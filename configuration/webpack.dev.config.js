@@ -14,7 +14,7 @@ module.exports = merge(webpackConfiguration, {
   devServer: {
     contentBase: environment.paths.output,
     watchContentBase: true,
-    publicPath: '/',
+    publicPath: '/matsurisu-panic/',
     open: true,
     historyApiFallback: true,
     compress: true,

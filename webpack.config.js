@@ -31,6 +31,7 @@ module.exports = {
   output: {
     filename: 'js/[name].js',
     path: environment.paths.output,
+    publicPath: '/matsurisu-panic/',
   },
   module: {
     rules: [
@@ -105,8 +106,8 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(environment.paths.source, 'images', 'content'),
-          to: path.resolve(environment.paths.output, 'images', 'content'),
+          from: path.resolve(environment.paths.source, 'images'),
+          to: path.resolve(environment.paths.output, 'images'),
           toType: 'dir',
           globOptions: {
             ignore: ['*.DS_Store', 'Thumbs.db'],
