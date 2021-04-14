@@ -4,7 +4,7 @@ import { WIDTH, HEIGHT } from "../globals";
 
 const ControlButton = ButtonFactory("controls");
 
-const BOTTOM_MARGIN = 200;
+const BOTTOM_MARGIN = 150;
 const SIDE_MARGIN = 100;
 
 export default class Controls extends Phaser.GameObjects.Container {
@@ -13,6 +13,7 @@ export default class Controls extends Phaser.GameObjects.Container {
 
     this._left = false;
     this._right = false;
+    this._up = false;
     this._down = false;
     this.leftButton = new ControlButton(scene, {
       x: SIDE_MARGIN,
@@ -32,9 +33,18 @@ export default class Controls extends Phaser.GameObjects.Container {
       downCallback: () => (this._right = true),
       upCallback: () => (this._right = false),
     });
+    this.upButton = new ControlButton(scene, {
+      x: WIDTH / 2,
+      y: HEIGHT - BOTTOM_MARGIN - 75,
+      keys: ["w", "up"],
+      default: 8,
+      down: 9,
+      downCallback: () => (this._up = true),
+      upCallback: () => (this._up = false),
+    });
     this.downButton = new ControlButton(scene, {
       x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN,
+      y: HEIGHT - BOTTOM_MARGIN + 75,
       keys: ["s", "down"],
       default: 6,
       down: 7,
@@ -42,7 +52,12 @@ export default class Controls extends Phaser.GameObjects.Container {
       upCallback: () => (this._down = false),
     });
 
-    this.add([this.leftButton, this.rightButton, this.downButton]);
+    this.add([
+      this.leftButton,
+      this.rightButton,
+      this.upButton,
+      this.downButton,
+    ]);
 
     scene.add.existing(this);
   }
@@ -53,6 +68,10 @@ export default class Controls extends Phaser.GameObjects.Container {
 
   get right() {
     return this._right;
+  }
+
+  get up() {
+    return this._up;
   }
 
   get down() {

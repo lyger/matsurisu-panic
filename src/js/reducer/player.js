@@ -1,7 +1,12 @@
 const playerPhysicsDefaultState = {
   maxVelocity: 500,
   acceleration: 1500,
+  gravity: 1200,
   drag: 1500,
+  jumpAcceleration: 500,
+  jumpVelocity: 500,
+  hitBoxWidth: 150,
+  hitBoxHeight: 20,
 };
 
 export const playerDefaultState = {
@@ -27,6 +32,16 @@ function playerPhysicsReducer(state = playerPhysicsDefaultState, action) {
       return {
         ...state,
         drag: payload,
+      };
+    case "player.physics.setHitBoxWidth":
+      return {
+        ...state,
+        hitBoxWidth: payload,
+      };
+    case "player.physics.setHitBoxHeight":
+      return {
+        ...state,
+        hitBoxHeight: payload,
       };
     default:
       return state;

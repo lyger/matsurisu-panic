@@ -1,7 +1,9 @@
 import Phaser from "phaser";
-import { PUBLIC_PATH } from "../globals";
+import { HEIGHT, PUBLIC_PATH } from "../globals";
+import { StartScreen } from "./uiscenes";
 
 const SKINS = ["placeholder"];
+const MATSURISU = ["normal"];
 
 export default class Preloader extends Phaser.Scene {
   constructor() {
@@ -13,7 +15,7 @@ export default class Preloader extends Phaser.Scene {
     this.load.on("progress", function (value) {
       progressBar.clear();
       progressBar.fillStyle(0xffffff, 0.5);
-      progressBar.fillRect(250, 295, 300 * value, 10);
+      progressBar.fillRect(200, HEIGHT / 2 - 5, 320 * value, 10);
     });
 
     this.load.on("complete", function () {
@@ -28,6 +30,27 @@ export default class Preloader extends Phaser.Scene {
         frameHeight: 100,
       }
     );
+
+    this.load.spritesheet("ui", PUBLIC_PATH + "/images/ui_buttons.png", {
+      frameWidth: 200,
+      frameHeight: 100,
+    });
+
+    this.load.spritesheet("powerups", PUBLIC_PATH + "/images/powerups.png", {
+      frameWidth: 100,
+      frameHeight: 100,
+    });
+
+    MATSURISU.forEach((risuType) => {
+      this.load.spritesheet(
+        `matsurisu-${risuType}`,
+        PUBLIC_PATH + `/images/matsurisu-${risuType}.png`,
+        {
+          frameWidth: 100,
+          frameHeight: 100,
+        }
+      );
+    });
 
     SKINS.forEach((skin) => {
       this.load.spritesheet(
@@ -54,6 +77,7 @@ export default class Preloader extends Phaser.Scene {
           frameHeight: 200,
         }
       );
+      this.load.image(`win-${skin}`, PUBLIC_PATH + `/images/win-${skin}.png`);
     });
   }
 
@@ -73,15 +97,27 @@ export default class Preloader extends Phaser.Scene {
         repeat: -1,
       });
     };
+
     SKINS.forEach((skin) => {
       makeMatsuriAnimations(`matsuri-${skin}`);
       makeMatsuriAnimations(`matsuri-${skin}-arms-up`);
       makeMatsuriAnimations(`matsuri-${skin}-arms-down`);
     });
+
+    MATSURISU.forEach((skin) => {
+      this.anims.create({
+        key: `matsurisu-${skin}.fall`,
+        frames: this.anims.generateFrameNumbers(`matsurisu-${skin}`, {
+          frames: [0, 1],
+        }),
+        frameRate: 10,
+        repeat: -1,
+      });
+    });
   }
 
   create() {
     this.createAnimations();
-    this.scene.start("Game");
+    this.scene.add("Start", StartScreen, true);
   }
 }
