@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import ButtonFactory from "./uibutton";
-import { WIDTH, HEIGHT } from "../globals";
+import { WIDTH, HEIGHT, DEPTH } from "../globals";
+import store from "../store";
 
 const ControlButton = ButtonFactory("controls");
 
@@ -51,15 +52,54 @@ export default class Controls extends Phaser.GameObjects.Container {
       downCallback: () => (this._down = true),
       upCallback: () => (this._down = false),
     });
+    this.powerupButton = new ControlButton(scene, {
+      x: WIDTH / 2,
+      y: HEIGHT - BOTTOM_MARGIN,
+      keys: ["space"],
+      default: 2,
+      down: 3,
+      downCallback: () => this.usePowerup(),
+    })
+      .setVisible(false)
+      .setActive(false);
+    this.powerupIcon = scene.add
+      .image(WIDTH / 2, HEIGHT - BOTTOM_MARGIN, "powerups")
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT + 1)
+      .setVisible(false);
 
     this.add([
       this.leftButton,
       this.rightButton,
       this.upButton,
       this.downButton,
+      this.powerupButton,
     ]);
 
     scene.add.existing(this);
+  }
+
+  refreshPowerup() {
+    const state = store.getState();
+    const powerup = state.player.powerup;
+    if (powerup !== null) {
+      this.powerupButton.setVisible(true).setActive(true);
+      this.powerupIcon
+        .setTexture(powerup.texture)
+        .setFrame(powerup.frame)
+        .setVisible(true);
+    }
+  }
+
+  usePowerup() {
+    const state = store.getState();
+    const powerup = state.player.powerup;
+    if (powerup !== null) {
+      powerup.apply(this.scene);
+      store.dispatch({ type: "player.clearPowerup" });
+      this.powerupButton.setVisible(false).setActive(false);
+      this.powerupIcon.setVisible(false);
+    }
   }
 
   get left() {

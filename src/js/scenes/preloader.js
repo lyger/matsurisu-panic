@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { HEIGHT, PUBLIC_PATH } from "../globals";
 import { StartScreen } from "./uiscenes";
 
-const SKINS = ["placeholder"];
+const SKINS = ["normal"];
 const MATSURISU = ["normal"];
 
 export default class Preloader extends Phaser.Scene {
@@ -46,8 +46,8 @@ export default class Preloader extends Phaser.Scene {
         `matsurisu-${risuType}`,
         PUBLIC_PATH + `/images/matsurisu-${risuType}.png`,
         {
-          frameWidth: 100,
-          frameHeight: 100,
+          frameWidth: 150,
+          frameHeight: 150,
         }
       );
     });
@@ -57,27 +57,31 @@ export default class Preloader extends Phaser.Scene {
         `matsuri-${skin}`,
         PUBLIC_PATH + `/images/matsuri-${skin}.png`,
         {
-          frameWidth: 150,
-          frameHeight: 200,
+          frameWidth: 225,
+          frameHeight: 300,
         }
       );
       this.load.spritesheet(
         `matsuri-${skin}-arms-up`,
         PUBLIC_PATH + `/images/matsuri-${skin}-arms-up.png`,
         {
-          frameWidth: 150,
-          frameHeight: 200,
+          frameWidth: 225,
+          frameHeight: 300,
         }
       );
       this.load.spritesheet(
         `matsuri-${skin}-arms-down`,
         PUBLIC_PATH + `/images/matsuri-${skin}-arms-down.png`,
         {
-          frameWidth: 150,
-          frameHeight: 200,
+          frameWidth: 225,
+          frameHeight: 300,
         }
       );
-      this.load.image(`win-${skin}`, PUBLIC_PATH + `/images/win-${skin}.png`);
+      // this.load.image(`win-${skin}`, PUBLIC_PATH + `/images/win-${skin}.png`);
+      this.load.image(
+        `win-${skin}`,
+        PUBLIC_PATH + `/images/win-placeholder.png`
+      );
     });
   }
 
@@ -110,7 +114,7 @@ export default class Preloader extends Phaser.Scene {
         frames: this.anims.generateFrameNumbers(`matsurisu-${skin}`, {
           frames: [0, 1],
         }),
-        frameRate: 10,
+        frameRate: 5,
         repeat: -1,
       });
     });

@@ -2,9 +2,11 @@ import Phaser from "phaser";
 import store from "../store";
 import Controls from "./controls";
 import { WIDTH, PLAYERHEIGHT, DEPTH } from "../globals";
+import { applyModifiersToState } from "../utils";
 
-const HITBOX_UP_OFFSET = -70;
-const HITBOX_DOWN_OFFSET = 20;
+const HITBOX_UP_OFFSET = -45;
+const HITBOX_DOWN_OFFSET = 30;
+const HITBOX_HORIZ_OFFSET = -7;
 
 function syncSpritePhysics(from, to, xOffset = 0, yOffset = 0) {
   to.x = from.x + xOffset;
@@ -24,6 +26,8 @@ export default class Player extends Phaser.GameObjects.Container {
     super(scene);
 
     this.state = store.getState().player;
+    this.applyModifiersToPhysics();
+
     const { PLAYERDEPTH } = DEPTH;
 
     this.controls = new Controls(scene);
@@ -32,24 +36,24 @@ export default class Player extends Phaser.GameObjects.Container {
 
     this.bodySprite = scene.physics.add
       .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName)
-      .setSize(100, 150)
+      .setSize(170, 220)
       .setOffset(25, 50)
       .setDepth(PLAYERDEPTH)
-      .setMaxVelocity(this.state.physics.maxVelocity)
+      .setMaxVelocity(this.modPhysics.maxVelocity)
       .setCollideWorldBounds(true)
-      .setDragX(this.state.physics.drag);
+      .setDragX(this.modPhysics.drag);
 
-    this.bodySprite.body.setGravityY(this.state.physics.gravity);
+    this.bodySprite.body.setGravityY(this.modPhysics.gravity);
 
     this.armSprite = scene.physics.add
       .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName + "-arms-up")
       .setDepth(PLAYERDEPTH + 1);
 
     this.hitBox = scene.add.rectangle(
-      WIDTH / 2,
+      WIDTH / 2 + HITBOX_HORIZ_OFFSET,
       PLAYERHEIGHT + HITBOX_UP_OFFSET,
-      this.state.physics.hitBoxWidth,
-      this.state.physics.hitBoxHeight
+      this.modPhysics.hitBoxWidth,
+      this.modPhysics.hitBoxHeight
     );
 
     scene.physics.add.existing(this.hitBox);
@@ -59,9 +63,54 @@ export default class Player extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
+  applyModifiersToPhysics() {
+    this.modPhysics = applyModifiersToState(this.state.physics);
+  }
+
+  applyPhysicsToSprites() {
+    this.skinName = "matsuri-" + this.state.skin;
+    this.bodySprite
+      .setTexture(this.skinName)
+      .setMaxVelocity(this.modPhysics.maxVelocity)
+      .setDragX(this.modPhysics.drag);
+
+    this.bodySprite.body.setGravityY(this.modPhysics.gravity);
+
+    this.armSprite.setTexture(
+      this.skinName + (this.crouching ? "-arms-down" : "-arms-up")
+    );
+
+    this.hitBox.setSize(
+      this.modPhysics.hitBoxWidth,
+      this.modPhysics.hitBoxHeight
+    );
+  }
+
+  reloadState() {
+    const newState = store.getState().player;
+    if (this.state === newState) return;
+
+    this.controls.refreshPowerup();
+
+    const doPhysicsUpdate = this.state.physics !== newState.physics;
+    this.state = newState;
+
+    if (doPhysicsUpdate) {
+      this.applyModifiersToPhysics();
+      this.applyPhysicsToSprites();
+    }
+  }
+
+  get jumping() {
+    return !this.bodySprite.body.touching.down;
+  }
+
+  get crouching() {
+    return this.controls.down;
+  }
+
   update(time) {
-    let armType;
-    let armOffset;
+    this.reloadState();
     if (this.controls.up) {
       if (this.bodySprite.body.touching.down) {
         this.bodySprite.setVelocityY(-this.state.physics.jumpVelocity);
@@ -70,13 +119,18 @@ export default class Player extends Phaser.GameObjects.Container {
     } else {
       this.bodySprite.setAccelerationY(0);
     }
-    if (this.controls.down) {
+
+    let armType;
+    let armOffset;
+
+    if (this.crouching) {
       armType = "-arms-down";
       armOffset = HITBOX_DOWN_OFFSET;
     } else {
       armType = "-arms-up";
       armOffset = HITBOX_UP_OFFSET;
     }
+
     if (this.controls.left == this.controls.right) {
       this.bodySprite.anims.play(this.skinName + ".idle", true);
       this.armSprite.anims.play(this.skinName + armType + ".idle", true);
@@ -90,8 +144,14 @@ export default class Player extends Phaser.GameObjects.Container {
       this.armSprite.anims.play(this.skinName + armType + ".run", true);
       this.bodySprite.setAccelerationX(this.state.physics.acceleration, 0);
     }
+
     syncSpritePhysics(this.bodySprite, this.armSprite);
     syncSpriteAnimations(this.bodySprite, this.armSprite);
-    syncSpritePhysics(this.bodySprite, this.hitBox, 0, armOffset);
+    syncSpritePhysics(
+      this.bodySprite,
+      this.hitBox,
+      HITBOX_HORIZ_OFFSET,
+      armOffset
+    );
   }
 }

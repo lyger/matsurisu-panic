@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { DEPTH } from "../globals";
 import store from "../store";
+import { applyModifiersToState } from "../utils";
 
 function euclidean(x, y) {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
@@ -11,23 +12,19 @@ export default class Dropper extends Phaser.GameObjects.Group {
     super(scene);
 
     this.state = store.getState().stage;
-    this.startTime = Infinity;
-    this.listenerList = [];
-
-    scene.events.on("dropper.start", () => {
-      console.log("DEBUG starting dropper");
-      this.startTime = this.scene.time.now;
-    });
+    this.applyModifiersToConfigs();
 
     this.matsurisu = scene.physics.add.group();
     this.money = scene.physics.add.group();
     this.powerups = scene.physics.add.group();
 
-    this.generateItems();
-
     this.add(this.matsurisu);
     this.add(this.money);
     this.add(this.powerups);
+
+    this.generateItems();
+
+    this.createTimer();
 
     const checkFinished = () => {
       if (this.matsurisuBuffer.length > 0) return;
@@ -44,20 +41,22 @@ export default class Dropper extends Phaser.GameObjects.Group {
   }
 
   generateItems() {
-    const matsurisuCfg = this.state.matsurisu;
-    const moneyCfg = this.state.money;
+    const matsurisuCfg = this.modMatsurisu;
+    const moneyCfg = this.modMoney;
 
     const rand = Phaser.Math.RND;
 
     this.matsurisuBuffer = [];
+    this.matsurisuLastSpawn = 0;
 
     let last = {
-      type: "matsurisu",
-      start: 0,
+      deltaY: 0,
       x: rand.between(matsurisuCfg.minX, matsurisuCfg.maxX),
     };
 
     this.matsurisuBuffer.push(last);
+
+    let totalY = 0;
 
     for (let i = 0; i < matsurisuCfg.number - 1; i++) {
       // Attempt 10 times to produce new coordinates that fulfill the conditions
@@ -79,51 +78,95 @@ export default class Dropper extends Phaser.GameObjects.Group {
           break;
       }
       const next = {
-        start: last.start + (deltaY / matsurisuCfg.fallSpeed) * 1000,
+        deltaY: deltaY,
         x: newX,
       };
 
       this.matsurisuBuffer.push(next);
 
       last = next;
+      totalY += deltaY;
     }
 
     this.moneyBuffer = [];
 
     const numMoney = rand.between(moneyCfg.minNumber, moneyCfg.maxNumber);
 
-    const maxStart = this.matsurisuBuffer[this.matsurisuBuffer.length - 1]
-      .start;
-
     for (let i = 0; i < numMoney; i++) {
       this.moneyBuffer.push({
-        start: rand.between(0, maxStart),
+        y: rand.between(0, totalY),
         x: rand.between(moneyCfg.minX, moneyCfg.maxX),
       });
     }
 
-    this.moneyBuffer.sort((a, b) => a.start - b.start);
+    this.moneyBuffer.sort((a, b) => a.y - b.y);
+  }
+
+  applyModifiersToConfigs() {
+    this.modMatsurisu = applyModifiersToState(this.state.matsurisu);
+    this.modMoney = applyModifiersToState(this.state.money);
+  }
+
+  applyConfigsToSprites() {
+    this.matsurisu.setVelocityY(this.modMatsurisu.fallSpeed);
+    this.money.setVelocityY(this.modMoney.fallSpeed);
+  }
+
+  reloadState() {
+    const newState = store.getState().stage;
+    if (this.state === newState) return;
+
+    const doConfigUpdates =
+      this.state.matsurisu !== newState.matsurisu ||
+      this.state.money !== newState.money;
+    this.state = newState;
+
+    if (doConfigUpdates) {
+      this.applyModifiersToConfigs();
+      this.applyConfigsToSprites();
+    }
+  }
+
+  createTimer() {
+    this.timer = this.scene.time.addEvent({
+      delay: Infinity,
+    });
+    this.timer.paused = true;
+
+    this.scene.events.on("dropper.start", () => {
+      console.log("DEBUG starting dropper");
+      this.timer.paused = false;
+    });
   }
 
   update(time) {
-    const delta = time - this.startTime;
+    this.reloadState();
+    const rand = Phaser.Math.RND;
+    const delta = this.timer.elapsed;
+    const matsurisuDeltaY =
+      ((delta - this.matsurisuLastSpawn) / 1000) * this.modMatsurisu.fallSpeed;
+    const matsurisuTotalY = (delta / 1000) * this.modMatsurisu.fallSpeed;
 
     if (
       this.matsurisuBuffer.length > 0 &&
-      this.matsurisuBuffer[0].start <= delta
+      this.matsurisuBuffer[0].deltaY <= matsurisuDeltaY
     ) {
       const next = this.matsurisuBuffer.shift();
+      this.matsurisuLastSpawn = delta;
 
       this.matsurisu
         .create(next.x, -100, "matsurisu-normal", 0, true, true)
-        .setSize(30, 60)
-        .setOffset(30, 20)
+        .setSize(105, 90)
         .setDepth(DEPTH.OBJECTDEPTH)
-        .setVelocityY(this.state.matsurisu.fallSpeed)
+        .setVelocityY(this.modMatsurisu.fallSpeed)
+        .setFlip(rand.frac() > 0.5, rand.frac() > 0.5)
         .anims.play("matsurisu-normal.fall");
     }
 
-    if (this.moneyBuffer.length > 0 && this.moneyBuffer[0].start <= delta) {
+    if (
+      this.moneyBuffer.length > 0 &&
+      this.moneyBuffer[0].y <= matsurisuTotalY
+    ) {
       const next = this.moneyBuffer.shift();
 
       this.money
@@ -131,7 +174,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
         .setSize(60, 60)
         .setOffset(20, 20)
         .setDepth(DEPTH.OBJECTDEPTH)
-        .setVelocityY(this.state.money.fallSpeed);
+        .setVelocityY(this.modMoney.fallSpeed);
     }
   }
 }

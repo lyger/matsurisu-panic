@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import ButtonFactory from "../components/uibutton";
 import { HEIGHT, WIDTH, TEXT_STYLE, DEPTH } from "../globals";
 import store from "../store";
-import Game from "./game";
+import Stage from "./stage";
 
 const Button = ButtonFactory("ui");
 
@@ -21,7 +21,7 @@ export class StartScreen extends Phaser.Scene {
   }
 
   startGame() {
-    this.scene.add("game", Game, true);
+    this.scene.add("Stage", Stage, true);
     this.scene.remove(this.scene.key);
   }
 }
@@ -49,9 +49,37 @@ export class GameOver extends Phaser.Scene {
   }
 
   handleNewGame() {
-    this.scene.remove("Game");
+    this.scene.remove("Stage");
     store.dispatch({ type: "global.newGame" });
-    this.scene.add("Game", Game, true);
+    this.scene.add("Stage", Stage, true);
+    this.scene.remove(this.scene.key);
+  }
+}
+
+export class PauseScreen extends Phaser.Scene {
+  create() {
+    this.add
+      .text(WIDTH / 2, HEIGHT / 2 - 100, "PAUSED", {
+        ...TEXT_STYLE,
+        fontSize: 50,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT);
+
+    this.button = new Button(this, {
+      x: WIDTH / 2,
+      y: HEIGHT / 2 + 50,
+      default: 0,
+      hover: 1,
+      down: 2,
+      upCallback: () => this.handleResume(),
+    });
+
+    this.add.existing(this.button);
+  }
+
+  handleResume() {
+    this.scene.resume("Stage");
     this.scene.remove(this.scene.key);
   }
 }
@@ -82,9 +110,9 @@ export class WinScreen extends Phaser.Scene {
   }
 
   handleNewGame() {
-    this.scene.remove("Game");
+    this.scene.remove("Stage");
     store.dispatch({ type: "global.newGame" });
-    this.scene.add("Game", Game, true);
+    this.scene.add("Stage", Stage, true);
     this.scene.remove(this.scene.key);
   }
 }

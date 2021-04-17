@@ -2,7 +2,6 @@ import "../scss/app.scss";
 import Phaser from "phaser";
 import { WIDTH, HEIGHT } from "./globals";
 import Preloader from "./scenes/preloader";
-import Game from "./scenes/game";
 
 const game = new Phaser.Game({
   parent: "phaser-root",
@@ -14,7 +13,7 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  physics: { default: "arcade", arcade: { debug: true } },
+  physics: { default: "arcade", arcade: { debug: false } },
   backgroundColor: 0x00000,
   resolution: 1,
   scene: Preloader,

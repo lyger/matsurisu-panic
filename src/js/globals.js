@@ -1,6 +1,6 @@
 export const WIDTH = 720;
 export const HEIGHT = 1280;
-export const PLAYERHEIGHT = 900;
+export const PLAYERHEIGHT = 850;
 
 export const DEPTH = {
   BGBACK: 0,

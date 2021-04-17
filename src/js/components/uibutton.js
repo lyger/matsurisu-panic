@@ -46,17 +46,23 @@ function ButtonFactory(key) {
         .setInteractive(scene.input.makePixelPerfect());
 
       const handleDown = () => {
+        if (!this.active) return;
         this.setFrame(this.config.down);
         this.isDown = true;
         if (downCallback !== null) downCallback();
       };
       const handleUp = () => {
+        if (!this.active) return;
         this.setFrame(this.config.over);
         this.isDown = false;
         if (upCallback !== null) upCallback();
       };
-      const handleOver = () => this.setFrame(this.config.over);
+      const handleOver = () => {
+        if (!this.active) return;
+        this.setFrame(this.config.over);
+      };
       const handleOut = () => {
+        if (!this.active) return;
         if (this.isDown) handleUp();
         this.setFrame(this.config.default);
       };
