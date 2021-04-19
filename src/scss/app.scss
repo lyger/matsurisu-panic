@@ -11,9 +11,10 @@ html {
 body {
   background: $body-background-color;
   color: $foreground-color;
-  font-family: "DINP-R", arial, serif;
+  font-family: "Gen Jyuu Gothic P Heavy", sans-serif;
   font-size: 1.3em;
   height: 100%;
+  margin: 0;
 }
 
 #phaser-root {
@@ -24,7 +25,6 @@ body {
 }
 
 #phaser-root canvas {
-  // display: block;
   max-height: 177.78vw !important;
   max-width: 100vw !important;
 }

@@ -27,3 +27,14 @@ export function addModifierWithoutDuplicates(state, modifier) {
     modifiers: state.modifiers.concat([modifier]),
   };
 }
+
+export function chooseFromArray(arr, num) {
+  const buffer = arr.slice();
+  if (num >= arr.length) return buffer;
+  const ret = [];
+  for (let i = 0; i < num; i++) {
+    const idx = Math.floor(Math.random() * buffer.length);
+    ret.push(...buffer.splice(idx, 1));
+  }
+  return ret;
+}

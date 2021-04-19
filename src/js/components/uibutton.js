@@ -14,7 +14,7 @@ const defaultConfig = {
   upCallback: null,
 };
 
-function ButtonFactory(key) {
+function ButtonFactory(key, pixelPerfect = false) {
   class UIButton extends Phaser.GameObjects.Sprite {
     constructor(scene, config) {
       const updatedConfig = { ...defaultConfig, ...config };
@@ -35,6 +35,10 @@ function ButtonFactory(key) {
 
       super(scene, x, y, key, updatedConfig.default);
 
+      this.hitbox = pixelPerfect
+        ? this.scene.input.makePixelPerfect()
+        : undefined;
+
       this.setActive(true);
 
       this.config = updatedConfig;
@@ -43,7 +47,7 @@ function ButtonFactory(key) {
 
       this.setDepth(DEPTH.UIFRONT)
         .setOrigin(originX, originY)
-        .setInteractive(scene.input.makePixelPerfect());
+        .setInteractive(this.hitbox);
 
       const handleDown = () => {
         if (!this.active) return;
@@ -88,7 +92,7 @@ function ButtonFactory(key) {
       this.setFrame(this.config.default);
 
       if (value) {
-        this.setInteractive(this.scene.input.makePixelPerfect());
+        this.setInteractive(this.hitbox);
       } else {
         this.removeInteractive();
       }

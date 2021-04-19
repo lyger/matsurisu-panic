@@ -2,11 +2,11 @@ import Phaser from "phaser";
 import Player from "../components/player";
 import Dropper from "../components/dropper";
 import sendTweet from "../twitter";
-import { DEPTH, PLAYERHEIGHT, WIDTH } from "../globals";
+import { DEPTH, HEIGHT, PLAYERHEIGHT, WIDTH } from "../globals";
 import Scoreboard from "../components/scoreboard";
 import { GameOver, PauseScreen, WinScreen } from "./uiscenes";
 import store from "../store";
-import { Powerup } from "../components/items/powerup";
+import Shop from "./shop";
 
 const GAME_END_DELAY = 1000;
 const EFFECT_FADE_DURATION = 5000;
@@ -19,8 +19,8 @@ export default class Stage extends Phaser.Scene {
       this.dropper.matsurisu,
       (player, matsurisu) => {
         const coords = {
-          x: matsurisu.body.x,
-          y: matsurisu.body.y,
+          x: matsurisu.x,
+          y: matsurisu.y,
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.catch", coords);
@@ -32,19 +32,50 @@ export default class Stage extends Phaser.Scene {
       this.dropper.money,
       (player, money) => {
         const coords = {
-          x: money.body.x,
-          y: money.body.y,
+          x: money.x,
+          y: money.y,
         };
         money.destroy();
         this.events.emit("money.catch", coords);
       }
     );
+
+    this.physics.add.overlap(
+      this.matsuri.hitBox,
+      this.dropper.powerup,
+      (player, powerup) => {
+        const target = powerup.getData("target");
+        const data = {
+          x: powerup.x,
+          y: powerup.y,
+          target,
+        };
+        store.dispatch({
+          type: "player.setPowerup",
+          payload: target,
+        });
+        powerup.destroy();
+        this.events.emit("powerup.catch", data);
+      }
+    );
+
+    this.physics.add.overlap(
+      this.matsuri.hitBox,
+      this.dropper.ebifrion,
+      (player, ebifrion) => {
+        const data = {
+          x: ebifrion.x,
+          y: ebifrion.y,
+          rotation: ebifrion.rotation,
+        };
+        ebifrion.destroy();
+        this.events.emit("ebifrion.catch", data);
+      }
+    );
   }
 
   createGroundCollisions() {
-    const ground = this.add
-      .rectangle(WIDTH / 2, PLAYERHEIGHT + 300, 720, 300)
-      .setStrokeStyle(2, 0x00ff00);
+    const ground = this.add.rectangle(WIDTH / 2, PLAYERHEIGHT + 300, 720, 300);
     this.physics.add.existing(ground, true);
 
     this.physics.add.collider(
@@ -52,8 +83,8 @@ export default class Stage extends Phaser.Scene {
       this.dropper.matsurisu,
       (ground, matsurisu) => {
         const coords = {
-          x: matsurisu.body.x,
-          y: matsurisu.body.y,
+          x: matsurisu.x,
+          y: matsurisu.y,
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.drop", coords);
@@ -62,17 +93,51 @@ export default class Stage extends Phaser.Scene {
 
     this.physics.add.collider(ground, this.dropper.money, (ground, money) => {
       const coords = {
-        x: money.body.x,
-        y: money.body.y,
+        x: money.x,
+        y: money.y,
       };
       money.destroy();
       this.events.emit("money.drop", coords);
     });
 
+    this.physics.add.collider(
+      ground,
+      this.dropper.powerup,
+      (ground, powerup) => {
+        const data = {
+          x: powerup.x,
+          y: powerup.y,
+          target: powerup.getData("target"),
+        };
+        powerup.destroy();
+        this.events.emit("powerup.drop", data);
+      }
+    );
+
+    this.physics.add.collider(
+      ground,
+      this.dropper.ebifrion,
+      (ground, ebifrion) => {
+        const coords = {
+          x: ebifrion.x,
+          y: ebifrion.y,
+          rotation: ebifrion.rotation,
+        };
+        ebifrion.destroy();
+        this.events.emit("ebifrion.drop", coords);
+      }
+    );
+
     this.physics.add.collider(ground, this.matsuri.bodySprite);
   }
 
   create() {
+    store.dispatch({ type: "stage.increaseLevel" });
+    store.dispatch({ type: "score.resetCombo" });
+
+    this.background = this.add
+      .image(WIDTH / 2, HEIGHT / 2, "stage-background")
+      .setDepth(DEPTH.BGBACK);
     this.matsuri = new Player(this);
     this.dropper = new Dropper(this);
     this.scoreboard = new Scoreboard(this);
@@ -88,22 +153,13 @@ export default class Stage extends Phaser.Scene {
     });
 
     this.game.events.on("blur", this.pauseGame, this);
-
-    this.events.emit("dropper.start");
+    this.events.on("destroy", () => {
+      this.game.events.removeListener("blur", this.pauseGame, this);
+    });
 
     this.events.on("stage.addEffect", this.addEffect, this);
 
-    // DEBUG start with powerup
-    store.dispatch({
-      type: "player.setPowerup",
-      payload: new Powerup({
-        name: "Float",
-        target: "stage.matsurisu",
-        frame: 1,
-        modifier: { op: "multiply", fallSpeed: 0.5 },
-        duration: 15,
-      }),
-    });
+    this.events.emit("dropper.start");
 
     const debugKey = this.input.keyboard.addKey("z", true, false);
     debugKey.on("down", () => {
@@ -136,10 +192,13 @@ export default class Stage extends Phaser.Scene {
   }
 
   winStage() {
-    this.scene.pause(this.scene.key);
-    this.scene.add("WinScreen", WinScreen);
-    this.scene.launch("WinScreen");
-    this.scene.moveAbove("Stage", "WinScreen");
+    // this.scene.pause(this.scene.key);
+    // this.scene.add("WinScreen", WinScreen);
+    // this.scene.launch("WinScreen");
+    // this.scene.moveAbove("Stage", "WinScreen");
+    this.events.emit("stage.clearEffects");
+    this.scene.add("Shop", Shop, true);
+    this.scene.remove(this.scene.key);
   }
 
   alignEffects() {
@@ -149,8 +208,8 @@ export default class Stage extends Phaser.Scene {
       cellWidth: -110,
       cellHeight: 110,
       position: Phaser.Display.Align.CENTER,
-      x: 660,
-      y: 60,
+      x: 670,
+      y: 120,
     });
   }
 
@@ -158,7 +217,8 @@ export default class Stage extends Phaser.Scene {
     const newEffect = this.add
       .image(0, 0, texture, frame)
       .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
+      .setDepth(DEPTH.UIFRONT)
+      .setScale(0.75, 0.75);
     this.effects.push(newEffect);
     this.alignEffects();
     this.time.delayedCall(duration - EFFECT_FADE_DURATION, () => {
@@ -191,6 +251,5 @@ export default class Stage extends Phaser.Scene {
   update(time) {
     this.matsuri.update(time);
     this.dropper.update(time);
-    this.scoreboard.update(time);
   }
 }

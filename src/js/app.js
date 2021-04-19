@@ -13,6 +13,9 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
+  input: {
+    activePointers: 5,
+  },
   physics: { default: "arcade", arcade: { debug: false } },
   backgroundColor: 0x00000,
   resolution: 1,

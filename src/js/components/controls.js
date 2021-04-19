@@ -4,9 +4,11 @@ import { WIDTH, HEIGHT, DEPTH } from "../globals";
 import store from "../store";
 
 const ControlButton = ButtonFactory("controls");
+const ControlButtonBig = ButtonFactory("controls-big");
 
-const BOTTOM_MARGIN = 150;
-const SIDE_MARGIN = 100;
+const BOTTOM_MARGIN = 166;
+const VERTICAL_OFFSET = 142;
+const SIDE_MARGIN = 128;
 
 export default class Controls extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -20,8 +22,8 @@ export default class Controls extends Phaser.GameObjects.Container {
       x: SIDE_MARGIN,
       y: HEIGHT - BOTTOM_MARGIN,
       keys: ["a", "left"],
-      default: 0,
-      down: 1,
+      default: 1,
+      down: 5,
       downCallback: () => (this._left = true),
       upCallback: () => (this._left = false),
     });
@@ -29,39 +31,39 @@ export default class Controls extends Phaser.GameObjects.Container {
       x: WIDTH - SIDE_MARGIN,
       y: HEIGHT - BOTTOM_MARGIN,
       keys: ["d", "right"],
-      default: 4,
-      down: 5,
+      default: 0,
+      down: 4,
       downCallback: () => (this._right = true),
       upCallback: () => (this._right = false),
     });
     this.upButton = new ControlButton(scene, {
       x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN - 75,
+      y: HEIGHT - BOTTOM_MARGIN - VERTICAL_OFFSET,
       keys: ["w", "up"],
-      default: 8,
-      down: 9,
+      default: 2,
+      down: 6,
       downCallback: () => (this._up = true),
       upCallback: () => (this._up = false),
     });
     this.downButton = new ControlButton(scene, {
       x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN + 75,
+      y: HEIGHT - BOTTOM_MARGIN + VERTICAL_OFFSET,
       keys: ["s", "down"],
-      default: 6,
+      default: 3,
       down: 7,
       downCallback: () => (this._down = true),
       upCallback: () => (this._down = false),
     });
-    this.powerupButton = new ControlButton(scene, {
+    this.powerupButton = new ControlButtonBig(scene, {
       x: WIDTH / 2,
       y: HEIGHT - BOTTOM_MARGIN,
       keys: ["space"],
-      default: 2,
-      down: 3,
+      default: 0,
+      down: 1,
       downCallback: () => this.usePowerup(),
     })
-      .setVisible(false)
-      .setActive(false);
+      .setActive(false)
+      .setFrame(1);
     this.powerupIcon = scene.add
       .image(WIDTH / 2, HEIGHT - BOTTOM_MARGIN, "powerups")
       .setOrigin(0.5, 0.5)
@@ -76,6 +78,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       this.powerupButton,
     ]);
 
+    this.refreshPowerup();
     scene.add.existing(this);
   }
 
@@ -83,7 +86,9 @@ export default class Controls extends Phaser.GameObjects.Container {
     const state = store.getState();
     const powerup = state.player.powerup;
     if (powerup !== null) {
-      this.powerupButton.setVisible(true).setActive(true);
+      this.powerupButton
+        .setActive(true)
+        .setFrame(this.powerupButton.config.default);
       this.powerupIcon
         .setTexture(powerup.texture)
         .setFrame(powerup.frame)
@@ -97,7 +102,7 @@ export default class Controls extends Phaser.GameObjects.Container {
     if (powerup !== null) {
       powerup.apply(this.scene);
       store.dispatch({ type: "player.clearPowerup" });
-      this.powerupButton.setVisible(false).setActive(false);
+      this.powerupButton.setActive(false);
       this.powerupIcon.setVisible(false);
     }
   }

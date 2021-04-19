@@ -36,7 +36,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     this.bodySprite = scene.physics.add
       .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName)
-      .setSize(170, 220)
+      .setSize(170, 230)
       .setOffset(25, 50)
       .setDepth(PLAYERDEPTH)
       .setMaxVelocity(this.modPhysics.maxVelocity)
@@ -57,6 +57,8 @@ export default class Player extends Phaser.GameObjects.Container {
     );
 
     scene.physics.add.existing(this.hitBox);
+
+    this.setDepth(PLAYERDEPTH);
 
     this.add([this.bodySprite, this.armSprite]);
 
@@ -113,9 +115,9 @@ export default class Player extends Phaser.GameObjects.Container {
     this.reloadState();
     if (this.controls.up) {
       if (this.bodySprite.body.touching.down) {
-        this.bodySprite.setVelocityY(-this.state.physics.jumpVelocity);
+        this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
       }
-      this.bodySprite.setAccelerationY(-this.state.physics.jumpAcceleration);
+      this.bodySprite.setAccelerationY(-this.modPhysics.jumpAcceleration);
     } else {
       this.bodySprite.setAccelerationY(0);
     }
@@ -138,11 +140,11 @@ export default class Player extends Phaser.GameObjects.Container {
     } else if (this.controls.left) {
       this.bodySprite.anims.play(this.skinName + ".run", true);
       this.armSprite.anims.play(this.skinName + armType + ".run", true);
-      this.bodySprite.setAccelerationX(-this.state.physics.acceleration, 0);
+      this.bodySprite.setAccelerationX(-this.modPhysics.acceleration, 0);
     } else if (this.controls.right) {
       this.bodySprite.anims.play(this.skinName + ".run", true);
       this.armSprite.anims.play(this.skinName + armType + ".run", true);
-      this.bodySprite.setAccelerationX(this.state.physics.acceleration, 0);
+      this.bodySprite.setAccelerationX(this.modPhysics.acceleration, 0);
     }
 
     syncSpritePhysics(this.bodySprite, this.armSprite);

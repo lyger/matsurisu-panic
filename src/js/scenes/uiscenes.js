@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { resetCatalog } from "../components/items/catalog";
 import ButtonFactory from "../components/uibutton";
 import { HEIGHT, WIDTH, TEXT_STYLE, DEPTH } from "../globals";
 import store from "../store";
@@ -51,6 +52,7 @@ export class GameOver extends Phaser.Scene {
   handleNewGame() {
     this.scene.remove("Stage");
     store.dispatch({ type: "global.newGame" });
+    resetCatalog();
     this.scene.add("Stage", Stage, true);
     this.scene.remove(this.scene.key);
   }
@@ -112,6 +114,7 @@ export class WinScreen extends Phaser.Scene {
   handleNewGame() {
     this.scene.remove("Stage");
     store.dispatch({ type: "global.newGame" });
+    resetCatalog();
     this.scene.add("Stage", Stage, true);
     this.scene.remove(this.scene.key);
   }

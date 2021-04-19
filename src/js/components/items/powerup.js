@@ -1,21 +1,36 @@
 import store from "../../store";
+import Item from "./item";
 
-export class Powerup {
+export default class Powerup extends Item {
   constructor({
     name,
-    target,
-    texture = "powerups",
+    tier,
+    texture,
     frame = 0,
+    target,
     modifier,
     duration,
+    price,
+    purchaseLimit,
+    purchaseConditions,
   }) {
+    super("powerup", {
+      name,
+      tier,
+      texture,
+      frame,
+      price,
+      purchaseLimit,
+      purchaseConditions,
+    });
     if (modifier.key === undefined) modifier.key = "Powerup:" + name;
-    this.name = name;
     this.target = target;
-    this.texture = texture;
-    this.frame = frame;
     this.modifier = modifier;
     this.duration = duration * 1000;
+  }
+
+  handleBuy() {
+    store.dispatch({ type: "player.setPowerup", payload: this });
   }
 
   getTarget(state) {
@@ -40,6 +55,12 @@ export class Powerup {
         })
       );
     });
+    scene.events.on("stage.clearEffects", () =>
+      store.dispatch({
+        type: `${this.target}.removeModifier`,
+        payload: this.modifier.key,
+      })
+    );
     store.dispatch({
       type: `${this.target}.addModifier`,
       payload: this.modifier,

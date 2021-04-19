@@ -10,37 +10,26 @@ export default class Preloader extends Phaser.Scene {
     super("Preloader");
   }
 
-  preload() {
-    const progressBar = this.add.graphics();
-    this.load.on("progress", function (value) {
-      progressBar.clear();
-      progressBar.fillStyle(0xffffff, 0.5);
-      progressBar.fillRect(200, HEIGHT / 2 - 5, 320 * value, 10);
-    });
-
-    this.load.on("complete", function () {
-      progressBar.destroy();
-    });
-
+  loadControls() {
     this.load.spritesheet(
       "controls",
-      PUBLIC_PATH + "/images/control_buttons.png",
+      PUBLIC_PATH + "/images/control-buttons.png",
       {
-        frameWidth: 100,
-        frameHeight: 100,
+        frameWidth: 140,
+        frameHeight: 140,
       }
     );
+    this.load.spritesheet(
+      "controls-big",
+      PUBLIC_PATH + "/images/control-buttons-big.png",
+      {
+        frameWidth: 320,
+        frameHeight: 136,
+      }
+    );
+  }
 
-    this.load.spritesheet("ui", PUBLIC_PATH + "/images/ui_buttons.png", {
-      frameWidth: 200,
-      frameHeight: 100,
-    });
-
-    this.load.spritesheet("powerups", PUBLIC_PATH + "/images/powerups.png", {
-      frameWidth: 100,
-      frameHeight: 100,
-    });
-
+  loadCharacters() {
     MATSURISU.forEach((risuType) => {
       this.load.spritesheet(
         `matsurisu-${risuType}`,
@@ -49,6 +38,10 @@ export default class Preloader extends Phaser.Scene {
           frameWidth: 150,
           frameHeight: 150,
         }
+      );
+      this.load.image(
+        `matsurisu-${risuType}-die`,
+        PUBLIC_PATH + `/images/matsurisu-${risuType}-die.png`
       );
     });
 
@@ -82,6 +75,85 @@ export default class Preloader extends Phaser.Scene {
         `win-${skin}`,
         PUBLIC_PATH + `/images/win-placeholder.png`
       );
+    });
+  }
+
+  loadStage() {
+    this.load.image(
+      "stage-background",
+      PUBLIC_PATH + "/images/stage-background.png"
+    );
+
+    this.load.image(
+      "stage-scoreboard",
+      PUBLIC_PATH + "/images/stage-scoreboard.png"
+    );
+    this.load.image(
+      "stage-scoreboard-life",
+      PUBLIC_PATH + "/images/stage-scoreboard-life.png"
+    );
+  }
+
+  loadShop() {
+    this.load.image(
+      "shop-confirm-modal",
+      PUBLIC_PATH + "/images/shop-confirm-modal.png"
+    );
+    this.load.image(
+      "shop-confirm-arrow",
+      PUBLIC_PATH + "/images/shop-confirm-arrow.png"
+    );
+    this.load.spritesheet(
+      "shop-confirm-buttons",
+      PUBLIC_PATH + "/images/shop-confirm-buttons.png",
+      {
+        frameWidth: 100,
+        frameHeight: 100,
+      }
+    );
+    this.load.spritesheet(
+      "shop-done-buttons",
+      PUBLIC_PATH + "/images/shop-done-buttons.png",
+      {
+        frameWidth: 200,
+        frameHeight: 100,
+      }
+    );
+  }
+
+  loadItems() {
+    this.load.spritesheet("items", PUBLIC_PATH + "/images/items.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+  }
+
+  preload() {
+    const progressBar = this.add.graphics();
+    this.load.on("progress", function (value) {
+      progressBar.clear();
+      progressBar.fillStyle(0xffffff, 0.5);
+      progressBar.fillRect(200, HEIGHT / 2 - 5, 320 * value, 10);
+    });
+
+    this.load.on("complete", function () {
+      progressBar.destroy();
+    });
+
+    this.loadControls();
+    this.loadCharacters();
+    this.loadStage();
+    this.loadShop();
+    this.loadItems();
+
+    this.load.spritesheet("ui", PUBLIC_PATH + "/images/ui_buttons.png", {
+      frameWidth: 200,
+      frameHeight: 100,
+    });
+
+    this.load.spritesheet("powerups", PUBLIC_PATH + "/images/powerups.png", {
+      frameWidth: 100,
+      frameHeight: 100,
     });
   }
 
