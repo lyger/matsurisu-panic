@@ -57,7 +57,7 @@ export default class Player extends Phaser.GameObjects.Container {
       .setGravityY(this.modPhysics.gravity);
 
     this.hitBox = scene.add.rectangle(
-      WIDTH / 2 + HITBOX_HORIZ_OFFSET,
+      WIDTH / 2 + HITBOX_HORIZ_OFFSET[this.facing],
       PLAYERHEIGHT + HITBOX_UP_OFFSET,
       this.modPhysics.hitBoxWidth,
       this.modPhysics.hitBoxHeight
