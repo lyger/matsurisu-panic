@@ -1,26 +1,99 @@
 import Phaser from "phaser";
+import { DEPTH, GROUNDHEIGHT, HEIGHT, WIDTH } from "../globals";
 import Player from "../components/player";
 import Dropper from "../components/dropper";
-import sendTweet from "../twitter";
-import { DEPTH, HEIGHT, PLAYERHEIGHT, WIDTH } from "../globals";
 import Scoreboard from "../components/scoreboard";
-import { GameOver, PauseScreen, WinScreen } from "./uiscenes";
+import ButtonFactory from "../components/uibutton";
+import sendTweet from "../twitter";
+import { PauseScreen } from "./uiscenes";
 import store from "../store";
 import Shop from "./shop";
+import Results from "./results";
+import { addCurtainsTransition } from "./curtains";
+import DebugCursor from "../components/debugcursor";
 
+const GAME_START_DELAY = 1000;
 const GAME_END_DELAY = 1000;
 const EFFECT_FADE_DURATION = 5000;
 const EFFECT_BLINK_DURATION = 500;
 
+const PauseButton = ButtonFactory("pause-button", false);
+
 export default class Stage extends Phaser.Scene {
+  create() {
+    store.dispatch({ type: "stage.increaseLevel" });
+    store.dispatch({ type: "score.resetCombo" });
+
+    this.startBgm(GAME_START_DELAY / 2000);
+
+    this.background = this.add
+      .image(WIDTH / 2, HEIGHT / 2, "stage-background")
+      .setDepth(DEPTH.BGBACK);
+    this.matsuri = new Player(this);
+    this.dropper = new Dropper(this);
+    this.scoreboard = new Scoreboard(this, 45);
+    this.effects = [];
+
+    this.createPlayerCollisions();
+    this.createGroundCollisions();
+
+    this.events.once("global.gameOver", this.loseStage, this);
+
+    this.events.once("dropper.done", () => {
+      this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
+    });
+
+    this.pauseButton = new PauseButton(this, {
+      x: 70,
+      y: 140,
+      keys: ["esc"],
+      default: 0,
+      downCallback: () => this.pauseGame(),
+    }).setActive(false);
+    this.add.existing(this.pauseButton);
+
+    this.game.events.on("blur", this.pauseGame, this);
+    this.events.on("destroy", () => {
+      this.game.events.removeListener("blur", this.pauseGame, this);
+    });
+
+    this.events.on("stage.addEffect", this.addEffect, this);
+
+    this.time.delayedCall(GAME_START_DELAY, () => {
+      this.events.emit("dropper.start");
+      this.pauseButton.setActive(true);
+    });
+
+    if (this.anims.paused) this.anims.resumeAll();
+
+    const debugKey = this.input.keyboard.addKey("z", true, false);
+    debugKey.on("down", () => {
+      this.winStage();
+
+      // POSTING TWEET
+      // this.game.renderer.snapshotArea(200, 600, 300, 300, function (image) {
+      //   const imgData = /base64,(.+)/.exec(image.src)[1];
+      //   sendTweet(
+      //     "Test tweet with media again",
+      //     imgData,
+      //     console.log,
+      //     console.log
+      //   );
+      // });
+    });
+  }
+
   createPlayerCollisions() {
     this.physics.add.overlap(
       this.matsuri.hitBox,
       this.dropper.matsurisu,
       (player, matsurisu) => {
+        const state = store.getState();
+        const isLow = matsurisu.y >= state.stage.matsurisu.lowCatchY;
         const coords = {
           x: matsurisu.x,
           y: matsurisu.y,
+          isLow,
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.catch", coords);
@@ -75,7 +148,9 @@ export default class Stage extends Phaser.Scene {
   }
 
   createGroundCollisions() {
-    const ground = this.add.rectangle(WIDTH / 2, PLAYERHEIGHT + 300, 720, 300);
+    const ground = this.add
+      .rectangle(WIDTH / 2, GROUNDHEIGHT, 720, 300)
+      .setOrigin(0.5, 0);
     this.physics.add.existing(ground, true);
 
     this.physics.add.collider(
@@ -129,62 +204,36 @@ export default class Stage extends Phaser.Scene {
     );
 
     this.physics.add.collider(ground, this.matsuri.bodySprite);
+    this.physics.add.collider(ground, this.matsuri.armSprite);
   }
 
-  create() {
-    store.dispatch({ type: "stage.increaseLevel" });
-    store.dispatch({ type: "score.resetCombo" });
-
-    this.background = this.add
-      .image(WIDTH / 2, HEIGHT / 2, "stage-background")
-      .setDepth(DEPTH.BGBACK);
-    this.matsuri = new Player(this);
-    this.dropper = new Dropper(this);
-    this.scoreboard = new Scoreboard(this);
-    this.effects = [];
-
-    this.createPlayerCollisions();
-    this.createGroundCollisions();
-
-    this.events.once("global.gameOver", this.gameOver, this);
-
-    this.events.once("dropper.done", () => {
-      this.time.delayedCall(GAME_END_DELAY, this.winStage, undefined, this);
+  startBgm(delay) {
+    this.bgm = this.sound.add("matsuri-samba", {
+      loop: true,
+      volume: 0.1,
     });
+    this.bgm.play({ delay });
+  }
 
-    this.game.events.on("blur", this.pauseGame, this);
-    this.events.on("destroy", () => {
-      this.game.events.removeListener("blur", this.pauseGame, this);
-    });
-
-    this.events.on("stage.addEffect", this.addEffect, this);
-
-    this.events.emit("dropper.start");
-
-    const debugKey = this.input.keyboard.addKey("z", true, false);
-    debugKey.on("down", () => {
-      // POSTING TWEET
-      // this.game.renderer.snapshotArea(200, 600, 300, 300, function (image) {
-      //   const imgData = /base64,(.+)/.exec(image.src)[1];
-      //   sendTweet(
-      //     "Test tweet with media again",
-      //     imgData,
-      //     console.log,
-      //     console.log
-      //   );
-      // });
+  fadeBgm(duration) {
+    this.tweens.add({
+      targets: this.bgm,
+      volume: 0.0,
+      duration,
+      onComplete: () => this.bgm.destroy(),
     });
   }
 
-  gameOver() {
-    console.log("DEBUG game over");
-    this.scene.pause(this.scene.key);
-    this.scene.add("GameOver", GameOver);
-    this.scene.launch("GameOver");
-    this.scene.moveAbove("Stage", "GameOver");
+  loseStage() {
+    this.matsuri.disable();
+    this.dropper.pause();
+    this.pauseButton.setActive(false);
+    this.fadeBgm(1000);
+    this.time.delayedCall(GAME_END_DELAY, () => this.gameOver());
   }
 
   pauseGame() {
+    if (this.scene.systems.isTransitioning()) return;
     if (this.scene.isPaused(this.scene.key)) return;
     this.scene.add("PauseScreen", PauseScreen);
     this.scene.launch("PauseScreen");
@@ -192,21 +241,37 @@ export default class Stage extends Phaser.Scene {
   }
 
   winStage() {
-    // this.scene.pause(this.scene.key);
-    // this.scene.add("WinScreen", WinScreen);
-    // this.scene.launch("WinScreen");
-    // this.scene.moveAbove("Stage", "WinScreen");
     this.events.emit("stage.clearEffects");
-    this.scene.add("Shop", Shop, true);
-    this.scene.remove(this.scene.key);
+    this.pauseButton.setActive(false);
+    this.fadeBgm(1000);
+    const state = store.getState();
+    if (state.stage.level === state.stage.maxLevel) {
+      this.gameOver();
+    } else {
+      addCurtainsTransition({
+        scene: this,
+        targetKey: "Shop",
+        targetClass: Shop,
+        duration: 1000,
+      });
+    }
+  }
+
+  gameOver() {
+    addCurtainsTransition({
+      scene: this,
+      targetKey: "Results",
+      targetClass: Results,
+      duration: 1000,
+    });
   }
 
   alignEffects() {
     Phaser.Actions.GridAlign(this.effects, {
       width: -1,
       height: 1,
-      cellWidth: -110,
-      cellHeight: 110,
+      cellWidth: -90,
+      cellHeight: 90,
       position: Phaser.Display.Align.CENTER,
       x: 670,
       y: 120,

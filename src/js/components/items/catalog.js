@@ -1,5 +1,6 @@
+import { CATCH_MESSAGE_STYLE, DEPTH } from "../../globals";
 import store from "../../store";
-import { chooseFromArray } from "../../utils";
+import { addTextEffect, chooseFromArray } from "../../utils";
 import DispatchItem from "./dispatch";
 import Powerup from "./powerup";
 
@@ -21,6 +22,7 @@ function getInitialCatalog() {
         },
         duration: 15,
         price: 1000,
+        conflictsWith: ["SpeedPlus"],
       }),
       new Powerup({
         name: "Jump",
@@ -30,11 +32,12 @@ function getInitialCatalog() {
         frame: 3,
         modifier: {
           op: "multiply",
-          jumpVelocity: 1.2,
-          jumpAcceleration: 1.2,
+          jumpVelocity: 1.17,
+          jumpAcceleration: 1.17,
         },
         duration: 15,
         price: 1000,
+        conflictsWith: ["JumpPlus"],
       }),
       new Powerup({
         name: "Float",
@@ -44,6 +47,7 @@ function getInitialCatalog() {
         modifier: { op: "multiply", fallSpeed: 0.75 },
         duration: 15,
         price: 1500,
+        conflictsWith: ["FloatPlus"],
       }),
       new Powerup({
         name: "SpeedPlus",
@@ -59,6 +63,7 @@ function getInitialCatalog() {
         },
         duration: 20,
         price: 2500,
+        conflictsWith: ["Speed"],
       }),
       new Powerup({
         name: "JumpPlus",
@@ -68,11 +73,12 @@ function getInitialCatalog() {
         frame: 7,
         modifier: {
           op: "multiply",
-          jumpVelocity: 1.4,
-          jumpAcceleration: 1.4,
+          jumpVelocity: 1.33,
+          jumpAcceleration: 1.33,
         },
         duration: 20,
         price: 2500,
+        conflictsWith: ["Jump"],
       }),
       new Powerup({
         name: "FloatPlus",
@@ -83,6 +89,7 @@ function getInitialCatalog() {
         modifier: { op: "multiply", fallSpeed: 0.5 },
         duration: 20,
         price: 3500,
+        conflictsWith: ["Float"],
       }),
     ],
 
@@ -97,6 +104,30 @@ function getInitialCatalog() {
         purchaseConditions: [
           (state) => state.score.lives < state.score.maxLives,
         ],
+        buySideEffect: (scene) => {
+          addTextEffect(scene, {
+            x: 155,
+            y: 855,
+            text: "+1",
+            depth: DEPTH.UIFRONT + 1,
+          });
+        },
+      }),
+      new DispatchItem({
+        name: "Ebifrion",
+        tier: 3,
+        frame: 0,
+        action: { type: "score.catchEbifrion" },
+        price: 4000,
+        buySideEffect: (scene) => {
+          const state = store.getState();
+          addTextEffect(scene, {
+            x: 142,
+            y: 798,
+            text: `+${state.score.scorePerEbifrion}`,
+            depth: DEPTH.UIFRONT + 1,
+          });
+        },
       }),
     ],
   };

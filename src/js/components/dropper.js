@@ -1,7 +1,12 @@
 import Phaser from "phaser";
-import { DEPTH } from "../globals";
+import {
+  DEPTH,
+  GROUNDHEIGHT,
+  TEXT_STYLE,
+  CATCH_MESSAGE_STYLE,
+} from "../globals";
 import store from "../store";
-import { applyModifiersToState } from "../utils";
+import { addTextEffect, applyModifiersToState } from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
 
 function euclidean(x, y) {
@@ -159,12 +164,13 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("money.catch", checkFinished);
     this.scene.events.on("money.drop", checkFinished);
 
+    this.scene.events.on("matsurisu.catch", this.catchMatsurisu, this);
+    this.scene.events.on("matsurisu.drop", this.dropMatsurisu, this);
     this.scene.events.on("money.catch", this.collectMoney, this);
     this.scene.events.on("money.drop", this.dropMoney, this);
-    this.scene.events.on("matsurisu.drop", this.matsurisuDie, this);
     this.scene.events.on("powerup.catch", this.collectPowerup, this);
     this.scene.events.on("powerup.drop", this.dropPowerup, this);
-    this.scene.events.on("ebifrion.catch", this.collectEbifrion, this);
+    this.scene.events.on("ebifrion.catch", this.catchEbifrion, this);
     this.scene.events.on("ebifrion.drop", this.dropEbifrion, this);
   }
 
@@ -175,9 +181,85 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.timer.paused = true;
 
     this.scene.events.on("dropper.start", () => {
-      console.log("DEBUG starting dropper");
       this.timer.paused = false;
       this.totalY = 0;
+    });
+  }
+
+  catchMatsurisu({ x, y, isLow }) {
+    if (isLow) {
+      const state = store.getState();
+      const multiplier = state.score.lowMultiplier;
+      addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
+    }
+    const rand = Phaser.Math.RND;
+    const deltaY = GROUNDHEIGHT - y - 75;
+    if (deltaY > 0) {
+      const flip = rand.sign();
+      const deltaX = flip * rand.frac() * 0.3 * deltaY;
+      const fallPath = this.scene.add
+        .path(x, y)
+        .splineTo([x + 0.6 * deltaX, y + 0.4 * deltaY, x + deltaX, y + deltaY]);
+      const matsurisu = new Phaser.GameObjects.PathFollower(
+        this.scene,
+        fallPath,
+        x,
+        y,
+        "matsurisu-normal-land",
+        0
+      )
+        .setOrigin(0.5, 0.5)
+        .setDepth(DEPTH.OBJECTDEPTH)
+        .setFlipX(flip < 0);
+      this.scene.add.existing(matsurisu);
+      matsurisu.startFollow({
+        duration: deltaY * 2 + 100,
+        repeat: 0,
+        ease: function (v) {
+          return v ** 1.5;
+        },
+        onComplete: () => {
+          matsurisu.setDepth(DEPTH.OBJECTBACK);
+          matsurisu.anims.play("matsurisu-normal.stand");
+          this.scene.tweens.add({
+            targets: matsurisu,
+            alpha: 0,
+            repeat: 0,
+            delay: 10000,
+            duration: 500,
+            onComplete: () => matsurisu.destroy(),
+          });
+        },
+      });
+    } else {
+      const matsurisu = this.scene.add
+        .sprite(x, GROUNDHEIGHT - 75, "matsurisu-normal-land", 1)
+        .setOrigin(0.5, 0.5)
+        .setDepth(DEPTH.OBJECTBACK)
+        .setFlipX(rand.frac() > 0.5);
+      matsurisu.anims.play("matsurisu-normal.stand");
+      this.scene.tweens.add({
+        targets: matsurisu,
+        alpha: 0,
+        repeat: 0,
+        delay: 10000,
+        duration: 500,
+        onComplete: () => matsurisu.destroy(),
+      });
+    }
+  }
+
+  dropMatsurisu({ x, y }) {
+    const matsurisu = this.scene.add
+      .image(x, y, "matsurisu-normal-die")
+      .setDepth(DEPTH.OBJECTDEPTH);
+    this.scene.tweens.add({
+      targets: matsurisu,
+      alpha: 0,
+      y: y - 200,
+      repeat: 0,
+      duration: 1000,
+      onComplete: () => matsurisu.destroy(),
     });
   }
 
@@ -209,20 +291,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  matsurisuDie({ x, y }) {
-    const matsurisu = this.scene.add
-      .image(x, y, "matsurisu-normal-die")
-      .setDepth(DEPTH.OBJECTDEPTH);
-    this.scene.tweens.add({
-      targets: matsurisu,
-      alpha: 0,
-      y: y - 200,
-      repeat: 0,
-      duration: 1000,
-      onComplete: () => matsurisu.destroy(),
-    });
-  }
-
   collectPowerup({ x, y, target }) {
     const powerup = this.scene.add
       .image(x, y, target.texture, target.frame)
@@ -251,10 +319,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectEbifrion({ x, y, rotation }) {
+  catchEbifrion({ x, y, rotation }) {
+    const state = store.getState();
     const ebifrion = this.scene.add
       .image(x, y, "items", 0)
       .setDepth(DEPTH.OBJECTDEPTH);
+    addTextEffect(this.scene, {
+      x,
+      y,
+      text: `+${state.score.scorePerEbifrion}`,
+    });
     this.scene.tweens.add({
       targets: ebifrion,
       rotation: rotation - 2 * Math.PI,
@@ -286,12 +360,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.modMoney = applyModifiersToState(this.state.money);
     this.modPowerup = applyModifiersToState(this.state.powerup);
     this.modEbifrion = applyModifiersToState(this.state.ebifrion);
+    return this;
   }
 
   applyConfigsToSprites() {
     this.matsurisu.setVelocityY(this.modMatsurisu.fallSpeed);
     this.money.setVelocityY(this.modMoney.fallSpeed);
     this.powerup.setVelocityY(this.modPowerup.fallSpeed);
+    return this;
   }
 
   reloadState() {
@@ -303,10 +379,26 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.state.money !== newState.money;
     this.state = newState;
 
-    if (doConfigUpdates) {
-      this.applyModifiersToConfigs();
-      this.applyConfigsToSprites();
-    }
+    if (doConfigUpdates) this.applyModifiersToConfigs().applyConfigsToSprites();
+    return this;
+  }
+
+  pause() {
+    this.matsurisu.setVelocityY(0);
+    this.money.setVelocityY(0);
+    this.powerup.setVelocityY(0);
+    this.ebifrion.pauseFollow();
+    this.timer.paused = true;
+    this.scene.anims.pauseAll();
+    return this;
+  }
+
+  resume() {
+    this.applyConfigsToSprites();
+    this.ebifrion.resumeFollow();
+    this.timer.paused = false;
+    this.scene.anims.resumeAll();
+    return this;
   }
 
   update(time) {
@@ -319,7 +411,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     if (
       this.matsurisuBuffer.length > 0 &&
-      this.matsurisuBuffer[0].deltaY <= matsurisuDeltaY
+      this.matsurisuBuffer[0].deltaY < matsurisuDeltaY
     ) {
       const next = this.matsurisuBuffer.shift();
       this.matsurisuLastSpawn = delta;
@@ -337,7 +429,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     if (
       this.moneyBuffer.length > 0 &&
-      this.moneyBuffer[0].y <= matsurisuTotalY
+      this.moneyBuffer[0].y < matsurisuTotalY
     ) {
       const next = this.moneyBuffer.shift();
 
@@ -350,7 +442,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     if (
       this.powerupBuffer.length > 0 &&
-      this.powerupBuffer[0].y <= matsurisuTotalY
+      this.powerupBuffer[0].y < matsurisuTotalY
     ) {
       const next = this.powerupBuffer.shift();
 

@@ -100,11 +100,29 @@ export default class Controls extends Phaser.GameObjects.Container {
     const state = store.getState();
     const powerup = state.player.powerup;
     if (powerup !== null) {
-      powerup.apply(this.scene);
-      store.dispatch({ type: "player.clearPowerup" });
-      this.powerupButton.setActive(false);
-      this.powerupIcon.setVisible(false);
+      const success = powerup.apply(this.scene);
+      if (success) {
+        store.dispatch({ type: "player.clearPowerup" });
+        this.powerupButton.setActive(false);
+        this.powerupIcon.setVisible(false);
+      }
     }
+  }
+
+  disable() {
+    this.leftButton.setActive(false);
+    this.rightButton.setActive(false);
+    this.upButton.setActive(false);
+    this.downButton.setActive(false);
+    this.powerupButton.setActive(false);
+  }
+
+  enable() {
+    this.leftButton.setActive(true);
+    this.rightButton.setActive(true);
+    this.upButton.setActive(true);
+    this.downButton.setActive(true);
+    this.powerupButton.setActive(true);
   }
 
   get left() {

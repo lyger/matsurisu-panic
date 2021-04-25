@@ -76,13 +76,10 @@ function ButtonFactory(key, pixelPerfect = false) {
       this.on("pointerdown", handleDown);
       this.on("pointerup", handleUp);
 
-      this.keys = {};
-
       keys.forEach((keyName) => {
         const key = scene.input.keyboard.addKey(keyName, true, false);
         key.on("down", handleDown);
         key.on("up", handleOut);
-        this.keys[keyName] = key;
       });
     }
 

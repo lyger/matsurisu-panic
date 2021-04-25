@@ -11,6 +11,7 @@ export default class DispatchItem extends Item {
     price,
     purchaseLimit,
     purchaseConditions,
+    buySideEffect,
   }) {
     super("dispatch", {
       name,
@@ -20,11 +21,18 @@ export default class DispatchItem extends Item {
       price,
       purchaseLimit,
       purchaseConditions,
+      buySideEffect,
     });
     this.action = action;
   }
 
   handleBuy() {
-    store.dispatch(this.action);
+    let action;
+    if (this.action instanceof Function) {
+      action = this.action(store.getState());
+    } else {
+      action = this.action;
+    }
+    store.dispatch(action);
   }
 }

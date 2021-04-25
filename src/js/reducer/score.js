@@ -2,15 +2,22 @@ export const scoreDefaultState = {
   score: 0,
   lives: 3,
   money: 0,
-  maxLives: 6,
-  maxMoney: 50000,
+  maxLives: 10,
+  maxMoney: 99999,
   combo: 0,
+  bestCombo: 0,
   moneyPerCoin: 500,
   scorePerCatch: 100,
-  scorePerEbifrion: 1000,
+  scorePerEbifrion: 2000,
   bonusPerCombo: 5,
+  lowMultiplier: 2,
   minCombo: 5,
   maxCombo: 25,
+  results: {
+    livesMultiplier: 1500,
+    moneyMultiplier: 0.2,
+    bestComboMultiplier: 200,
+  },
 };
 
 export default function scoreReducer(state = scoreDefaultState, action) {
@@ -21,10 +28,12 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       const comboBonus =
         Math.max(Math.min(newCombo, state.maxCombo) - state.minCombo, 0) *
         state.bonusPerCombo;
+      const multiplier = payload.isLow ? state.lowMultiplier : 1;
       return {
         ...state,
         combo: newCombo,
-        score: state.score + state.scorePerCatch + comboBonus,
+        bestCombo: Math.max(newCombo, state.bestCombo),
+        score: state.score + (state.scorePerCatch + comboBonus) * multiplier,
       };
     case "score.catchEbifrion":
       return {
