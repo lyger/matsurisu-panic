@@ -2,6 +2,16 @@ function roundToFive(n) {
   return Math.floor(n / 5) * 5;
 }
 
+function applyAirBonus(airborne, state) {
+  if (!airborne) return state;
+  const airBonus = state.airCounter * state.bonusPerAir;
+  return {
+    ...state,
+    airCounter: state.airCounter + 1,
+    score: state.score + airBonus,
+  };
+}
+
 export const scoreDefaultState = {
   score: 0,
   lives: 3,
@@ -15,7 +25,8 @@ export const scoreDefaultState = {
   scorePerEbifrion: 2000,
   bonusPerCombo: 5,
   lowMultiplier: 2,
-  highMultiplier: 1.5,
+  airCounter: 0,
+  bonusPerAir: 200,
   minCombo: 5,
   maxCombo: 25,
   results: {
@@ -28,29 +39,31 @@ export const scoreDefaultState = {
 export default function scoreReducer(state = scoreDefaultState, action) {
   const { type, payload } = action;
   switch (type) {
-    case "score.catch":
+    case "score.catch": {
       const newCombo = state.combo + 1;
       const comboBonus =
         Math.max(Math.min(newCombo, state.maxCombo) - state.minCombo, 0) *
         state.bonusPerCombo;
-      const multiplier = payload.isLow
-        ? state.lowMultiplier
-        : payload.isHigh
-        ? state.highMultiplier
-        : 1;
+      const multiplier = payload.isLow ? state.lowMultiplier : 1;
+      const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
-        ...state,
+        ...stateWithAir,
         combo: newCombo,
         bestCombo: Math.max(newCombo, state.bestCombo),
-        score:
-          state.score +
-          roundToFive((state.scorePerCatch + comboBonus) * multiplier),
+        score: state.score + (state.scorePerCatch + comboBonus) * multiplier,
       };
-    case "score.catchEbifrion":
+    }
+    case "score.catchEbifrion": {
+      const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
-        ...state,
+        ...stateWithAir,
         score: state.score + state.scorePerEbifrion,
       };
+    }
+    case "score.catchPowerup": {
+      const stateWithAir = applyAirBonus(payload.airborne, state);
+      return stateWithAir;
+    }
     case "score.addScore":
       // Should only be used in the rare case when score needs to be manually adjusted, otherwise use "score.catch"
       return {
@@ -79,11 +92,13 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         money: Math.max(state.money - (payload || 1), 0),
       };
-    case "score.gainCoin":
+    case "score.gainCoin": {
+      const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
-        ...state,
+        ...stateWithAir,
         money: Math.min(state.money + state.moneyPerCoin, state.maxMoney),
       };
+    }
     case "score.gainMoney":
       // Should only be used in the rare case when money needs to be manually adjusted, otherwise use "score.gainCoin"
       return {
@@ -94,6 +109,11 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         combo: 0,
+      };
+    case "score.resetAirCounter":
+      return {
+        ...state,
+        airCounter: 0,
       };
     default:
       return state;

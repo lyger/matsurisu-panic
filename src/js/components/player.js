@@ -38,6 +38,7 @@ export default class Player extends Phaser.GameObjects.Container {
     const { PLAYERDEPTH } = DEPTH;
 
     this.controls = new Controls(scene);
+    this.airborne = false;
     this.sliding = false;
     this.canStartSlide = true;
 
@@ -140,15 +141,22 @@ export default class Player extends Phaser.GameObjects.Container {
     if (!this.active) return;
     this.reloadState();
 
-    if (this.controls.up) {
-      if (this.bodySprite.body.touching.down) {
-        this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
-      }
-      this.bodySprite.setAccelerationY(-this.modPhysics.jumpAcceleration);
-    } else {
-      this.bodySprite.setAccelerationY(0);
-    }
+    // Vertical movement
+    const grounded = this.bodySprite.body.touching.down;
+    const jump = this.controls.up;
+    const startedJump = jump && grounded;
+    const endedJump = this.airborne && grounded;
 
+    this.airborne = !grounded;
+
+    if (startedJump)
+      this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
+    if (endedJump) store.dispatch({ type: "score.resetAirCounter" });
+
+    const accelerationY = jump ? -this.modPhysics.jumpAcceleration : 0;
+    this.bodySprite.setAccelerationY(accelerationY);
+
+    // Horizontal movement
     const idle = this.controls.left === this.controls.right;
     const right = !idle && this.controls.right;
     const crouching = this.crouching;
@@ -161,7 +169,6 @@ export default class Player extends Phaser.GameObjects.Container {
           this.extraPhysics.slideThresholdVelocity);
     const startedSliding =
       sliding && this.canStartSlide && sliding !== this.sliding;
-
     this.sliding = sliding;
     this.facing = idle ? this.facing : right ? ".right" : ".left";
 

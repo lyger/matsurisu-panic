@@ -21,7 +21,6 @@ const PauseButton = ButtonFactory("pause-button", true);
 
 export default class Stage extends Phaser.Scene {
   create() {
-    new DebugCursor(this);
     store.dispatch({ type: "stage.increaseLevel" });
     store.dispatch({ type: "score.resetCombo" });
 
@@ -100,15 +99,16 @@ export default class Stage extends Phaser.Scene {
       (player, matsurisu) => {
         const state = store.getState();
         const isLow = matsurisu.y >= state.stage.matsurisu.lowCatchY;
-        const isHigh = matsurisu.y <= state.stage.matsurisu.highCatchY;
-        const coords = {
+        const airborne = this.matsuri.airborne;
+        const data = {
           x: matsurisu.x,
           y: matsurisu.y,
+          state,
           isLow,
-          isHigh,
+          airborne,
         };
         matsurisu.destroy();
-        this.events.emit("matsurisu.catch", coords);
+        this.events.emit("matsurisu.catch", data);
       }
     );
 
@@ -116,12 +116,16 @@ export default class Stage extends Phaser.Scene {
       this.matsuri.hitBox,
       this.dropper.money,
       (player, money) => {
-        const coords = {
+        const state = store.getState();
+        const airborne = this.matsuri.airborne;
+        const data = {
           x: money.x,
           y: money.y,
+          state,
+          airborne,
         };
         money.destroy();
-        this.events.emit("money.catch", coords);
+        this.events.emit("money.catch", data);
       }
     );
 
@@ -129,11 +133,15 @@ export default class Stage extends Phaser.Scene {
       this.matsuri.hitBox,
       this.dropper.powerup,
       (player, powerup) => {
+        const state = store.getState();
         const target = powerup.getData("target");
+        const airborne = this.matsuri.airborne;
         const data = {
           x: powerup.x,
           y: powerup.y,
+          state,
           target,
+          airborne,
         };
         store.dispatch({
           type: "player.setPowerup",
@@ -148,10 +156,14 @@ export default class Stage extends Phaser.Scene {
       this.matsuri.hitBox,
       this.dropper.ebifrion,
       (player, ebifrion) => {
+        const state = store.getState();
+        const airborne = this.matsuri.airborne;
         const data = {
           x: ebifrion.x,
           y: ebifrion.y,
           rotation: ebifrion.rotation,
+          state,
+          airborne,
         };
         ebifrion.destroy();
         this.events.emit("ebifrion.catch", data);

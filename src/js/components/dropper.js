@@ -186,17 +186,19 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  catchMatsurisu({ x, y, isLow, isHigh }) {
+  showAirBonus(x, y, airborne, state) {
+    if (!airborne) return;
+    const airBonus = state.score.airCounter * state.score.bonusPerAir;
+    if (airBonus === 0) return;
+    addTextEffect(this.scene, { x, y, text: `AIR! +${airBonus}` });
+  }
+
+  catchMatsurisu({ x, y, isLow, state, airborne }) {
     if (isLow) {
-      const state = store.getState();
       const multiplier = state.score.lowMultiplier;
       addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
     }
-    if (isHigh) {
-      const state = store.getState();
-      const multiplier = state.score.highMultiplier;
-      addTextEffect(this.scene, { x, y, text: `HIGH! x${multiplier}` });
-    }
+    this.showAirBonus(x, y, airborne, state);
     const rand = Phaser.Math.RND;
     const deltaY = GROUNDHEIGHT - y - 75;
     if (deltaY > 0) {
@@ -268,7 +270,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectMoney({ x, y }) {
+  collectMoney({ x, y, airborne, state }) {
+    this.showAirBonus(x, y, airborne, state);
     const money = this.scene.add
       .image(x, y, "items", 2)
       .setDepth(DEPTH.OBJECTDEPTH);
@@ -296,7 +299,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectPowerup({ x, y, target }) {
+  collectPowerup({ x, y, target, airborne, state }) {
+    this.showAirBonus(x, y, airborne, state);
     const powerup = this.scene.add
       .image(x, y, target.texture, target.frame)
       .setDepth(DEPTH.OBJECTDEPTH);
@@ -324,8 +328,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  catchEbifrion({ x, y, rotation }) {
-    const state = store.getState();
+  catchEbifrion({ x, y, rotation, airborne, state }) {
+    this.showAirBonus(x, y, airborne, state);
     const ebifrion = this.scene.add
       .image(x, y, "items", 0)
       .setDepth(DEPTH.OBJECTDEPTH);

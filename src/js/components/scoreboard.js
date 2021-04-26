@@ -55,18 +55,23 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
   }
 
   addStageListeners() {
-    this.scene.events.on("matsurisu.catch", ({ isLow, isHigh }) => {
-      store.dispatch({ type: "score.catch", payload: { isLow, isHigh } });
+    this.scene.events.on("matsurisu.catch", ({ isLow, airborne }) => {
+      store.dispatch({ type: "score.catch", payload: { isLow, airborne } });
       this.refreshState();
     });
 
-    this.scene.events.on("money.catch", () => {
-      store.dispatch({ type: "score.gainCoin" });
+    this.scene.events.on("money.catch", ({ airborne }) => {
+      store.dispatch({ type: "score.gainCoin", payload: { airborne } });
       this.refreshState();
     });
 
-    this.scene.events.on("ebifrion.catch", () => {
-      store.dispatch({ type: "score.catchEbifrion" });
+    this.scene.events.on("ebifrion.catch", ({ airborne }) => {
+      store.dispatch({ type: "score.catchEbifrion", payload: { airborne } });
+      this.refreshState();
+    });
+
+    this.scene.events.on("powerup.catch", ({ airborne }) => {
+      store.dispatch({ type: "score.catchPowerup", payload: { airborne } });
       this.refreshState();
     });
 
