@@ -5,7 +5,10 @@ import store from "../../store";
 class ShopItem extends Phaser.GameObjects.Container {
   constructor(scene, item) {
     super(scene);
+
     this.item = item;
+    this.discountAmount = 0;
+
     this.frame = new Phaser.GameObjects.Sprite(
       this.scene,
       0,
@@ -34,8 +37,53 @@ class ShopItem extends Phaser.GameObjects.Container {
     )
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
+    this.discountSlash = new Phaser.GameObjects.Line(
+      this.scene,
+      0,
+      0,
+      0,
+      80,
+      110,
+      80,
+      0xffffff
+    )
+      .setLineWidth(3)
+      .setDepth(DEPTH.UIFRONT)
+      .setVisible(false);
+    this.discountText = new Phaser.GameObjects.Text(this.scene, 0, 95, "", {
+      ...TEXT_STYLE,
+      color: "#fc5854",
+    })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT + 1)
+      .setVisible(false);
     this.frame.on("pointerdown", this.handlePurchase, this);
-    this.add([this.frame, this.itemIcon, this.itemText]);
+    this.add([
+      this.frame,
+      this.itemIcon,
+      this.itemText,
+      this.discountSlash,
+      this.discountText,
+    ]);
+  }
+
+  get price() {
+    // Items will always cost at least one coin
+    return Math.max(
+      this.item.price - this.discountAmount,
+      store.getState().score.moneyPerCoin
+    );
+  }
+
+  setDiscount(amount) {
+    this.discountAmount = amount;
+    this.discountSlash.setVisible(true);
+    this.discountText.setText(`¥${this.price}`).setVisible(true);
+  }
+
+  buy(scene) {
+    store.dispatch({ type: "score.loseMoney", payload: this.price });
+    this.item.buy(scene);
   }
 
   handlePurchase() {
@@ -46,6 +94,8 @@ class ShopItem extends Phaser.GameObjects.Container {
     this.frame.removeInteractive().setFrame(1);
     this.itemIcon.setTint(0x7f7f7f);
     this.itemText.setColor("#7f7f7f");
+    this.discountSlash.setStrokeStyle(3, 0x7f7f7f);
+    this.discountText.setColor("#7e2c2a");
   }
 }
 
@@ -88,7 +138,6 @@ export default class Item {
 
   buy(scene) {
     this.numPurchased++;
-    store.dispatch({ type: "score.loseMoney", payload: this.price });
     if (this.buySideEffect !== null) this.buySideEffect(scene);
     this.handleBuy(scene);
   }

@@ -61,9 +61,12 @@ function ButtonFactory(key, pixelPerfect = false) {
         this.isDown = false;
         if (upCallback !== null) upCallback();
       };
-      const handleOver = () => {
+      const handleOver = (pointer) => {
         if (!this.active) return;
-        this.setFrame(this.config.over);
+        if (!this.isDown) {
+          if (pointer.isDown) handleDown();
+          else this.setFrame(this.config.over);
+        }
       };
       const handleOut = () => {
         if (!this.active) return;

@@ -3,12 +3,9 @@ import ButtonFactory from "./uibutton";
 import { WIDTH, HEIGHT, DEPTH } from "../globals";
 import store from "../store";
 
-const ControlButton = ButtonFactory("controls");
-const ControlButtonBig = ButtonFactory("controls-big");
-
-const BOTTOM_MARGIN = 166;
-const VERTICAL_OFFSET = 142;
-const SIDE_MARGIN = 128;
+const ControlButtonHorizontal = ButtonFactory("controls-horizontal");
+const ControlButtonVertical = ButtonFactory("controls-vertical");
+const ControlButtonItem = ButtonFactory("controls-item");
 
 export default class Controls extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -18,45 +15,46 @@ export default class Controls extends Phaser.GameObjects.Container {
     this._right = false;
     this._up = false;
     this._down = false;
-    this.leftButton = new ControlButton(scene, {
-      x: SIDE_MARGIN,
-      y: HEIGHT - BOTTOM_MARGIN,
+
+    this.leftButton = new ControlButtonHorizontal(scene, {
+      x: 70,
+      y: HEIGHT - 115,
       keys: ["a", "left"],
-      default: 1,
-      down: 5,
+      default: 2,
+      down: 3,
       downCallback: () => (this._left = true),
       upCallback: () => (this._left = false),
     });
-    this.rightButton = new ControlButton(scene, {
-      x: WIDTH - SIDE_MARGIN,
-      y: HEIGHT - BOTTOM_MARGIN,
+    this.rightButton = new ControlButtonHorizontal(scene, {
+      x: 210,
+      y: HEIGHT - 115,
       keys: ["d", "right"],
       default: 0,
-      down: 4,
+      down: 1,
       downCallback: () => (this._right = true),
       upCallback: () => (this._right = false),
     });
-    this.upButton = new ControlButton(scene, {
-      x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN - VERTICAL_OFFSET,
+    this.upButton = new ControlButtonVertical(scene, {
+      x: WIDTH - 140,
+      y: HEIGHT - 172.5,
       keys: ["w", "up"],
-      default: 2,
-      down: 6,
+      default: 0,
+      down: 1,
       downCallback: () => (this._up = true),
       upCallback: () => (this._up = false),
     });
-    this.downButton = new ControlButton(scene, {
-      x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN + VERTICAL_OFFSET,
+    this.downButton = new ControlButtonVertical(scene, {
+      x: WIDTH - 140,
+      y: HEIGHT - 57.5,
       keys: ["s", "down"],
-      default: 3,
-      down: 7,
+      default: 2,
+      down: 3,
       downCallback: () => (this._down = true),
       upCallback: () => (this._down = false),
     });
-    this.powerupButton = new ControlButtonBig(scene, {
+    this.powerupButton = new ControlButtonItem(scene, {
       x: WIDTH / 2,
-      y: HEIGHT - BOTTOM_MARGIN,
+      y: HEIGHT - 115,
       keys: ["space"],
       default: 0,
       down: 1,
@@ -65,9 +63,10 @@ export default class Controls extends Phaser.GameObjects.Container {
       .setActive(false)
       .setFrame(1);
     this.powerupIcon = scene.add
-      .image(WIDTH / 2, HEIGHT - BOTTOM_MARGIN, "powerups")
+      .image(WIDTH / 2, HEIGHT - 105, "powerups")
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT + 1)
+      .setScale(0.75, 0.75)
       .setVisible(false);
 
     this.add([

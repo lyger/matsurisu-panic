@@ -1,3 +1,7 @@
+function roundToFive(n) {
+  return Math.floor(n / 5) * 5;
+}
+
 export const scoreDefaultState = {
   score: 0,
   lives: 3,
@@ -11,6 +15,7 @@ export const scoreDefaultState = {
   scorePerEbifrion: 2000,
   bonusPerCombo: 5,
   lowMultiplier: 2,
+  highMultiplier: 1.5,
   minCombo: 5,
   maxCombo: 25,
   results: {
@@ -28,12 +33,18 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       const comboBonus =
         Math.max(Math.min(newCombo, state.maxCombo) - state.minCombo, 0) *
         state.bonusPerCombo;
-      const multiplier = payload.isLow ? state.lowMultiplier : 1;
+      const multiplier = payload.isLow
+        ? state.lowMultiplier
+        : payload.isHigh
+        ? state.highMultiplier
+        : 1;
       return {
         ...state,
         combo: newCombo,
         bestCombo: Math.max(newCombo, state.bestCombo),
-        score: state.score + (state.scorePerCatch + comboBonus) * multiplier,
+        score:
+          state.score +
+          roundToFive((state.scorePerCatch + comboBonus) * multiplier),
       };
     case "score.catchEbifrion":
       return {

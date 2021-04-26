@@ -11,12 +11,13 @@ const matsurisuDefaultState = {
   minDistance: 300,
   fallSpeed: 200,
   lowCatchY: 815,
+  highCatchY: 605,
   modifiers: [],
 };
 
 const moneyDefaultState = {
-  minNumber: 5,
-  maxNumber: 10,
+  minNumber: 6,
+  maxNumber: 8,
   minX: 50,
   maxX: 670,
   fallSpeed: 250,
@@ -87,8 +88,8 @@ function moneyReducer(state = moneyDefaultState, action) {
       const i = payload - 1;
       return {
         ...state,
-        minNumber: Math.min(Math.floor(5 + i * 0.5), 10),
-        maxNumber: Math.min(10 + i, 20),
+        minNumber: Math.min(Math.floor(6 + i * 0.8), 10),
+        maxNumber: Math.min(8 + i * 1.5, 20),
         fallSpeed: Math.min(250 + offsetSqrt(i) * 160, 700),
       };
     case "stage.money.addModifier":

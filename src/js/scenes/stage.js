@@ -17,10 +17,11 @@ const GAME_END_DELAY = 1000;
 const EFFECT_FADE_DURATION = 5000;
 const EFFECT_BLINK_DURATION = 500;
 
-const PauseButton = ButtonFactory("pause-button", false);
+const PauseButton = ButtonFactory("pause-button", true);
 
 export default class Stage extends Phaser.Scene {
   create() {
+    new DebugCursor(this);
     store.dispatch({ type: "stage.increaseLevel" });
     store.dispatch({ type: "score.resetCombo" });
 
@@ -44,13 +45,21 @@ export default class Stage extends Phaser.Scene {
     });
 
     this.pauseButton = new PauseButton(this, {
-      x: 70,
-      y: 140,
+      x: 45,
+      y: 45,
       keys: ["esc"],
       default: 0,
+      over: 1,
+      down: 1,
       downCallback: () => this.pauseGame(),
     }).setActive(false);
     this.add.existing(this.pauseButton);
+
+    this.muteButton = this.add
+      .sprite(675, 45, "mute-button", 0)
+      .setDepth(DEPTH.UIFRONT)
+      .setInteractive(this.input.makePixelPerfect());
+    this.muteButton.on("pointerdown", this.toggleMute, this);
 
     this.game.events.on("blur", this.pauseGame, this);
     this.events.on("destroy", () => {
@@ -58,6 +67,7 @@ export default class Stage extends Phaser.Scene {
     });
 
     this.events.on("stage.addEffect", this.addEffect, this);
+    this.events.on("resume", this.pauseButton.show, this.pauseButton);
 
     this.time.delayedCall(GAME_START_DELAY, () => {
       this.events.emit("dropper.start");
@@ -90,10 +100,12 @@ export default class Stage extends Phaser.Scene {
       (player, matsurisu) => {
         const state = store.getState();
         const isLow = matsurisu.y >= state.stage.matsurisu.lowCatchY;
+        const isHigh = matsurisu.y <= state.stage.matsurisu.highCatchY;
         const coords = {
           x: matsurisu.x,
           y: matsurisu.y,
           isLow,
+          isHigh,
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.catch", coords);
@@ -222,6 +234,12 @@ export default class Stage extends Phaser.Scene {
       duration,
       onComplete: () => this.bgm.destroy(),
     });
+  }
+
+  toggleMute() {
+    const isMuted = this.game.sound.mute;
+    this.game.sound.mute = !isMuted;
+    this.muteButton.setFrame(isMuted ? 0 : 1);
   }
 
   loseStage() {

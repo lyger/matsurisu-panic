@@ -186,11 +186,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  catchMatsurisu({ x, y, isLow }) {
+  catchMatsurisu({ x, y, isLow, isHigh }) {
     if (isLow) {
       const state = store.getState();
       const multiplier = state.score.lowMultiplier;
       addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
+    }
+    if (isHigh) {
+      const state = store.getState();
+      const multiplier = state.score.highMultiplier;
+      addTextEffect(this.scene, { x, y, text: `HIGH! x${multiplier}` });
     }
     const rand = Phaser.Math.RND;
     const deltaY = GROUNDHEIGHT - y - 75;

@@ -2,45 +2,26 @@ import Phaser from "phaser";
 import { DEPTH, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
 
-const LABEL_OFFSET = -19;
-const STATS_OFFSET = 10;
+const STATS_OFFSET = 55;
 const LIVES_OFFSET_TOP = -15;
 const LIVES_OFFSET_BOT = 11;
 
 export default class Scoreboard extends Phaser.GameObjects.Container {
-  constructor(scene, height) {
+  constructor(scene) {
     super(scene);
 
-    this.height = height;
-
     this.scene.add
-      .image(WIDTH / 2, height, "stage-scoreboard")
+      .image(WIDTH / 2, 10, "stage-scoreboard")
+      .setOrigin(0.5, 0)
       .setDepth(DEPTH.UIBACK);
-
-    const TEXT_STYLE_SMALL = {
-      ...TEXT_STYLE,
-      fontSize: "18px",
-    };
 
     const TEXT_STYLE_COMBO = {
       ...TEXT_STYLE,
       color: "#182538",
     };
 
-    this.scoreLabel = this.scene.add
-      .text(120, height + LABEL_OFFSET, "SCORE", TEXT_STYLE_SMALL)
-      .setDepth(DEPTH.UIFRONT)
-      .setOrigin(0.5, 0.5);
-    this.moneyLabel = this.scene.add
-      .text(610, height + LABEL_OFFSET, "MONEY", TEXT_STYLE_SMALL)
-      .setDepth(DEPTH.UIFRONT)
-      .setOrigin(0.5, 0.5);
     this.moneyYenSign = this.scene.add
-      .text(565, height + STATS_OFFSET, "¥", TEXT_STYLE)
-      .setDepth(DEPTH.UIFRONT)
-      .setOrigin(0.5, 0.5);
-    this.levelLabel = this.scene.add
-      .text(278, height + LABEL_OFFSET + 4, "Lv", TEXT_STYLE_SMALL)
+      .text(565, 1015, "¥", TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.comboLabel = this.scene.add
@@ -50,15 +31,15 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setAlpha(0);
 
     this.scoreText = this.scene.add
-      .text(120, height + STATS_OFFSET, "0", TEXT_STYLE)
+      .text(385, STATS_OFFSET, "0", TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.moneyText = this.scene.add
-      .text(680, height + STATS_OFFSET, "0", TEXT_STYLE)
+      .text(680, 1015, "0", TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(1, 0.5);
     this.levelText = this.scene.add
-      .text(278, height + STATS_OFFSET, "1", TEXT_STYLE)
+      .text(278, STATS_OFFSET, "1", TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.livesTop = this.scene.add.group();
@@ -74,8 +55,8 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
   }
 
   addStageListeners() {
-    this.scene.events.on("matsurisu.catch", ({ isLow }) => {
-      store.dispatch({ type: "score.catch", payload: { isLow } });
+    this.scene.events.on("matsurisu.catch", ({ isLow, isHigh }) => {
+      store.dispatch({ type: "score.catch", payload: { isLow, isHigh } });
       this.refreshState();
     });
 
@@ -109,9 +90,9 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       key: "stage-scoreboard-life",
       quantity: numLivesTop,
       setXY: {
-        x: 322,
-        y: this.height + LIVES_OFFSET_TOP,
-        stepX: 26.3,
+        x: 292,
+        y: 1003 + LIVES_OFFSET_TOP,
+        stepX: 30,
       },
       setOrigin: {
         x: 0.5,
@@ -125,9 +106,9 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       key: "stage-scoreboard-life",
       quantity: numLivesBot,
       setXY: {
-        x: 335,
-        y: this.height + LIVES_OFFSET_BOT,
-        stepX: 26.3,
+        x: 305,
+        y: 1003 + LIVES_OFFSET_BOT,
+        stepX: 30,
       },
       setOrigin: {
         x: 0.5,

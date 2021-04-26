@@ -15,7 +15,8 @@ const BROWN_TEXT_STYLE_LARGEST = { ...BROWN_TEXT_STYLE, fontSize: "40px" };
 const ShopConfirmButton = ButtonFactory("shop-confirm-buttons", true);
 
 class ShopConfirmModal extends Phaser.Scene {
-  create({ item, buyCallback }) {
+  create({ shopItem, buyCallback }) {
+    const { item } = shopItem;
     const cover = this.add
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
@@ -29,7 +30,7 @@ class ShopConfirmModal extends Phaser.Scene {
     const state = store.getState();
     const currentPowerup = state.player.powerup;
     const currentMoney = state.score.money;
-    const newMoney = currentMoney - item.price;
+    const newMoney = currentMoney - shopItem.price;
 
     this.add
       .text(
@@ -138,17 +139,16 @@ export default class Shop extends Phaser.Scene {
 
     this.createScoreboard();
 
-    this.events.on("shop.confirmPurchase", (itemIcon) => {
-      const item = itemIcon.item;
+    this.events.on("shop.confirmPurchase", (shopItem) => {
       const buyCallback = () => {
-        item.buy(this);
-        this.items.splice(this.items.indexOf(itemIcon), 1);
-        itemIcon.destroy();
+        shopItem.buy(this);
+        this.items.splice(this.items.indexOf(shopItem), 1);
+        shopItem.destroy();
         this.refreshState();
       };
       this.scene.pause(this.scene.key);
       this.scene.add("ShopConfirmModal", ShopConfirmModal, true, {
-        item,
+        shopItem,
         buyCallback,
       });
     });
@@ -207,6 +207,7 @@ export default class Shop extends Phaser.Scene {
     const state = store.getState();
     const { money } = state.score;
     const { powerup } = state.player;
+    const { powerupDiscountRate } = state.shop;
     if (powerup !== null) {
       if (this.itemIcon !== null) this.itemIcon.destroy();
       this.itemIcon = this.add
@@ -215,10 +216,14 @@ export default class Shop extends Phaser.Scene {
         .setOrigin(0.5, 0.5);
     }
 
-    this.items.forEach((itemIcon) => {
-      const item = itemIcon.item;
-      if (item.price > money) {
-        itemIcon.setCannotBuy();
+    this.items.forEach((shopItem) => {
+      if (powerup !== null && shopItem.item.type === "powerup") {
+        shopItem.setDiscount(
+          Math.floor((powerup.price * powerupDiscountRate) / 100) * 100
+        );
+      }
+      if (shopItem.price > money) {
+        shopItem.setCannotBuy();
       }
     });
 

@@ -13,19 +13,27 @@ export default class Preloader extends Phaser.Scene {
 
   loadControls() {
     this.load.spritesheet(
-      "controls",
-      PUBLIC_PATH + "/images/control-buttons.png",
+      "controls-horizontal",
+      PUBLIC_PATH + "/images/control-buttons-horizontal.png",
       {
         frameWidth: 140,
-        frameHeight: 140,
+        frameHeight: 230,
       }
     );
     this.load.spritesheet(
-      "controls-big",
-      PUBLIC_PATH + "/images/control-buttons-big.png",
+      "controls-vertical",
+      PUBLIC_PATH + "/images/control-buttons-vertical.png",
       {
-        frameWidth: 320,
-        frameHeight: 136,
+        frameWidth: 280,
+        frameHeight: 115,
+      }
+    );
+    this.load.spritesheet(
+      "controls-item",
+      PUBLIC_PATH + "/images/control-buttons-item.png",
+      {
+        frameWidth: 160,
+        frameHeight: 230,
       }
     );
   }
@@ -122,8 +130,17 @@ export default class Preloader extends Phaser.Scene {
       "pause-button",
       PUBLIC_PATH + "/images/pause-button.png",
       {
-        frameWidth: 100,
-        frameHeight: 100,
+        frameWidth: 60,
+        frameHeight: 65,
+      }
+    );
+
+    this.load.spritesheet(
+      "mute-button",
+      PUBLIC_PATH + "/images/mute-button.png",
+      {
+        frameWidth: 60,
+        frameHeight: 65,
       }
     );
   }
