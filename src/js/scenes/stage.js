@@ -54,11 +54,7 @@ export default class Stage extends Phaser.Scene {
     }).setActive(false);
     this.add.existing(this.pauseButton);
 
-    this.muteButton = this.add
-      .sprite(675, 45, "mute-button", 0)
-      .setDepth(DEPTH.UIFRONT)
-      .setInteractive(this.input.makePixelPerfect());
-    this.muteButton.on("pointerdown", this.toggleMute, this);
+    this.createMuteButton();
 
     this.game.events.on("blur", this.pauseGame, this);
     this.events.on("destroy", () => {
@@ -90,6 +86,21 @@ export default class Stage extends Phaser.Scene {
       //   );
       // });
     });
+  }
+
+  createMuteButton() {
+    const settings = JSON.parse(
+      window.localStorage.getItem("matsurisu-panic.settings") || "{}"
+    );
+    const mute = settings.mute || false;
+    this.game.sound.mute = mute;
+    this.muteButton = this.add
+      .sprite(675, 45, "mute-button", mute ? 1 : 0)
+      .setDepth(DEPTH.UIFRONT)
+      .setInteractive(this.input.makePixelPerfect());
+    this.muteButton.on("pointerdown", this.toggleMute, this);
+    const muteKey = this.input.keyboard.addKey("m", true, false);
+    muteKey.on("down", this.toggleMute, this);
   }
 
   createPlayerCollisions() {
@@ -249,9 +260,21 @@ export default class Stage extends Phaser.Scene {
   }
 
   toggleMute() {
-    const isMuted = this.game.sound.mute;
-    this.game.sound.mute = !isMuted;
-    this.muteButton.setFrame(isMuted ? 0 : 1);
+    const oldMute = this.game.sound.mute;
+    const newMute = !oldMute;
+    this.game.sound.mute = newMute;
+    this.muteButton.setFrame(newMute ? 1 : 0);
+    const settings = JSON.parse(
+      window.localStorage.getItem("matsurisu-panic.settings") || "{}"
+    );
+    const newSettings = {
+      ...settings,
+      mute: newMute,
+    };
+    window.localStorage.setItem(
+      "matsurisu-panic.settings",
+      JSON.stringify(newSettings)
+    );
   }
 
   loseStage() {

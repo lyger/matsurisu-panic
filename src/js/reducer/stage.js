@@ -10,7 +10,7 @@ const matsurisuDefaultState = {
   maxSpacingY: 400,
   minDistance: 300,
   fallSpeed: 200,
-  lowCatchY: 815,
+  lowCatchY: 810,
   modifiers: [],
 };
 

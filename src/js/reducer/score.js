@@ -1,7 +1,3 @@
-function roundToFive(n) {
-  return Math.floor(n / 5) * 5;
-}
-
 function applyAirBonus(airborne, state) {
   if (!airborne) return state;
   const airBonus = state.airCounter * state.bonusPerAir;

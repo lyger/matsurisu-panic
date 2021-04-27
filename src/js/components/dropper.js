@@ -1,12 +1,11 @@
 import Phaser from "phaser";
-import {
-  DEPTH,
-  GROUNDHEIGHT,
-  TEXT_STYLE,
-  CATCH_MESSAGE_STYLE,
-} from "../globals";
+import { DEPTH, GROUNDHEIGHT } from "../globals";
 import store from "../store";
-import { addTextEffect, applyModifiersToState } from "../utils";
+import {
+  addTextEffect,
+  applyModifiersToState,
+  syncSpritePhysics,
+} from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
 
 function euclidean(x, y) {
@@ -23,6 +22,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.matsurisu = this.scene.physics.add.group();
     this.money = this.scene.physics.add.group();
     this.powerup = this.scene.physics.add.group();
+    this.extraConfigs = [];
 
     this.totalY = 0;
 
@@ -410,6 +410,32 @@ export default class Dropper extends Phaser.GameObjects.Group {
     return this;
   }
 
+  createExtra(matsurisu, config) {
+    const { key, texture, frame, depth, x, y } = config;
+    const newExtra = this.scene.physics.add
+      .sprite(matsurisu.x + x, matsurisu.y + y, texture, frame)
+      .setDepth(DEPTH.OBJECTDEPTH + depth)
+      .setVisible(true)
+      .setActive(true);
+    matsurisu.setData(`extra:${key}`, newExtra);
+    matsurisu.on("destroy", () => newExtra?.destroy?.());
+  }
+
+  addExtra({ key, duration, texture, frame, depth = 0, x = 0, y = 0 }) {
+    const config = { key, texture, frame, depth, x, y };
+    this.extraConfigs.push(config);
+    this.matsurisu
+      .getChildren()
+      .forEach((matsurisu) => this.createExtra(matsurisu, config));
+    this.scene.time.delayedCall(duration * 1000, () => {
+      this.extraConfigs.splice(this.extraConfigs.indexOf(config), 1);
+      this.matsurisu.getChildren().forEach((matsurisu) => {
+        const extra = matsurisu.getData(`extra:${key}`);
+        extra?.destroy?.();
+      });
+    });
+  }
+
   update(time) {
     this.reloadState();
     const rand = Phaser.Math.RND;
@@ -434,6 +460,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
         .setRotation(rand.frac() * 2 * Math.PI);
       newMatsurisu.anims.play("matsurisu-normal.fall");
       newMatsurisu.body.setCircle(45, 30, 30);
+      this.extraConfigs.forEach((config) =>
+        this.createExtra(newMatsurisu, config)
+      );
     }
 
     if (
@@ -480,5 +509,12 @@ export default class Dropper extends Phaser.GameObjects.Group {
         repeat: 0,
       });
     }
+
+    this.matsurisu.getChildren().forEach((matsurisu) => {
+      this.extraConfigs.forEach(({ key, x, y }) => {
+        const extra = matsurisu.getData(`extra:${key}`);
+        if (extra !== undefined) syncSpritePhysics(matsurisu, extra, x, y);
+      });
+    });
   }
 }

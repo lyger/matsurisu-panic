@@ -68,3 +68,12 @@ export function addTextEffect(
     onComplete: () => effectText.destroy(),
   });
 }
+
+export function syncSpritePhysics(from, to, xOffset = 0, yOffset = 0) {
+  to.x = from.x + xOffset;
+  to.y = from.y + yOffset;
+  const velocity = from.body?.velocity;
+  const acceleration = from.body?.acceleration;
+  to.body?.setVelocity(velocity?.x, velocity?.y);
+  to.body?.setAcceleration(acceleration?.x, acceleration?.y);
+}

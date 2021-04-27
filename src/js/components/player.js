@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import store from "../store";
 import Controls from "./controls";
 import { WIDTH, PLAYERHEIGHT, DEPTH } from "../globals";
-import { applyModifiersToState } from "../utils";
+import { applyModifiersToState, syncSpritePhysics } from "../utils";
 
 const HITBOX_UP_OFFSET = -45;
 const HITBOX_DOWN_OFFSET = 60;
@@ -14,15 +14,6 @@ const HITBOX_HORIZ_CROUCH_OFFSET = {
   ".left": -7,
   ".right": 7,
 };
-
-function syncSpritePhysics(from, to, xOffset = 0, yOffset = 0) {
-  to.x = from.x + xOffset;
-  to.y = from.y + yOffset;
-  const velocity = from.body.velocity;
-  const acceleration = from.body.acceleration;
-  to.body.setVelocity(velocity.x, velocity.y);
-  to.body.setAcceleration(acceleration.x, acceleration.y);
-}
 
 // function syncSpriteAnimations(from, to) {
 //   to.anims.setProgress(from.anims.getProgress());

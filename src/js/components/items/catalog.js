@@ -23,6 +23,31 @@ function getInitialCatalog() {
         duration: 15,
         price: 1000,
         conflictsWith: ["SpeedPlus"],
+        applySideEffect: (scene) => {
+          const config = {
+            blendMode: "OVERLAY",
+            frequency: 30,
+            lifespan: 400,
+            follow: scene.matsuri.bodySprite,
+            radial: true,
+            alpha: { min: 0.3, max: 0.8 },
+            speed: { min: 100, max: 150 },
+            angle: { min: 0, max: 359 },
+            scale: { start: 1, end: 0.3 },
+          };
+          const particlesTop = scene.add
+            .particles("particle-speed")
+            .setDepth(DEPTH.PLAYERDEPTH + 1);
+          particlesTop.createEmitter(config);
+          const particlesBot = scene.add
+            .particles("particle-speed")
+            .setDepth(DEPTH.PLAYERDEPTH - 1);
+          particlesBot.createEmitter(config);
+          scene.time.delayedCall(15000, () => {
+            particlesTop.destroy();
+            particlesBot.destroy();
+          });
+        },
       }),
       new Powerup({
         name: "Jump",
@@ -48,6 +73,16 @@ function getInitialCatalog() {
         duration: 15,
         price: 1500,
         conflictsWith: ["FloatPlus"],
+        applySideEffect: (scene) => {
+          scene.dropper.addExtra({
+            key: "Float",
+            duration: 15,
+            texture: "items",
+            frame: 3,
+            depth: 1,
+            y: -80,
+          });
+        },
       }),
       new Powerup({
         name: "SpeedPlus",
@@ -64,6 +99,32 @@ function getInitialCatalog() {
         duration: 20,
         price: 2500,
         conflictsWith: ["Speed"],
+        applySideEffect: (scene) => {
+          const config = {
+            blendMode: "OVERLAY",
+            frequency: 30,
+            lifespan: 400,
+            follow: scene.matsuri.bodySprite,
+            radial: true,
+            alpha: { min: 0.3, max: 0.8 },
+            speed: { min: 100, max: 150 },
+            angle: { min: 0, max: 359 },
+            scale: { start: 1, end: 0.5 },
+            quantity: 2,
+          };
+          const particlesTop = scene.add
+            .particles("particle-speed")
+            .setDepth(DEPTH.PLAYERDEPTH + 1);
+          particlesTop.createEmitter(config);
+          const particlesBot = scene.add
+            .particles("particle-speed")
+            .setDepth(DEPTH.PLAYERDEPTH - 1);
+          particlesBot.createEmitter(config);
+          scene.time.delayedCall(20000, () => {
+            particlesTop.destroy();
+            particlesBot.destroy();
+          });
+        },
       }),
       new Powerup({
         name: "JumpPlus",
@@ -147,11 +208,14 @@ export function getAvailablePowerups() {
 
 export function getShopItems() {
   const state = store.getState();
+  const player = state.player;
   const level = state.stage.level;
   const filteredItems = CATALOG.powerups
     .concat(CATALOG.dispatchItems)
     .filter((item) => {
-      return item.tier <= level && item.canBuy;
+      return (
+        item.tier <= level && item.canBuy && item.name !== player.powerup?.name
+      );
     });
 
   return chooseFromArray(filteredItems, state.shop.numItems);

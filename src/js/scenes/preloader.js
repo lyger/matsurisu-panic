@@ -195,6 +195,10 @@ export default class Preloader extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     });
+    this.load.image(
+      "particle-speed",
+      PUBLIC_PATH + "/images/particle-speed.png"
+    );
   }
 
   loadSounds() {
