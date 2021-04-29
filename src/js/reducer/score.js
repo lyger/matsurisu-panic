@@ -56,6 +56,12 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         score: state.score + state.scorePerEbifrion,
       };
     }
+    case "score.buyEbifrion": {
+      return {
+        ...state,
+        score: state.score + state.scorePerEbifrion,
+      };
+    }
     case "score.catchPowerup": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
       return stateWithAir;

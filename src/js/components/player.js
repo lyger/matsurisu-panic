@@ -82,7 +82,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
   applyPhysicsToSprites() {
     this.skinName = "matsuri-" + this.state.skin;
-    this.bodySprite.setTexture(this.skinName).setDragX(this.modPhysics.drag);
+    this.bodySprite.setDragX(this.modPhysics.drag);
 
     this.bodySprite.body
       .setMaxVelocityX(this.modPhysics.maxVelocity)
@@ -109,14 +109,6 @@ export default class Player extends Phaser.GameObjects.Container {
     }
   }
 
-  get jumping() {
-    return !this.bodySprite.body.touching.down;
-  }
-
-  get crouching() {
-    return this.controls.down;
-  }
-
   disable() {
     this.setActive(false);
     this.bodySprite.setVelocity(0).setAcceleration(0).setGravityY(0);
@@ -132,25 +124,37 @@ export default class Player extends Phaser.GameObjects.Container {
     if (!this.active) return;
     this.reloadState();
 
+    // Inputs
+    const idle = this.controls.left === this.controls.right;
+    const right = !idle && this.controls.right;
+    const crouching = this.controls.down;
+    const jumping = this.controls.up;
+
     // Vertical movement
     const grounded = this.bodySprite.body.touching.down;
-    const jump = this.controls.up;
-    const startedJump = jump && grounded;
+    const quickFall = crouching && !grounded;
+    const startedJump = jumping && grounded;
     const endedJump = this.airborne && grounded;
 
     this.airborne = !grounded;
 
-    if (startedJump)
+    if (startedJump) {
       this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
-    if (endedJump) store.dispatch({ type: "score.resetAirCounter" });
+      this.emit("jump");
+    }
+    if (endedJump) {
+      this.emit("land");
+      store.dispatch({ type: "score.resetAirCounter" });
+    }
 
-    const accelerationY = jump ? -this.modPhysics.jumpAcceleration : 0;
+    const accelerationY = jumping
+      ? -this.modPhysics.jumpAcceleration
+      : quickFall
+      ? this.modPhysics.quickFallAcceleration
+      : 0;
     this.bodySprite.setAccelerationY(accelerationY);
 
     // Horizontal movement
-    const idle = this.controls.left === this.controls.right;
-    const right = !idle && this.controls.right;
-    const crouching = this.crouching;
     const sliding =
       crouching &&
       Math.abs(this.bodySprite.body.velocity.x) >

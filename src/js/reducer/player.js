@@ -7,6 +7,7 @@ const playerPhysicsDefaultState = {
   drag: 1500,
   jumpAcceleration: 450,
   jumpVelocity: 450,
+  quickFallAcceleration: 1000,
   hitBoxWidth: 140,
   hitBoxHeight: 25,
   crouchMultiplier: 0.4,

@@ -1,4 +1,4 @@
-import { CATCH_MESSAGE_STYLE, DEPTH } from "../../globals";
+import { DEPTH } from "../../globals";
 import store from "../../store";
 import { addTextEffect, chooseFromArray } from "../../utils";
 import DispatchItem from "./dispatch";
@@ -12,25 +12,26 @@ function getInitialCatalog() {
         name: "Speed",
         tier: 1,
         target: "player.physics",
-        texture: "powerups",
-        frame: 2,
+        frame: 5,
         modifier: {
           op: "multiply",
           maxVelocity: 1.25,
           acceleration: 1.25,
           drag: 1.25,
         },
-        duration: 15,
+        duration: 30,
         price: 1000,
         conflictsWith: ["SpeedPlus"],
         applySideEffect: (scene) => {
           const config = {
-            blendMode: "OVERLAY",
+            blendMode: "COLOR",
+            frame: [0, 1, 2, 3],
             frequency: 30,
             lifespan: 400,
             follow: scene.matsuri.bodySprite,
             radial: true,
-            alpha: { min: 0.3, max: 0.8 },
+            rotate: { min: 0, max: 359 },
+            alpha: { start: 0.8, end: 0 },
             speed: { min: 100, max: 150 },
             angle: { min: 0, max: 359 },
             scale: { start: 1, end: 0.3 },
@@ -43,7 +44,7 @@ function getInitialCatalog() {
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);
           particlesBot.createEmitter(config);
-          scene.time.delayedCall(15000, () => {
+          scene.time.delayedCall(30000, () => {
             particlesTop.destroy();
             particlesBot.destroy();
           });
@@ -53,16 +54,44 @@ function getInitialCatalog() {
         name: "Jump",
         tier: 1,
         target: "player.physics",
-        texture: "powerups",
-        frame: 3,
+        frame: 7,
         modifier: {
           op: "multiply",
           jumpVelocity: 1.17,
           jumpAcceleration: 1.17,
+          quickFallAcceleration: 1.17,
         },
-        duration: 15,
+        duration: 30,
         price: 1000,
         conflictsWith: ["JumpPlus"],
+        applySideEffect: (scene) => {
+          const jumpCallback = () => {
+            const particles = scene.add
+              .particles("particle-bunny")
+              .setDepth(DEPTH.PLAYERDEPTH - 1);
+            const emitter = particles.createEmitter({
+              frame: [0, 1, 2, 3],
+              frequency: 100,
+              lifespan: 300,
+              follow: scene.matsuri.bodySprite,
+              followOffset: { y: 100 },
+              radial: true,
+              scale: { min: 0.4, max: 0.8 },
+              rotate: { min: 0, max: 359 },
+              alpha: { start: 1, end: 0 },
+              speed: { min: 50, max: 100 },
+              angle: { min: 0, max: 359 },
+            });
+            scene.matsuri.once("land", () => {
+              emitter.stop();
+              scene.time.delayedCall(300, particles.destroy, particles);
+            });
+          };
+          scene.matsuri.on("jump", jumpCallback);
+          scene.time.delayedCall(30000, () =>
+            scene.matsuri.off("jump", jumpCallback)
+          );
+        },
       }),
       new Powerup({
         name: "Float",
@@ -70,17 +99,17 @@ function getInitialCatalog() {
         target: "stage.matsurisu",
         frame: 3,
         modifier: { op: "multiply", fallSpeed: 0.75 },
-        duration: 15,
+        duration: 20,
         price: 1500,
         conflictsWith: ["FloatPlus"],
         applySideEffect: (scene) => {
           scene.dropper.addExtra({
             key: "Float",
-            duration: 15,
-            texture: "items",
-            frame: 3,
-            depth: 1,
-            y: -80,
+            duration: 20,
+            texture: "extra-balloons",
+            frame: 0,
+            depth: -1,
+            y: -85,
           });
         },
       }),
@@ -88,7 +117,6 @@ function getInitialCatalog() {
         name: "SpeedPlus",
         tier: 3,
         target: "player.physics",
-        texture: "powerups",
         frame: 6,
         modifier: {
           op: "multiply",
@@ -96,17 +124,19 @@ function getInitialCatalog() {
           acceleration: 1.5,
           drag: 1.5,
         },
-        duration: 20,
-        price: 2500,
+        duration: 30,
+        price: 2000,
         conflictsWith: ["Speed"],
         applySideEffect: (scene) => {
           const config = {
-            blendMode: "OVERLAY",
-            frequency: 30,
+            blendMode: "COLOR",
+            frame: [0, 1, 2, 3],
+            frequency: 40,
             lifespan: 400,
             follow: scene.matsuri.bodySprite,
             radial: true,
-            alpha: { min: 0.3, max: 0.8 },
+            rotate: { min: 0, max: 359 },
+            alpha: { start: 0.8, end: 0 },
             speed: { min: 100, max: 150 },
             angle: { min: 0, max: 359 },
             scale: { start: 1, end: 0.5 },
@@ -120,7 +150,7 @@ function getInitialCatalog() {
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);
           particlesBot.createEmitter(config);
-          scene.time.delayedCall(20000, () => {
+          scene.time.delayedCall(30000, () => {
             particlesTop.destroy();
             particlesBot.destroy();
           });
@@ -130,27 +160,64 @@ function getInitialCatalog() {
         name: "JumpPlus",
         tier: 4,
         target: "player.physics",
-        texture: "powerups",
-        frame: 7,
+        frame: 8,
         modifier: {
           op: "multiply",
           jumpVelocity: 1.33,
           jumpAcceleration: 1.33,
+          quickFallAcceleration: 1.33,
         },
-        duration: 20,
-        price: 2500,
+        duration: 30,
+        price: 2000,
         conflictsWith: ["Jump"],
+        applySideEffect: (scene) => {
+          const jumpCallback = () => {
+            const particles = scene.add
+              .particles("particle-bunny")
+              .setDepth(DEPTH.PLAYERDEPTH - 1);
+            const emitter = particles.createEmitter({
+              frame: [0, 1, 2, 3],
+              frequency: 80,
+              lifespan: 350,
+              follow: scene.matsuri.bodySprite,
+              followOffset: { y: 100 },
+              radial: true,
+              scale: { min: 0.4, max: 0.8 },
+              rotate: { min: 0, max: 359 },
+              alpha: { start: 1, end: 0 },
+              speed: { min: 50, max: 100 },
+              angle: { min: 0, max: 359 },
+            });
+            scene.matsuri.once("land", () => {
+              emitter.stop();
+              scene.time.delayedCall(350, particles.destroy, particles);
+            });
+          };
+          scene.matsuri.on("jump", jumpCallback);
+          scene.time.delayedCall(30000, () =>
+            scene.matsuri.off("jump", jumpCallback)
+          );
+        },
       }),
       new Powerup({
         name: "FloatPlus",
         tier: 5,
         target: "stage.matsurisu",
-        texture: "powerups",
-        frame: 5,
+        frame: 4,
         modifier: { op: "multiply", fallSpeed: 0.5 },
-        duration: 20,
-        price: 3500,
+        duration: 25,
+        price: 3000,
         conflictsWith: ["Float"],
+        applySideEffect: (scene) => {
+          scene.dropper.addExtra({
+            key: "FloatPlus",
+            duration: 25,
+            texture: "extra-balloons",
+            frame: 0,
+            depth: -1,
+            y: -85,
+          });
+        },
       }),
     ],
 
@@ -178,7 +245,7 @@ function getInitialCatalog() {
         name: "Ebifrion",
         tier: 3,
         frame: 0,
-        action: { type: "score.catchEbifrion" },
+        action: { type: "score.buyEbifrion" },
         price: 4000,
         buySideEffect: (scene) => {
           const state = store.getState();

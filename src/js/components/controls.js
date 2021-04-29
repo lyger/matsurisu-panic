@@ -66,7 +66,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       .image(WIDTH / 2, HEIGHT - 105, "powerups")
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT + 1)
-      .setScale(0.75, 0.75)
+      .setScale(0.7, 0.7)
       .setVisible(false);
 
     this.add([

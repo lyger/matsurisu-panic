@@ -286,8 +286,15 @@ export default class Stage extends Phaser.Scene {
   }
 
   pauseGame() {
-    if (this.scene.systems.isTransitioning()) return;
-    if (this.scene.isPaused(this.scene.key)) return;
+    const transitioning = this.scene?.systems?.isTransitioning();
+    const paused = this.scene?.isPaused(this.scene.key);
+    if (
+      transitioning ||
+      paused ||
+      transitioning === undefined ||
+      paused === undefined
+    )
+      return;
     this.scene.add("PauseScreen", PauseScreen);
     this.scene.launch("PauseScreen");
     this.scene.pause(this.scene.key);

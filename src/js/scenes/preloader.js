@@ -195,9 +195,19 @@ export default class Preloader extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     });
-    this.load.image(
+    this.load.spritesheet(
       "particle-speed",
-      PUBLIC_PATH + "/images/particle-speed.png"
+      PUBLIC_PATH + "/images/particle-speed.png",
+      { frameWidth: 100, frameHeight: 100 }
+    );
+    this.load.spritesheet(
+      "particle-bunny",
+      PUBLIC_PATH + "/images/particle-bunny.png",
+      { frameWidth: 128, frameHeight: 128 }
+    );
+    this.load.image(
+      "extra-balloons",
+      PUBLIC_PATH + "/images/extra-balloons.png"
     );
   }
 
