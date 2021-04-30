@@ -15,12 +15,13 @@ function getInitialCatalog() {
         frame: 5,
         modifier: {
           op: "multiply",
-          maxVelocity: 1.25,
-          acceleration: 1.25,
-          drag: 1.25,
+          maxVelocity: 1.2,
+          acceleration: 1.2,
+          drag: 1.5,
         },
-        duration: 30,
+        duration: 25,
         price: 1000,
+        purchaseLimit: 1,
         conflictsWith: ["SpeedPlus"],
         applySideEffect: (scene) => {
           const config = {
@@ -44,7 +45,7 @@ function getInitialCatalog() {
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);
           particlesBot.createEmitter(config);
-          scene.time.delayedCall(30000, () => {
+          scene.time.delayedCall(25000, () => {
             particlesTop.destroy();
             particlesBot.destroy();
           });
@@ -61,8 +62,9 @@ function getInitialCatalog() {
           jumpAcceleration: 1.17,
           quickFallAcceleration: 1.17,
         },
-        duration: 30,
+        duration: 25,
         price: 1000,
+        purchaseLimit: 1,
         conflictsWith: ["JumpPlus"],
         applySideEffect: (scene) => {
           const jumpCallback = () => {
@@ -72,7 +74,7 @@ function getInitialCatalog() {
             const emitter = particles.createEmitter({
               frame: [0, 1, 2, 3],
               frequency: 100,
-              lifespan: 300,
+              lifespan: 400,
               follow: scene.matsuri.bodySprite,
               followOffset: { y: 100 },
               radial: true,
@@ -88,7 +90,7 @@ function getInitialCatalog() {
             });
           };
           scene.matsuri.on("jump", jumpCallback);
-          scene.time.delayedCall(30000, () =>
+          scene.time.delayedCall(25000, () =>
             scene.matsuri.off("jump", jumpCallback)
           );
         },
@@ -101,6 +103,7 @@ function getInitialCatalog() {
         modifier: { op: "multiply", fallSpeed: 0.75 },
         duration: 20,
         price: 1500,
+        purchaseLimit: 1,
         conflictsWith: ["FloatPlus"],
         applySideEffect: (scene) => {
           scene.dropper.addExtra({
@@ -120,12 +123,13 @@ function getInitialCatalog() {
         frame: 6,
         modifier: {
           op: "multiply",
-          maxVelocity: 1.5,
-          acceleration: 1.5,
+          maxVelocity: 1.33,
+          acceleration: 1.33,
           drag: 1.5,
         },
-        duration: 30,
+        duration: 35,
         price: 2000,
+        purchaseLimit: 1,
         conflictsWith: ["Speed"],
         applySideEffect: (scene) => {
           const config = {
@@ -150,7 +154,7 @@ function getInitialCatalog() {
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);
           particlesBot.createEmitter(config);
-          scene.time.delayedCall(30000, () => {
+          scene.time.delayedCall(35000, () => {
             particlesTop.destroy();
             particlesBot.destroy();
           });
@@ -167,8 +171,9 @@ function getInitialCatalog() {
           jumpAcceleration: 1.33,
           quickFallAcceleration: 1.33,
         },
-        duration: 30,
+        duration: 35,
         price: 2000,
+        purchaseLimit: 1,
         conflictsWith: ["Jump"],
         applySideEffect: (scene) => {
           const jumpCallback = () => {
@@ -178,7 +183,7 @@ function getInitialCatalog() {
             const emitter = particles.createEmitter({
               frame: [0, 1, 2, 3],
               frequency: 80,
-              lifespan: 350,
+              lifespan: 450,
               follow: scene.matsuri.bodySprite,
               followOffset: { y: 100 },
               radial: true,
@@ -190,11 +195,11 @@ function getInitialCatalog() {
             });
             scene.matsuri.once("land", () => {
               emitter.stop();
-              scene.time.delayedCall(350, particles.destroy, particles);
+              scene.time.delayedCall(450, particles.destroy, particles);
             });
           };
           scene.matsuri.on("jump", jumpCallback);
-          scene.time.delayedCall(30000, () =>
+          scene.time.delayedCall(35000, () =>
             scene.matsuri.off("jump", jumpCallback)
           );
         },
@@ -205,13 +210,14 @@ function getInitialCatalog() {
         target: "stage.matsurisu",
         frame: 4,
         modifier: { op: "multiply", fallSpeed: 0.5 },
-        duration: 25,
+        duration: 30,
         price: 3000,
+        purchaseLimit: 1,
         conflictsWith: ["Float"],
         applySideEffect: (scene) => {
           scene.dropper.addExtra({
             key: "FloatPlus",
-            duration: 25,
+            duration: 30,
             texture: "extra-balloons",
             frame: 0,
             depth: -1,

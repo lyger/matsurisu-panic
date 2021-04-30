@@ -25,7 +25,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.comboLabel = this.scene.add
-      .text(WIDTH / 2, 475, "COMBO", { ...TEXT_STYLE_COMBO, fontSize: "48px" })
+      .text(WIDTH / 2, 480, "COMBO", { ...TEXT_STYLE_COMBO, fontSize: "40px" })
       .setDepth(DEPTH.BGFRONT)
       .setOrigin(0.5, 0.5)
       .setAlpha(0);
@@ -35,7 +35,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.moneyText = this.scene.add
-      .text(680, 1015, "0", TEXT_STYLE)
+      .text(690, 1015, "0", TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(1, 0.5);
     this.levelText = this.scene.add
@@ -148,7 +148,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     if (this.state.combo >= this.state.minCombo) this.showCombos();
     else this.hideCombos();
     this.scoreText.setText(`${this.state.score}`);
-    this.moneyText.setText(`${this.state.money}`);
+    this.moneyText.setText(`${this.state.money.toLocaleString("en-US")}`);
     this.levelText.setText(`${allState.stage.level}`);
     this.comboText.setText(`${this.state.combo}`);
     this.refreshLives();

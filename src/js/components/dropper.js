@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { DEPTH, GROUNDHEIGHT } from "../globals";
+import { DEPTH, GROUNDHEIGHT, WIDTH } from "../globals";
 import store from "../store";
 import {
   addTextEffect,
@@ -7,6 +7,10 @@ import {
   syncSpritePhysics,
 } from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
+
+const PBAR_WIDTH = 658;
+const PBAR_HEIGHT = 12;
+const PBAR_Y = 345;
 
 function euclidean(x, y) {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
@@ -33,7 +37,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.generateItems();
 
     this.createTimer();
-
+    this.createProgressBar();
     this.createEvents();
   }
 
@@ -87,6 +91,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
       last = next;
       totalY += deltaY;
     }
+    this.maximumY = totalY;
 
     // GENERATE MONEY
     this.moneyBuffer = [];
@@ -150,6 +155,24 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.ebifrion.body.setCircle(40, 24, 24);
   }
 
+  createTimer() {
+    this.timer = this.scene.time.addEvent({
+      delay: Infinity,
+    });
+    this.timer.paused = true;
+
+    this.scene.events.on("dropper.start", () => {
+      this.timer.paused = false;
+      this.totalY = 0;
+    });
+  }
+
+  createProgressBar() {
+    this.progressBar = this.scene.add
+      .rectangle(WIDTH / 2 - PBAR_WIDTH / 2, PBAR_Y, 0, PBAR_HEIGHT, 0x182538)
+      .setDepth(DEPTH.BGFRONT);
+  }
+
   createEvents() {
     const checkFinished = () => {
       if (this.matsurisuBuffer.length > 0) return;
@@ -172,18 +195,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("powerup.drop", this.dropPowerup, this);
     this.scene.events.on("ebifrion.catch", this.catchEbifrion, this);
     this.scene.events.on("ebifrion.drop", this.dropEbifrion, this);
-  }
-
-  createTimer() {
-    this.timer = this.scene.time.addEvent({
-      delay: Infinity,
-    });
-    this.timer.paused = true;
-
-    this.scene.events.on("dropper.start", () => {
-      this.timer.paused = false;
-      this.totalY = 0;
-    });
   }
 
   showAirBonus(x, y, airborne, state) {
@@ -516,5 +527,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
         if (extra !== undefined) syncSpritePhysics(matsurisu, extra, x, y);
       });
     });
+
+    this.progressBar.setSize(
+      Math.min(matsurisuTotalY / (this.maximumY + 200), 1) * PBAR_WIDTH,
+      PBAR_HEIGHT
+    );
   }
 }

@@ -32,7 +32,7 @@ class ShopItem extends Phaser.GameObjects.Container {
       this.scene,
       0,
       80,
-      `¥${this.item.price}`,
+      `¥${this.item.price.toLocaleString("en-US")}`,
       { ...TEXT_STYLE, color: "#fff" }
     )
       .setOrigin(0.5, 0.5)
@@ -78,7 +78,9 @@ class ShopItem extends Phaser.GameObjects.Container {
   setDiscount(amount) {
     this.discountAmount = amount;
     this.discountSlash.setVisible(true);
-    this.discountText.setText(`¥${this.price}`).setVisible(true);
+    this.discountText
+      .setText(`¥${this.price.toLocaleString("en-US")}`)
+      .setVisible(true);
   }
 
   buy(scene) {
