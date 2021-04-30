@@ -72,22 +72,6 @@ export default class Preloader extends Phaser.Scene {
         }
       );
       this.load.spritesheet(
-        `matsuri-${skin}-arms-up`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-arms-up.png`,
-        {
-          frameWidth: 225,
-          frameHeight: 300,
-        }
-      );
-      this.load.spritesheet(
-        `matsuri-${skin}-arms-down`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-arms-down.png`,
-        {
-          frameWidth: 225,
-          frameHeight: 300,
-        }
-      );
-      this.load.spritesheet(
         `matsuri-${skin}-down-left`,
         PUBLIC_PATH + `/images/matsuri-${skin}-down-left.png`,
         {
@@ -132,6 +116,8 @@ export default class Preloader extends Phaser.Scene {
       {
         frameWidth: 60,
         frameHeight: 65,
+        margin: 1,
+        spacing: 2,
       }
     );
 
@@ -141,6 +127,8 @@ export default class Preloader extends Phaser.Scene {
       {
         frameWidth: 60,
         frameHeight: 65,
+        margin: 1,
+        spacing: 2,
       }
     );
   }
@@ -310,8 +298,6 @@ export default class Preloader extends Phaser.Scene {
 
     SKINS.forEach((skin) => {
       makeMatsuriAnimations(`matsuri-${skin}`);
-      // makeMatsuriAnimations(`matsuri-${skin}-arms-up`);
-      // makeMatsuriAnimations(`matsuri-${skin}-arms-down`);
     });
 
     MATSURISU.forEach((skin) => {

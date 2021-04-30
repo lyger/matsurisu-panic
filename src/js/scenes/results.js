@@ -5,6 +5,7 @@ import ButtonFactory from "../components/uibutton";
 import { resetCatalog } from "../components/items/catalog";
 import Stage from "./stage";
 import { addCurtainsTransition } from "./curtains";
+import sendTweet from "../twitter";
 
 const Button = ButtonFactory("ui");
 
@@ -58,6 +59,22 @@ export default class Results extends Phaser.Scene {
     });
 
     this.add.existing(this.button);
+
+    // const debugButton = this.add
+    //   .rectangle(WIDTH / 2, 1000, 500, 150, 0x0000ff)
+    //   .setInteractive();
+    // debugButton.on("pointerdown", () => {
+    //   this.game.renderer.snapshotArea(200, 200, 500, 500, (image) => {
+    //     const imgData = /base64,(.+)/.exec(image.src)[1];
+    //     sendTweet(
+    //       `Test tweet ${this.state.score.score}`,
+    //       imgData,
+    //       this.state.score.score,
+    //       console.log,
+    //       console.log
+    //     );
+    //   });
+    // });
   }
 
   addBonus({ name, y, delay, duration, value, multiplier }) {

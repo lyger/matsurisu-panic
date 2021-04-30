@@ -1,9 +1,12 @@
 const TOKEN_ENDPOINT = "https://onitools.moe/_matsurisu_panic_auth/token";
 const TWEET_ENDPOINT = "https://onitools.moe/_matsurisu_panic_auth/tweet";
 
+let userAuth;
+
 export default function sendTweet(
   message,
   imageData,
+  score,
   successCallback,
   errorCallback
 ) {
@@ -16,21 +19,15 @@ export default function sendTweet(
       successCallback(data);
   };
   const wrappedErrorCallback = (data) => {
+    clearInterval(twitterAuthWindowInterval);
     if (errorCallback !== undefined && errorCallback !== null)
       errorCallback(data);
   };
 
-  // Callback for after twitter login
-  function finishTweetProcess(event) {
-    if (!event.origin.startsWith("https://onitools.moe")) {
-      return;
-    }
-
-    const auth = event.data;
-
+  function postTweet(auth) {
     fetch(TWEET_ENDPOINT, {
       method: "POST",
-      body: JSON.stringify({ auth: auth, data: tweetData }),
+      body: JSON.stringify({ auth: auth, data: tweetData, score: score }),
     })
       .then((response) => {
         if (!response.ok)
@@ -42,10 +39,25 @@ export default function sendTweet(
       .then((json) => {
         if (json.status !== 200) throw new Error(json.error_message);
         clearInterval(twitterAuthWindowInterval);
-        twitterAuthWindow.close();
+        twitterAuthWindow?.close();
         wrappedSuccessCallback(json);
       })
       .catch(wrappedErrorCallback);
+  }
+
+  if (userAuth !== undefined) return postTweet(userAuth);
+
+  // Callback for after twitter login
+  function finishTweetProcess(event) {
+    if (!event.origin.startsWith("https://onitools.moe")) {
+      return;
+    }
+
+    const auth = event.data;
+    console.log(auth);
+    userAuth = auth;
+
+    postTweet(auth);
 
     window.removeEventListener("message", finishTweetProcess);
   }
@@ -60,7 +72,6 @@ export default function sendTweet(
 
     twitterAuthWindowInterval = setInterval(() => {
       if (twitterAuthWindow.closed) {
-        clearInterval(twitterAuthWindowInterval);
         wrappedErrorCallback(new Error("Popup closed before authentication."));
       }
     }, 100);
@@ -79,6 +90,7 @@ export default function sendTweet(
     })
     .then((json) => {
       if (json.status !== 200) throw new Error(json.error_message);
+      console.log("oauth_token", json.oauth_token);
       openTwitterAuthWindow(json.oauth_token);
     })
     .catch(wrappedErrorCallback);

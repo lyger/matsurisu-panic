@@ -4,7 +4,6 @@ import Player from "../components/player";
 import Dropper from "../components/dropper";
 import Scoreboard from "../components/scoreboard";
 import ButtonFactory from "../components/uibutton";
-import sendTweet from "../twitter";
 import { PauseScreen } from "./uiscenes";
 import store from "../store";
 import Shop from "./shop";
@@ -74,25 +73,11 @@ export default class Stage extends Phaser.Scene {
     const debugKey = this.input.keyboard.addKey("z", true, false);
     debugKey.on("down", () => {
       this.winStage();
-
-      // POSTING TWEET
-      // this.game.renderer.snapshotArea(200, 600, 300, 300, function (image) {
-      //   const imgData = /base64,(.+)/.exec(image.src)[1];
-      //   sendTweet(
-      //     "Test tweet with media again",
-      //     imgData,
-      //     console.log,
-      //     console.log
-      //   );
-      // });
     });
   }
 
   createMuteButton() {
-    const settings = JSON.parse(
-      window.localStorage.getItem("matsurisu-panic.settings") || "{}"
-    );
-    const mute = settings.mute || false;
+    const mute = store.getState().settings.mute;
     this.game.sound.mute = mute;
     this.muteButton = this.add
       .sprite(675, 45, "mute-button", mute ? 1 : 0)
@@ -243,9 +228,10 @@ export default class Stage extends Phaser.Scene {
   }
 
   startBgm(delay) {
+    const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-samba", {
       loop: true,
-      volume: 0.1,
+      volume: 0.1 * settings.volumeMusic,
     });
     this.bgm.play({ delay });
   }
@@ -260,24 +246,14 @@ export default class Stage extends Phaser.Scene {
   }
 
   toggleMute() {
-    const oldMute = this.game.sound.mute;
-    const newMute = !oldMute;
+    store.dispatch({ type: "settings.toggleMute" });
+    const newMute = store.getState().settings.mute;
     this.game.sound.mute = newMute;
     this.muteButton.setFrame(newMute ? 1 : 0);
-    const settings = JSON.parse(
-      window.localStorage.getItem("matsurisu-panic.settings") || "{}"
-    );
-    const newSettings = {
-      ...settings,
-      mute: newMute,
-    };
-    window.localStorage.setItem(
-      "matsurisu-panic.settings",
-      JSON.stringify(newSettings)
-    );
   }
 
   loseStage() {
+    this.time.clearPendingEvents();
     this.matsuri.disable();
     this.dropper.pause();
     this.pauseButton.setActive(false);

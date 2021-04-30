@@ -2,12 +2,14 @@ import stageReducer, { stageDefaultState } from "./stage";
 import playerReducer, { playerDefaultState } from "./player";
 import scoreReducer, { scoreDefaultState } from "./score";
 import shopReducer, { shopDefaultState } from "./shop";
+import settingsReducer, { settingsDefaultState } from "./settings";
 
 const mainDefaultState = {
   stage: stageDefaultState,
   player: playerDefaultState,
   score: scoreDefaultState,
   shop: shopDefaultState,
+  settings: settingsDefaultState,
 };
 
 export default function mainReducer(state = mainDefaultState, action) {
@@ -22,6 +24,7 @@ export default function mainReducer(state = mainDefaultState, action) {
         player: playerReducer(state.player, action),
         score: scoreReducer(state.score, action),
         shop: shopReducer(state.shop, action),
+        settings: settingsReducer(state.settings, action),
       };
   }
 }

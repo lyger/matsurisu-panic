@@ -118,9 +118,10 @@ const ShopButton = ButtonFactory("shop-done-buttons", true);
 
 export default class Shop extends Phaser.Scene {
   create() {
+    const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-jazz", {
       loop: true,
-      volume: 0.5,
+      volume: 0.5 * settings.volumeMusic,
     });
     this.bgm.play();
 
