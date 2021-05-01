@@ -46,14 +46,15 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...stateWithAir,
         combo: newCombo,
         bestCombo: Math.max(newCombo, state.bestCombo),
-        score: state.score + (state.scorePerCatch + comboBonus) * multiplier,
+        score:
+          stateWithAir.score + (state.scorePerCatch + comboBonus) * multiplier,
       };
     }
     case "score.catchEbifrion": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
         ...stateWithAir,
-        score: state.score + state.scorePerEbifrion,
+        score: stateWithAir.score + state.scorePerEbifrion,
       };
     }
     case "score.buyEbifrion": {
@@ -94,7 +95,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         money: Math.max(state.money - (payload || 1), 0),
       };
-    case "score.gainCoin": {
+    case "score.catchCoin": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
         ...stateWithAir,
@@ -102,7 +103,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       };
     }
     case "score.gainMoney":
-      // Should only be used in the rare case when money needs to be manually adjusted, otherwise use "score.gainCoin"
+      // Should only be used in the rare case when money needs to be manually adjusted, otherwise use "score.catchCoin"
       return {
         ...state,
         money: Math.min(state.money + (payload | 1), state.maxMoney),

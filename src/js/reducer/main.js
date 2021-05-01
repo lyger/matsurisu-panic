@@ -18,7 +18,13 @@ export default function mainReducer(state = mainDefaultState, action) {
   const { type, payload } = action;
   switch (type) {
     case "global.newGame":
-      return mainDefaultState;
+      return {
+        ...state,
+        stage: stageDefaultState,
+        player: playerDefaultState,
+        score: scoreDefaultState,
+        shop: shopDefaultState,
+      };
     default:
       return {
         ...state,

@@ -61,7 +61,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     });
 
     this.scene.events.on("money.catch", ({ airborne }) => {
-      store.dispatch({ type: "score.gainCoin", payload: { airborne } });
+      store.dispatch({ type: "score.catchCoin", payload: { airborne } });
       this.refreshState();
     });
 

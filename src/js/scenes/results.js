@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { DEPTH, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
 import ButtonFactory from "../components/uibutton";
-import { resetCatalog } from "../components/items/catalog";
 import Stage from "./stage";
 import { addCurtainsTransition } from "./curtains";
 import sendTweet from "../twitter";
@@ -100,7 +99,8 @@ export default class Results extends Phaser.Scene {
   }
 
   addBonus({ name, y, delay, duration, value, multiplier }) {
-    const newScore = this.counter.score + value * multiplier;
+    const newScore = this.finalScore + value * multiplier;
+    this.finalScore = newScore;
     this.time.delayedCall(delay, () => {
       this.add
         .text(WIDTH / 2, y, `${name}: ${value} × ${multiplier}`, TEXT_STYLE)
@@ -113,12 +113,10 @@ export default class Results extends Phaser.Scene {
         repeat: 0,
       });
     });
-    this.finalScore = newScore;
   }
 
   handleNewGame() {
     store.dispatch({ type: "global.newGame" });
-    resetCatalog();
     addCurtainsTransition({
       scene: this,
       targetKey: "Stage",

@@ -94,7 +94,8 @@ export default class Stage extends Phaser.Scene {
       this.dropper.matsurisu,
       (player, matsurisu) => {
         const state = store.getState();
-        const isLow = matsurisu.y >= state.stage.matsurisu.lowCatchY;
+        const isLow =
+          matsurisu.body.center.y >= state.stage.matsurisu.lowCatchY;
         const airborne = this.matsuri.airborne;
         const data = {
           x: matsurisu.x,
