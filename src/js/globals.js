@@ -28,5 +28,11 @@ export const CATCH_MESSAGE_STYLE = {
   shadow: { offsetX: 2, offsetY: 2, color: "#182538", fill: true },
 };
 
+export const RESULTS_TEXT_STYLE = {
+  ...TEXT_STYLE,
+  fontSize: "24px",
+  color: "#56301b",
+};
+
 export const CURTAIN_COLOR_1 = 0xfc5d51;
 export const CURTAIN_COLOR_2 = 0xff4e47;

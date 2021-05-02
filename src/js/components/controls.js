@@ -63,7 +63,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       .setActive(false)
       .setFrame(1);
     this.powerupIcon = scene.add
-      .image(WIDTH / 2, HEIGHT - 105, "powerups")
+      .image(WIDTH / 2, HEIGHT - 105, "items")
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT + 1)
       .setScale(0.7, 0.7)

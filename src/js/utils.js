@@ -83,18 +83,32 @@ export function timestampToDateString(value) {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
-  let hour = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  let suffix = "AM";
 
-  if (hour === 0) {
-    hour = 12;
-  } else if (hour === 12) {
-    suffix = "PM";
-  } else if (hour > 12) {
-    hour = hour - 12;
-    suffix = "PM";
+  return `${year}.${month}.${day}`;
+  // let hour = date.getHours();
+  // const minutes = date.getMinutes().toString().padStart(2, "0");
+  // let suffix = "AM";
+
+  // if (hour === 0) {
+  //   hour = 12;
+  // } else if (hour === 12) {
+  //   suffix = "PM";
+  // } else if (hour > 12) {
+  //   hour = hour - 12;
+  //   suffix = "PM";
+  // }
+
+  // return `${year}/${month}/${day} ${hour}:${minutes} ${suffix}`;
+}
+
+export function descendingSortedIndex(array, value, key = (v) => v) {
+  var low = 0,
+    high = array.length;
+
+  while (low < high) {
+    var mid = (low + high) >>> 1;
+    if (key(array[mid]) > value) low = mid + 1;
+    else high = mid;
   }
-
-  return `${year}/${month}/${day} ${hour}:${minutes} ${suffix}`;
+  return low;
 }

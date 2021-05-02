@@ -87,11 +87,6 @@ export default class Preloader extends Phaser.Scene {
           frameHeight: 300,
         }
       );
-      // this.load.image(`win-${skin}`, PUBLIC_PATH + `/images/win-${skin}.png`);
-      this.load.image(
-        `win-${skin}`,
-        PUBLIC_PATH + `/images/win-placeholder.png`
-      );
     });
   }
 
@@ -178,6 +173,35 @@ export default class Preloader extends Phaser.Scene {
     );
   }
 
+  loadResults() {
+    this.load.image(
+      "results-background",
+      PUBLIC_PATH + "/images/results-background.png"
+    );
+    this.load.image(
+      "results-frames",
+      PUBLIC_PATH + "/images/results-frames.png"
+    );
+    this.load.image(
+      "results-illustration",
+      PUBLIC_PATH + "/images/results-illustration.png"
+    );
+    this.load.image(
+      "results-tweet-button",
+      PUBLIC_PATH + "/images/results-tweet-button.png"
+    );
+    this.load.spritesheet(
+      "results-return-buttons",
+      PUBLIC_PATH + "/images/results-return-buttons.png",
+      {
+        frameWidth: 230,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+  }
+
   loadItems() {
     this.load.spritesheet("items", PUBLIC_PATH + "/images/items.png", {
       frameWidth: 128,
@@ -226,16 +250,12 @@ export default class Preloader extends Phaser.Scene {
     this.loadCharacters();
     this.loadStage();
     this.loadShop();
+    this.loadResults();
     this.loadItems();
     this.loadSounds();
 
     this.load.spritesheet("ui", PUBLIC_PATH + "/images/ui_buttons.png", {
       frameWidth: 200,
-      frameHeight: 100,
-    });
-
-    this.load.spritesheet("powerups", PUBLIC_PATH + "/images/powerups.png", {
-      frameWidth: 100,
       frameHeight: 100,
     });
   }
