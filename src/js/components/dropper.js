@@ -9,7 +9,7 @@ import {
 import { getAvailablePowerups } from "./items/catalog";
 
 const PBAR_WIDTH = 658;
-const PBAR_HEIGHT = 12;
+const PBAR_HEIGHT = 10;
 const PBAR_Y = 345;
 
 function euclidean(x, y) {
@@ -65,6 +65,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     for (let i = 0; i < matsurisuCfg.number - 1; i++) {
       // Attempt 10 times to produce new coordinates that fulfill the conditions
       let deltaY, newX;
+
       for (let j = 0; j < 10; j++) {
         deltaY = rand.between(
           matsurisuCfg.minSpacingY,
@@ -72,11 +73,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
         );
         newX = rand.between(matsurisuCfg.minX, matsurisuCfg.maxX);
 
-        const absDeltaX = Math.abs(last.x - newX);
+        const absDeltaX = Math.abs(newX - last.x);
+        const inverseSlope =
+          (absDeltaX + matsurisuCfg.slopeTurnaround) / deltaY;
 
         if (
           absDeltaX >= matsurisuCfg.minSpacingX &&
           absDeltaX <= matsurisuCfg.maxSpacingX &&
+          inverseSlope <= matsurisuCfg.maxInverseSlope &&
           euclidean(absDeltaX, deltaY) >= matsurisuCfg.minDistance
         )
           break;
@@ -169,8 +173,15 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   createProgressBar() {
     this.progressBar = this.scene.add
-      .rectangle(WIDTH / 2 - PBAR_WIDTH / 2, PBAR_Y, 0, PBAR_HEIGHT, 0x182538)
+      .rectangle(WIDTH / 2 - PBAR_WIDTH / 2, PBAR_Y, 0, PBAR_HEIGHT, 0x6b9999)
       .setDepth(DEPTH.BGFRONT);
+    this.scene.tweens.add({
+      targets: this.progressBar,
+      alpha: 0.5,
+      duration: 400,
+      yoyo: true,
+      repeat: Infinity,
+    });
   }
 
   createEvents() {
@@ -429,7 +440,11 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .setVisible(true)
       .setActive(true);
     matsurisu.setData(`extra:${key}`, newExtra);
-    matsurisu.on("destroy", () => newExtra?.destroy?.());
+    const destroyExtra = () => newExtra?.destroy?.();
+    matsurisu.once("destroy", destroyExtra);
+    this.scene.events.once("transitionout", () =>
+      matsurisu.off("destroy", destroyExtra)
+    );
   }
 
   addExtra({ key, duration, texture, frame, depth = 0, x = 0, y = 0 }) {

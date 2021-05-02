@@ -1,10 +1,12 @@
 import Phaser from "phaser";
 import { DEPTH, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
+import { addTextEffect } from "../utils";
 
 const STATS_OFFSET = 55;
 const LIVES_OFFSET_TOP = -15;
 const LIVES_OFFSET_BOT = 11;
+const COMBO_HEIGHT = 575;
 
 export default class Scoreboard extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -45,7 +47,10 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     this.livesTop = this.scene.add.group();
     this.livesBot = this.scene.add.group();
     this.comboText = this.scene.add
-      .text(WIDTH / 2, 575, "0", { ...TEXT_STYLE_COMBO, fontSize: "128px" })
+      .text(WIDTH / 2, COMBO_HEIGHT, "0", {
+        ...TEXT_STYLE_COMBO,
+        fontSize: "128px",
+      })
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.BGFRONT)
       .setAlpha(0);
@@ -75,12 +80,24 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       this.refreshState();
     });
 
+    this.scene.events.on("global.fullCombo", () => {
+      store.dispatch({ type: "score.fullCombo" });
+      const state = store.getState();
+      addTextEffect(this.scene, {
+        text: `FULL COMBO\n+${state.score.scorePerFullCombo}`,
+        x: WIDTH / 2,
+        y: COMBO_HEIGHT,
+      });
+      this.refreshState();
+    });
+
     this.scene.events.on("matsurisu.drop", () => {
       store.dispatch({ type: "score.drop" });
       this.refreshState();
       if (this.state.lives == 0)
         return this.scene.events.emit("global.gameOver");
     });
+
     return this;
   }
 
@@ -142,7 +159,27 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     return this;
   }
 
+  emphasizeCombos() {
+    const effect1 = this.scene.add
+      .text(WIDTH / 2, COMBO_HEIGHT, `${this.state.combo}`, {
+        ...this.comboText.style,
+        color: "#356e81",
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.BGFRONT + 1)
+      .setAlpha(0.7);
+    this.scene.tweens.add({
+      targets: effect1,
+      alpha: 0,
+      scale: 1.75,
+      duration: 400,
+      repeat: 0,
+      onComplete: () => effect1.destroy(),
+    });
+  }
+
   refreshState() {
+    const oldCombo = this.state.combo;
     const allState = store.getState();
     this.state = allState.score;
     if (this.state.combo >= this.state.minCombo) this.showCombos();
@@ -151,6 +188,8 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     this.moneyText.setText(`${this.state.money.toLocaleString("en-US")}`);
     this.levelText.setText(`${allState.stage.level}`);
     this.comboText.setText(`${this.state.combo}`);
+    if (this.state.combo > oldCombo && this.state.combo % 5 === 0)
+      this.emphasizeCombos();
     this.refreshLives();
     return this;
   }

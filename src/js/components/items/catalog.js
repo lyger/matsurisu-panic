@@ -58,7 +58,8 @@ function getInitialCatalog() {
         frame: 7,
         modifier: {
           op: "multiply",
-          jumpVelocity: 1.17,
+          jumpVelocity: 1.33,
+          gravity: 1.17,
           jumpAcceleration: 1.17,
           quickFallAcceleration: 1.17,
         },
@@ -67,32 +68,34 @@ function getInitialCatalog() {
         purchaseLimit: 1,
         conflictsWith: ["JumpPlus"],
         applySideEffect: (scene) => {
+          const particles = scene.add
+            .particles("particle-bunny")
+            .setDepth(DEPTH.PLAYERDEPTH + 1);
+          const emitter = particles.createEmitter({
+            frame: [0, 1, 2, 3],
+            lifespan: 600,
+            radial: true,
+            gravityY: 200,
+            scale: { min: 0.4, max: 0.8 },
+            rotate: { min: 0, max: 359 },
+            alpha: { start: 1, end: 0, ease: "Quad.easeIn" },
+            speed: { min: 150, max: 250 },
+            angle: { min: 180, max: 360 },
+            quantity: { min: 6, max: 8 },
+          });
+          emitter.explode(0);
           const jumpCallback = () => {
-            const particles = scene.add
-              .particles("particle-bunny")
-              .setDepth(DEPTH.PLAYERDEPTH - 1);
-            const emitter = particles.createEmitter({
-              frame: [0, 1, 2, 3],
-              frequency: 100,
-              lifespan: 400,
-              follow: scene.matsuri.bodySprite,
-              followOffset: { y: 100 },
-              radial: true,
-              scale: { min: 0.4, max: 0.8 },
-              rotate: { min: 0, max: 359 },
-              alpha: { start: 1, end: 0 },
-              speed: { min: 50, max: 100 },
-              angle: { min: 0, max: 359 },
-            });
-            scene.matsuri.once("land", () => {
-              emitter.stop();
-              scene.time.delayedCall(300, particles.destroy, particles);
-            });
+            emitter.setPosition(
+              scene.matsuri.bodySprite.x,
+              scene.matsuri.bodySprite.y + 100
+            );
+            emitter.explode();
           };
           scene.matsuri.on("jump", jumpCallback);
-          scene.time.delayedCall(25000, () =>
-            scene.matsuri.off("jump", jumpCallback)
-          );
+          scene.time.delayedCall(25000, () => {
+            scene.matsuri.off("jump", jumpCallback);
+            particles.destroy();
+          });
         },
       }),
       new Powerup({
@@ -167,7 +170,8 @@ function getInitialCatalog() {
         frame: 8,
         modifier: {
           op: "multiply",
-          jumpVelocity: 1.33,
+          jumpVelocity: 1.67,
+          gravity: 1.33,
           jumpAcceleration: 1.33,
           quickFallAcceleration: 1.33,
         },
@@ -176,32 +180,34 @@ function getInitialCatalog() {
         purchaseLimit: 1,
         conflictsWith: ["Jump"],
         applySideEffect: (scene) => {
+          const particles = scene.add
+            .particles("particle-bunny")
+            .setDepth(DEPTH.PLAYERDEPTH + 1);
+          const emitter = particles.createEmitter({
+            frame: [0, 1, 2, 3],
+            lifespan: 750,
+            radial: true,
+            gravityY: 200,
+            scale: { min: 0.4, max: 0.8 },
+            rotate: { min: 0, max: 359 },
+            alpha: { start: 1, end: 0.2, ease: "Quad.easeIn" },
+            speed: { min: 150, max: 250 },
+            angle: { min: 180, max: 360 },
+            quantity: { min: 8, max: 10 },
+          });
+          emitter.explode(0);
           const jumpCallback = () => {
-            const particles = scene.add
-              .particles("particle-bunny")
-              .setDepth(DEPTH.PLAYERDEPTH - 1);
-            const emitter = particles.createEmitter({
-              frame: [0, 1, 2, 3],
-              frequency: 80,
-              lifespan: 450,
-              follow: scene.matsuri.bodySprite,
-              followOffset: { y: 100 },
-              radial: true,
-              scale: { min: 0.4, max: 0.8 },
-              rotate: { min: 0, max: 359 },
-              alpha: { start: 1, end: 0 },
-              speed: { min: 50, max: 100 },
-              angle: { min: 0, max: 359 },
-            });
-            scene.matsuri.once("land", () => {
-              emitter.stop();
-              scene.time.delayedCall(450, particles.destroy, particles);
-            });
+            emitter.setPosition(
+              scene.matsuri.bodySprite.x,
+              scene.matsuri.bodySprite.y + 100
+            );
+            emitter.explode();
           };
           scene.matsuri.on("jump", jumpCallback);
-          scene.time.delayedCall(35000, () =>
-            scene.matsuri.off("jump", jumpCallback)
-          );
+          scene.time.delayedCall(25000, () => {
+            scene.matsuri.off("jump", jumpCallback);
+            particles.destroy();
+          });
         },
       }),
       new Powerup({

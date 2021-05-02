@@ -39,7 +39,20 @@ export default class Stage extends Phaser.Scene {
     this.events.once("global.gameOver", this.loseStage, this);
 
     this.events.once("dropper.done", () => {
-      this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
+      this.time.delayedCall(GAME_END_DELAY, () => {
+        const state = store.getState();
+        if (state.score.combo === state.stage.matsurisu.number) {
+          this.events.emit("global.fullCombo");
+          this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
+        } else this.winStage();
+      });
+    });
+
+    this.events.once("dropper.doneWithFullCombo", () => {
+      this.time.delayedCall(GAME_END_DELAY, () =>
+        this.events.emit("global.fullCombo")
+      );
+      this.time.delayedCall(GAME_END_DELAY * 2, () => this.winStage());
     });
 
     this.pauseButton = new PauseButton(this, {
@@ -56,7 +69,7 @@ export default class Stage extends Phaser.Scene {
     this.createMuteButton();
 
     this.game.events.on("blur", this.pauseGame, this);
-    this.events.on("destroy", () => {
+    this.events.once("destroy", () => {
       this.game.events.removeListener("blur", this.pauseGame, this);
     });
 

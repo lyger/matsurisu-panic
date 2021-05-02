@@ -25,6 +25,7 @@ export const scoreDefaultState = {
   bonusPerAir: 200,
   minCombo: 5,
   maxCombo: 25,
+  scorePerFullCombo: 3000,
   results: {
     livesMultiplier: 1500,
     moneyMultiplier: 0.2,
@@ -117,6 +118,11 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         airCounter: 0,
+      };
+    case "score.fullCombo":
+      return {
+        ...state,
+        score: state.score + state.scorePerFullCombo,
       };
     default:
       return state;
