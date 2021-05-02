@@ -1,11 +1,7 @@
 import Phaser from "phaser";
 import { DEPTH, GROUNDHEIGHT, WIDTH } from "../globals";
 import store from "../store";
-import {
-  addTextEffect,
-  applyModifiersToState,
-  syncSpritePhysics,
-} from "../utils";
+import { applyModifiersToState, syncSpritePhysics } from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
 
 const PBAR_WIDTH = 658;
@@ -208,19 +204,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("ebifrion.drop", this.dropEbifrion, this);
   }
 
-  showAirBonus(x, y, airborne, state) {
-    if (!airborne) return;
-    const airBonus = state.score.airCounter * state.score.bonusPerAir;
-    if (airBonus === 0) return;
-    addTextEffect(this.scene, { x, y, text: `AIR! +${airBonus}` });
-  }
-
-  catchMatsurisu({ x, y, isLow, state, airborne }) {
-    if (isLow) {
-      const multiplier = state.score.lowMultiplier;
-      addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
-    }
-    this.showAirBonus(x, y, airborne, state);
+  catchMatsurisu({ x, y }) {
     const rand = Phaser.Math.RND;
     const deltaY = GROUNDHEIGHT - y - 75;
     if (deltaY > 0) {
@@ -292,8 +276,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectMoney({ x, y, airborne, state }) {
-    this.showAirBonus(x, y, airborne, state);
+  collectMoney({ x, y }) {
     const money = this.scene.add
       .image(x, y, "items", 2)
       .setDepth(DEPTH.OBJECTDEPTH);
@@ -321,8 +304,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectPowerup({ x, y, target, airborne, state }) {
-    this.showAirBonus(x, y, airborne, state);
+  collectPowerup({ x, y, target }) {
     const powerup = this.scene.add
       .image(x, y, target.texture, target.frame)
       .setDepth(DEPTH.OBJECTDEPTH);
@@ -350,16 +332,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  catchEbifrion({ x, y, rotation, airborne, state }) {
-    this.showAirBonus(x, y, airborne, state);
+  catchEbifrion({ x, y, rotation }) {
     const ebifrion = this.scene.add
       .image(x, y, "items", 0)
       .setDepth(DEPTH.OBJECTDEPTH);
-    addTextEffect(this.scene, {
-      x,
-      y,
-      text: `+${state.score.scorePerEbifrion}`,
-    });
     this.scene.tweens.add({
       targets: ebifrion,
       rotation: rotation - 2 * Math.PI,

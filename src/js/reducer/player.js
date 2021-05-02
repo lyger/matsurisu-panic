@@ -16,6 +16,7 @@ const playerPhysicsDefaultState = {
   slideMultiplier: 1.4,
   slideThreshold: 0.8,
   slideCooldown: 500,
+  airForgivenessDuration: 100,
   modifiers: [],
 };
 

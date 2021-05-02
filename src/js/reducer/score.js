@@ -1,9 +1,12 @@
 function applyAirBonus(airborne, state) {
-  if (!airborne) return state;
-  const airBonus = state.airCounter * state.bonusPerAir;
+  if (!airborne) return { ...state, lastAirBonus: 0 };
+  const airCounter = state.airCounter + (state.airForgiveness > 0 ? 1 : 0);
+  const airBonus = airCounter * state.bonusPerAir;
   return {
     ...state,
-    airCounter: state.airCounter + 1,
+    airCounter: airCounter + 1,
+    airForgiveness: 0,
+    lastAirBonus: airBonus,
     score: state.score + airBonus,
   };
 }
@@ -22,7 +25,9 @@ export const scoreDefaultState = {
   bonusPerCombo: 5,
   lowMultiplier: 2,
   airCounter: 0,
+  airForgiveness: 0,
   bonusPerAir: 200,
+  lastAirBonus: 0,
   minCombo: 5,
   maxCombo: 25,
   scorePerFullCombo: 3000,
@@ -123,6 +128,21 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         score: state.score + state.scorePerFullCombo,
+      };
+    case "score.addAirForgiveness":
+      return {
+        ...state,
+        airForgiveness: state.airForgiveness + 1,
+      };
+    case "score.removeAirForgiveness":
+      return {
+        ...state,
+        airForgiveness: Math.max(state.airForgiveness - 1, 0),
+      };
+    case "score.resetAirForgiveness":
+      return {
+        ...state,
+        airForgiveness: 0,
       };
     default:
       return state;

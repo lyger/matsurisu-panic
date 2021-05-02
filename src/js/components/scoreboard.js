@@ -60,24 +60,37 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
   }
 
   addStageListeners() {
-    this.scene.events.on("matsurisu.catch", ({ isLow, airborne }) => {
+    this.scene.events.on("matsurisu.catch", ({ isLow, airborne, x, y }) => {
       store.dispatch({ type: "score.catch", payload: { isLow, airborne } });
       this.refreshState();
+      if (isLow) {
+        const multiplier = this.state.lowMultiplier;
+        addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
+      }
+      this.maybeShowAirBonus(x, y);
     });
 
-    this.scene.events.on("money.catch", ({ airborne }) => {
+    this.scene.events.on("money.catch", ({ airborne, x, y }) => {
       store.dispatch({ type: "score.catchCoin", payload: { airborne } });
       this.refreshState();
+      this.maybeShowAirBonus(x, y);
     });
 
-    this.scene.events.on("ebifrion.catch", ({ airborne }) => {
+    this.scene.events.on("ebifrion.catch", ({ airborne, x, y }) => {
       store.dispatch({ type: "score.catchEbifrion", payload: { airborne } });
       this.refreshState();
+      addTextEffect(this.scene, {
+        x,
+        y,
+        text: `+${this.state.scorePerEbifrion}`,
+      });
+      this.maybeShowAirBonus(x, y);
     });
 
-    this.scene.events.on("powerup.catch", ({ airborne }) => {
+    this.scene.events.on("powerup.catch", ({ airborne, x, y }) => {
       store.dispatch({ type: "score.catchPowerup", payload: { airborne } });
       this.refreshState();
+      this.maybeShowAirBonus(x, y);
     });
 
     this.scene.events.on("global.fullCombo", () => {
@@ -99,6 +112,12 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     });
 
     return this;
+  }
+
+  maybeShowAirBonus(x, y) {
+    const airBonus = this.state.lastAirBonus;
+    if (airBonus > 0)
+      addTextEffect(this.scene, { x, y, text: `AIR! +${airBonus}` });
   }
 
   refreshLives() {

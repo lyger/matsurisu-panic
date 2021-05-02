@@ -119,6 +119,7 @@ export default class Stage extends Phaser.Scene {
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.catch", data);
+        this.setAirForgiveness();
       }
     );
 
@@ -136,6 +137,7 @@ export default class Stage extends Phaser.Scene {
         };
         money.destroy();
         this.events.emit("money.catch", data);
+        this.setAirForgiveness();
       }
     );
 
@@ -159,6 +161,7 @@ export default class Stage extends Phaser.Scene {
         });
         powerup.destroy();
         this.events.emit("powerup.catch", data);
+        this.setAirForgiveness();
       }
     );
 
@@ -177,6 +180,7 @@ export default class Stage extends Phaser.Scene {
         };
         ebifrion.destroy();
         this.events.emit("ebifrion.catch", data);
+        this.setAirForgiveness();
       }
     );
   }
@@ -239,6 +243,16 @@ export default class Stage extends Phaser.Scene {
 
     this.physics.add.collider(ground, this.matsuri.bodySprite);
     this.physics.add.collider(ground, this.matsuri.armSprite);
+  }
+
+  setAirForgiveness() {
+    if (this.matsuri.airborne) return;
+    const state = store.getState();
+    store.dispatch({ type: "score.addAirForgiveness" });
+    this.time.delayedCall(state.player.physics.airForgivenessDuration, () => {
+      if (!this.matsuri.airborne)
+        store.dispatch({ type: "score.removeAirForgiveness" });
+    });
   }
 
   startBgm(delay) {
