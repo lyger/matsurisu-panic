@@ -144,8 +144,7 @@ export default class Player extends Phaser.GameObjects.Container {
     }
     if (endedJump) {
       this.emit("land");
-      store.dispatch({ type: "score.resetAirCounter" });
-      store.dispatch({ type: "score.resetAirForgiveness" });
+      store.dispatch({ type: "score.resetAir" });
     }
 
     const accelerationY = jumping

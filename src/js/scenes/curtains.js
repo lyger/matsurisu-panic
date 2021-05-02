@@ -69,10 +69,10 @@ export default class Curtains extends Phaser.Scene {
 
     this.scene.bringToTop(this.scene.key);
 
-    this.time.delayedCall(duration * 1.1, () => {
+    this.time.delayedCall(duration * 1.2, () => {
       this.scene.transition({
         target,
-        duration: duration * 0.9,
+        duration: duration * 0.8,
         sleep: true,
         remove: false,
         allowInput: false,

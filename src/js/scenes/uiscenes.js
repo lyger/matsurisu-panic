@@ -3,6 +3,8 @@ import { resetCatalog } from "../components/items/catalog";
 import ButtonFactory from "../components/uibutton";
 import { HEIGHT, WIDTH, TEXT_STYLE, DEPTH } from "../globals";
 import store from "../store";
+import { addCurtainsTransition } from "./curtains";
+import RestartProxy from "./restartproxy";
 import Stage from "./stage";
 
 const Button = ButtonFactory("ui");
@@ -22,37 +24,6 @@ export class StartScreen extends Phaser.Scene {
   }
 
   startGame() {
-    this.scene.add("Stage", Stage, true);
-    this.scene.remove(this.scene.key);
-  }
-}
-
-export class GameOver extends Phaser.Scene {
-  create() {
-    this.add
-      .text(WIDTH / 2, HEIGHT / 2 - 50, "GAME OVER", {
-        ...TEXT_STYLE,
-        fontSize: 100,
-      })
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
-
-    this.button = new Button(this, {
-      x: WIDTH / 2,
-      y: HEIGHT / 2 + 50,
-      default: 3,
-      hover: 4,
-      down: 5,
-      upCallback: () => this.handleNewGame(),
-    });
-
-    this.add.existing(this.button);
-  }
-
-  handleNewGame() {
-    this.scene.remove("Stage");
-    store.dispatch({ type: "global.newGame" });
-    resetCatalog();
     this.scene.add("Stage", Stage, true);
     this.scene.remove(this.scene.key);
   }
@@ -78,44 +49,36 @@ export class PauseScreen extends Phaser.Scene {
     });
 
     this.add.existing(this.button);
+
+    // this.debugRect = this.add
+    //   .rectangle(WIDTH / 2, 800, 300, 80, 0x0000ff)
+    //   .setDepth(DEPTH.UIFRONT)
+    //   .setInteractive();
+    // this.debugRect.on("pointerdown", () => this.handleNewGame());
   }
 
   handleResume() {
     this.scene.resume("Stage");
     this.scene.remove(this.scene.key);
   }
-}
-
-export class WinScreen extends Phaser.Scene {
-  create() {
-    const scoreState = store.getState().score;
-    this.add
-      .image(WIDTH / 2, HEIGHT / 2 - 200, "win-placeholder")
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
-
-    this.add
-      .text(WIDTH / 2, HEIGHT / 2, `SCORE: ${scoreState.score}`, TEXT_STYLE)
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
-
-    this.button = new Button(this, {
-      x: WIDTH / 2,
-      y: HEIGHT / 2 + 50,
-      default: 3,
-      hover: 4,
-      down: 5,
-      upCallback: () => this.handleNewGame(),
-    });
-
-    this.add.existing(this.button);
-  }
 
   handleNewGame() {
-    this.scene.remove("Stage");
+    const stageScene = this.scene.get("Stage");
+    this.tweens.add({
+      targets: stageScene.bgm,
+      volume: 0.0,
+      duration: 900,
+      onComplete: () => stageScene.bgm.destroy(),
+    });
+    this.events.once("destroy", () => {
+      stageScene.scene.remove("Stage");
+    });
     store.dispatch({ type: "global.newGame" });
-    resetCatalog();
-    this.scene.add("Stage", Stage, true);
-    this.scene.remove(this.scene.key);
+    addCurtainsTransition({
+      scene: this,
+      targetKey: "RestartProxy",
+      targetClass: RestartProxy,
+      duration: 1000,
+    });
   }
 }

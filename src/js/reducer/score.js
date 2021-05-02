@@ -119,10 +119,11 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         combo: 0,
       };
-    case "score.resetAirCounter":
+    case "score.resetAir":
       return {
         ...state,
         airCounter: 0,
+        airForgiveness: 0,
       };
     case "score.fullCombo":
       return {
@@ -138,11 +139,6 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         airForgiveness: Math.max(state.airForgiveness - 1, 0),
-      };
-    case "score.resetAirForgiveness":
-      return {
-        ...state,
-        airForgiveness: 0,
       };
     default:
       return state;
