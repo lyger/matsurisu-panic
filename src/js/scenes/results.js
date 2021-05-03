@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import {
   DEPTH,
   HEIGHT,
+  MSG,
   RESULTS_TEXT_STYLE,
   TEXT_STYLE,
   WIDTH,
@@ -13,19 +14,163 @@ import { addCurtainsTransition } from "./curtains";
 import sendTweet from "../twitter";
 import { timestampToDateString } from "../utils";
 import DebugCursor from "../components/debugcursor";
+import { StartScreen } from "./uiscenes";
 
-const Button = ButtonFactory("ui");
-const ReturnButton = ButtonFactory("results-return-buttons");
+const ReturnButton = ButtonFactory("results-return-buttons", true);
+const TweetButton = ButtonFactory("tweet-confirm-buttons", true);
 
 const SLIDE_DISTANCE = 100;
 const SLIDE_DELAY = 400;
 const SLIDE_DURATION = 800;
 
-export default class Results extends Phaser.Scene {
-  create() {
-    this.createUI();
+class TweetConfirmModal extends Phaser.Scene {
+  create({ imgData, score }) {
+    new DebugCursor(this);
+    const cover = this.add
+      .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
+      .setDepth(DEPTH.BGBACK)
+      .setInteractive();
+    cover.on("pointerdown", this.returnToResults, this);
+    this.add
+      .image(WIDTH / 2, HEIGHT / 2, "tweet-confirm-modal")
+      .setDepth(DEPTH.UIBACK)
+      .setOrigin(0.5, 0.5)
+      .setInteractive(this.input.makePixelPerfect());
 
     this.state = store.getState();
+    this.imgData = imgData;
+    this.score = score;
+
+    this.confirmText = this.add
+      .text(WIDTH / 2, 475, "", {
+        ...RESULTS_TEXT_STYLE,
+        fontSize: "32px",
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT);
+    this.tweetText = this.add
+      .text(WIDTH / 2, 665, "", {
+        ...RESULTS_TEXT_STYLE,
+        fontSize: "32px",
+        align: "center",
+        wordWrap: { width: 540, useAdvancedWrap: true },
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT);
+
+    this.englishButton = this.add
+      .image(275, 545, "tweet-language-buttons", 0)
+      .setDepth(DEPTH.UIFRONT);
+    this.japaneseButton = this.add
+      .image(445, 545, "tweet-language-buttons", 2)
+      .setDepth(DEPTH.UIFRONT);
+    this.englishButton.on("pointerdown", () => {
+      store.dispatch({ type: "settings.setEnglish" });
+      this.refreshDisplay();
+    });
+    this.japaneseButton.on("pointerdown", () => {
+      store.dispatch({ type: "settings.setJapanese" });
+      this.refreshDisplay();
+    });
+
+    this.buttonNo = new TweetButton(this, {
+      x: 230,
+      y: 820,
+      default: 0,
+      over: 1,
+      downCallback: () => this.returnToResults(),
+    });
+
+    this.buttonTweet = new TweetButton(this, {
+      x: 490,
+      y: 820,
+      default: 2,
+      over: 3,
+      downCallback: () => this.handleTweet(),
+    });
+
+    this.buttonOk = new TweetButton(this, {
+      x: WIDTH / 2,
+      y: 820,
+      default: 4,
+      over: 5,
+      downCallback: () => this.returnToResults(),
+    }).show(false);
+
+    this.add.existing(this.buttonNo);
+    this.add.existing(this.buttonTweet);
+    this.add.existing(this.buttonOk);
+
+    this.refreshDisplay();
+  }
+
+  get fullTweetText() {
+    const baseText = MSG.TWEET[this.state.settings.language].replace(
+      "[SCORE]",
+      `${this.score}`
+    );
+    return `${baseText} http://example.com`;
+  }
+
+  refreshDisplay() {
+    this.state = store.getState();
+    const lang = this.state.settings.language;
+    this.confirmText.setText(MSG.CONFIRM_TWEET[lang]);
+    this.tweetText.setText(MSG.TWEET[lang].replace("[SCORE]", `${this.score}`));
+    if (lang === "jp") {
+      this.englishButton.setFrame(1).setInteractive();
+      this.japaneseButton.setFrame(2).disableInteractive();
+    } else {
+      this.englishButton.setFrame(0).disableInteractive();
+      this.japaneseButton.setFrame(3).setInteractive();
+    }
+  }
+
+  returnToResults() {
+    this.scene.resume("Results");
+    this.scene.remove(this.scene.key);
+  }
+
+  handleTweet() {
+    this.buttonNo.show(false);
+    this.buttonTweet.show(false);
+    this.confirmText.setVisible(false);
+    this.englishButton.setVisible(false).setActive(false);
+    this.japaneseButton.setVisible(false).setActive(false);
+    this.tweetText.setText(MSG.TWEET_PROGRESS[this.state.settings.language]);
+    sendTweet(
+      this.fullTweetText,
+      this.imgData,
+      this.score,
+      this.handleSuccess.bind(this),
+      this.handleFailure.bind(this)
+    );
+  }
+
+  handleSuccess({ url }) {
+    this.tweetText.setText(
+      `${MSG.TWEET_SUCCESS[this.state.settings.language]} ${url}`
+    );
+    const clickArea = this.add
+      .rectangle(WIDTH / 2, 665, 540, 150, 0x000000, 0)
+      .setDepth(DEPTH.UIFRONT + 1)
+      .setInteractive();
+    clickArea.on("pointerdown", () => window.open(url, "_blank"));
+    this.buttonOk.show(true);
+  }
+
+  handleFailure(err) {
+    console.log(err);
+    this.tweetText.setText(MSG.TWEET_FAILURE[this.state.settings.language]);
+    this.buttonOk.show(true);
+  }
+}
+
+export default class Results extends Phaser.Scene {
+  create() {
+    this.state = store.getState();
+    this.createUI();
+
     this.counter = { score: this.state.score.score };
     this.finalScore = 0;
     this.imgData = "";
@@ -60,9 +205,9 @@ export default class Results extends Phaser.Scene {
     });
 
     this.scoreText = this.add
-      .text(400, 625, `${this.counter.score}`, {
+      .text(400, 623, `${this.counter.score}`, {
         ...RESULTS_TEXT_STYLE,
-        fontSize: "40px",
+        fontSize: "48px",
       })
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(1, 0.5)
@@ -98,9 +243,7 @@ export default class Results extends Phaser.Scene {
         }),
       onComplete: () => {
         this.tweetButton.setInteractive(this.input.makePixelPerfect());
-        this.tweetButton.on("pointerdown", () =>
-          console.log("TODO: Tweet confirm menu")
-        );
+        this.tweetButton.on("pointerdown", () => this.handleTweet());
       },
     });
 
@@ -109,7 +252,7 @@ export default class Results extends Phaser.Scene {
       y: 1190,
       default: 0,
       over: 1,
-      upCallback: () => console.log("TODO: Return to main menu"),
+      upCallback: () => this.handleMainMenu(),
     });
 
     this.retryButton = new ReturnButton(this, {
@@ -126,22 +269,6 @@ export default class Results extends Phaser.Scene {
     store.dispatch({ type: "highscores.add", payload: this.finalScore });
 
     this.createHighscores(secondaryDelay);
-
-    // const debugButton = this.add
-    //   .rectangle(WIDTH / 2, 1000, 500, 150, 0x0000ff)
-    //   .setInteractive();
-    // debugButton.on("pointerdown", () => {
-    //   this.game.renderer.snapshotArea(200, 200, 500, 500, (image) => {
-    //     const imgData = /base64,(.+)/.exec(image.src)[1];
-    //     sendTweet(
-    //       `Test tweet ${this.state.score.score}`,
-    //       imgData,
-    //       this.state.score.score,
-    //       console.log,
-    //       console.log
-    //     );
-    //   });
-    // });
   }
 
   createUI() {
@@ -163,7 +290,27 @@ export default class Results extends Phaser.Scene {
       ease: "Quad.easeOut",
       delay: SLIDE_DELAY,
       duration: SLIDE_DURATION,
-      repeat: 0,
+    });
+    const levelFrame = this.add
+      .container(WIDTH / 2, 130, [
+        new Phaser.GameObjects.Image(this, 0, 0, "results-level"),
+        new Phaser.GameObjects.Text(this, 85, -1, `${this.state.stage.level}`, {
+          ...TEXT_STYLE,
+          color: "#fff",
+          fontSize: "35px",
+        })
+          .setDepth(1)
+          .setOrigin(0.5, 0.5),
+      ])
+      .setDepth(DEPTH.UIBACK)
+      .setAlpha(0);
+    this.tweens.add({
+      targets: levelFrame,
+      alpha: 1,
+      y: 180,
+      ease: "Quad.easeOut",
+      delay: SLIDE_DELAY,
+      duration: SLIDE_DURATION,
     });
   }
 
@@ -184,12 +331,19 @@ export default class Results extends Phaser.Scene {
           .setDepth(DEPTH.UIFRONT)
           .setOrigin(1, 1)
           .setAlpha(0);
+        const targets = [scoreText, dateText];
         if (index === this.state.highscores.lastIndex) {
-          scoreText.setColor("#ff7366");
-          dateText.setColor("#ff7366");
+          scoreText.setColor("#fc5854");
+          dateText.setColor("#fc5854");
+          const newBadge = this.add
+            .image(160, y, "results-new")
+            .setOrigin(0.5, 1)
+            .setDepth(DEPTH.UIFRONT)
+            .setAlpha(0);
+          targets.push(newBadge);
         }
         this.tweens.add({
-          targets: [scoreText, dateText],
+          targets,
           alpha: 1,
           delay: delay + index * 300,
           duration: 500,
@@ -201,7 +355,7 @@ export default class Results extends Phaser.Scene {
     this.finalScore += value * multiplier;
     const message = multiplier === 1 ? `${value}` : `${value} × ${multiplier}`;
     const text = this.add
-      .text(350, y, message, RESULTS_TEXT_STYLE)
+      .text(355, y, message, RESULTS_TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(1, 0.5)
       .setAlpha(0);
@@ -210,9 +364,16 @@ export default class Results extends Phaser.Scene {
       alpha: 1,
       delay,
       duration,
-      repeat: 0,
     });
     return text;
+  }
+
+  handleTweet() {
+    this.scene.pause(this.scene.key);
+    this.scene.add("TweetConfirmModal", TweetConfirmModal, true, {
+      imgData: this.imgData,
+      score: this.finalScore,
+    });
   }
 
   handleNewGame() {
@@ -221,6 +382,16 @@ export default class Results extends Phaser.Scene {
       scene: this,
       targetKey: "Stage",
       targetClass: Stage,
+      duration: 1000,
+    });
+  }
+
+  handleMainMenu() {
+    store.dispatch({ type: "global.newGame" });
+    addCurtainsTransition({
+      scene: this,
+      targetKey: "Start",
+      targetClass: StartScreen,
       duration: 1000,
     });
   }

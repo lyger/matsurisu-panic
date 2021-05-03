@@ -38,7 +38,6 @@ export default class Curtains extends Phaser.Scene {
         ease: "Quad",
         x: x1,
         rotation: 0,
-        repeat: 0,
         yoyo: true,
       });
 
@@ -47,7 +46,6 @@ export default class Curtains extends Phaser.Scene {
         ease: "Quad",
         x: x2,
         rotation: 0,
-        repeat: 0,
         yoyo: true,
       });
     }

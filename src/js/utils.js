@@ -62,7 +62,6 @@ export function addTextEffect(
     targets: effectText,
     alpha: 0,
     y: y + deltaY,
-    repeat: 0,
     delay: delay,
     duration: duration,
     onComplete: () => effectText.destroy(),

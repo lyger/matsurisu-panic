@@ -165,7 +165,6 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     this.scene.tweens.add({
       targets: [this.comboLabel, this.comboText],
       alpha: 1,
-      repeat: 0,
       duration: 250,
     });
     return this;
@@ -192,7 +191,6 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       alpha: 0,
       scale: 1.75,
       duration: 400,
-      repeat: 0,
       onComplete: () => effect1.destroy(),
     });
   }

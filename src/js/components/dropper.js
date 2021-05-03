@@ -171,13 +171,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.progressBar = this.scene.add
       .rectangle(WIDTH / 2 - PBAR_WIDTH / 2, PBAR_Y, 0, PBAR_HEIGHT, 0x6b9999)
       .setDepth(DEPTH.BGFRONT);
-    this.scene.tweens.add({
-      targets: this.progressBar,
-      alpha: 0.5,
-      duration: 400,
-      yoyo: true,
-      repeat: Infinity,
-    });
   }
 
   createEvents() {
@@ -227,7 +220,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.scene.add.existing(matsurisu);
       matsurisu.startFollow({
         duration: deltaY * 2 + 100,
-        repeat: 0,
         ease: function (v) {
           return v ** 1.5;
         },
@@ -237,7 +229,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
           this.scene.tweens.add({
             targets: matsurisu,
             alpha: 0,
-            repeat: 0,
             delay: 10000,
             duration: 500,
             onComplete: () => matsurisu.destroy(),
@@ -254,7 +245,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.scene.tweens.add({
         targets: matsurisu,
         alpha: 0,
-        repeat: 0,
         delay: 10000,
         duration: 500,
         onComplete: () => matsurisu.destroy(),
@@ -270,7 +260,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       targets: matsurisu,
       alpha: 0,
       y: y - 200,
-      repeat: 0,
       duration: 1000,
       onComplete: () => matsurisu.destroy(),
     });
@@ -284,7 +273,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       targets: money,
       alpha: 0,
       y: y - 100,
-      repeat: 0,
       duration: 300,
       onComplete: () => money.destroy(),
     });
@@ -298,7 +286,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       targets: money,
       alpha: 0,
       y: y + 75,
-      repeat: 0,
       duration: 300,
       onComplete: () => money.destroy(),
     });
@@ -312,7 +299,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       targets: powerup,
       alpha: 0,
       y: y - 100,
-      repeat: 0,
       duration: 300,
       onComplete: () => powerup.destroy(),
     });
@@ -326,7 +312,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       targets: powerup,
       alpha: 0,
       y: y + 50,
-      repeat: 0,
       duration: 300,
       onComplete: () => powerup.destroy(),
     });
@@ -341,7 +326,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       rotation: rotation - 2 * Math.PI,
       alpha: 0,
       y: y - 75,
-      repeat: 0,
       duration: 300,
       onComplete: () => ebifrion.destroy(),
     });
@@ -356,7 +340,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       rotation: rotation + 2 * Math.PI,
       alpha: 0,
       y: y + 50,
-      repeat: 0,
       duration: 300,
       onComplete: () => ebifrion.destroy(),
     });
@@ -508,7 +491,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
         targets: this.ebifrion,
         rotation: 2 * Math.PI,
         duration: this.modEbifrion.fallDuration,
-        repeat: 0,
       });
     }
 

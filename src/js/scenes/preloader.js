@@ -200,6 +200,33 @@ export default class Preloader extends Phaser.Scene {
         spacing: 2,
       }
     );
+    this.load.image("results-level", PUBLIC_PATH + "/images/results-level.png");
+    this.load.image("results-new", PUBLIC_PATH + "/images/results-new.png");
+
+    this.load.image(
+      "tweet-confirm-modal",
+      PUBLIC_PATH + "/images/tweet-confirm-modal.png"
+    );
+    this.load.spritesheet(
+      "tweet-confirm-buttons",
+      PUBLIC_PATH + "/images/tweet-confirm-buttons.png",
+      {
+        frameWidth: 230,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "tweet-language-buttons",
+      PUBLIC_PATH + "/images/tweet-language-buttons.png",
+      {
+        frameWidth: 160,
+        frameHeight: 60,
+        margin: 1,
+        spacing: 2,
+      }
+    );
   }
 
   loadItems() {

@@ -25,7 +25,8 @@ class ShopConfirmModal extends Phaser.Scene {
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "shop-confirm-modal")
       .setDepth(DEPTH.UIBACK)
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setInteractive(this.input.makePixelPerfect());
 
     const state = store.getState();
     const currentPowerup = state.player.powerup;

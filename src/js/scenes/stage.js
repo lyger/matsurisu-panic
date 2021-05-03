@@ -87,6 +87,10 @@ export default class Stage extends Phaser.Scene {
     debugKey.on("down", () => {
       this.winStage();
     });
+    const debugKey2 = this.input.keyboard.addKey("x", true, false);
+    debugKey2.on("down", () => {
+      this.loseStage();
+    });
   }
 
   createMuteButton() {
@@ -364,7 +368,6 @@ export default class Stage extends Phaser.Scene {
             targets: newEffect,
             alpha: 0,
             duration: EFFECT_BLINK_DURATION,
-            repeat: 0,
             onComplete: (fadeTween) => {
               this.tweens.remove(fadeTween);
               this.effects.splice(this.effects.indexOf(newEffect), 1);
