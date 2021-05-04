@@ -4,9 +4,9 @@ import store from "../store";
 import { applyModifiersToState, syncSpritePhysics } from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
 
-const PBAR_WIDTH = 658;
-const PBAR_HEIGHT = 10;
-const PBAR_Y = 345;
+const PBAR_WIDTH = 676;
+const PBAR_HEIGHT = 16;
+const PBAR_Y = 332;
 
 function euclidean(x, y) {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
@@ -169,8 +169,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   createProgressBar() {
     this.progressBar = this.scene.add
-      .rectangle(WIDTH / 2 - PBAR_WIDTH / 2, PBAR_Y, 0, PBAR_HEIGHT, 0x6b9999)
-      .setDepth(DEPTH.BGFRONT);
+      .image(WIDTH / 2, PBAR_Y, "stage-progress")
+      .setDepth(DEPTH.BGFRONT)
+      .setCrop(0, 0, 0, PBAR_HEIGHT);
   }
 
   createEvents() {
@@ -501,7 +502,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
       });
     });
 
-    this.progressBar.setSize(
+    this.progressBar.setCrop(
+      0,
+      0,
       Math.min(matsurisuTotalY / (this.maximumY + 200), 1) * PBAR_WIDTH,
       PBAR_HEIGHT
     );

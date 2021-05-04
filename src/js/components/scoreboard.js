@@ -68,7 +68,11 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       this.refreshState();
       if (isLow) {
         const multiplier = this.state.lowMultiplier;
-        addTextEffect(this.scene, { x, y, text: `LOW! x${multiplier}` });
+        addTextEffect(this.scene, {
+          x,
+          y: y + 45,
+          text: `LOW! x${multiplier}`,
+        });
       }
       const airCount = this.maybeShowAirBonus(x, y);
       this.scene.events.emit("sound.catch", {
@@ -129,7 +133,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     const counter = Math.max(this.state.airCounter - 1, 0);
     const airBonus = counter * this.state.bonusPerAir;
     if (airBonus > 0) {
-      addTextEffect(this.scene, { x, y, text: `AIR! +${airBonus}` });
+      addTextEffect(this.scene, { x, y: y - 45, text: `AIR! +${airBonus}` });
     }
     return counter;
   }

@@ -59,7 +59,7 @@ export default class Stage extends Phaser.Scene {
       x: 45,
       y: 45,
       keys: ["esc"],
-      default: 0,
+      base: 0,
       over: 1,
       down: 1,
       downCallback: () => this.pauseGame(),
@@ -70,7 +70,7 @@ export default class Stage extends Phaser.Scene {
 
     this.game.events.on("blur", this.pauseGame, this);
     this.events.once("destroy", () => {
-      this.game.events.removeListener("blur", this.pauseGame, this);
+      this.game.events.off("blur", this.pauseGame, this);
     });
 
     this.events.on("stage.addEffect", this.addEffect, this);
@@ -337,7 +337,6 @@ export default class Stage extends Phaser.Scene {
       targets: this.bgm,
       volume: 0.0,
       duration,
-      // onComplete: () => this.bgm.destroy(),
     });
   }
 

@@ -4,6 +4,7 @@ import Item from "./item";
 export default class DispatchItem extends Item {
   constructor({
     name,
+    description,
     tier,
     texture,
     frame,
@@ -15,6 +16,7 @@ export default class DispatchItem extends Item {
   }) {
     super("dispatch", {
       name,
+      description,
       tier,
       texture,
       frame,

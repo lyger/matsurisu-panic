@@ -1,39 +1,30 @@
 import Phaser from "phaser";
 import { DEPTH } from "../globals";
 
-const defaultConfig = {
-  x: 0,
-  y: 0,
-  keys: [],
-  originX: 0.5,
-  originY: 0.5,
-  default: 0,
-  over: null,
-  down: null,
-  downCallback: null,
-  upCallback: null,
-};
-
-function ButtonFactory(key, pixelPerfect = false) {
+function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
   class UIButton extends Phaser.GameObjects.Sprite {
-    constructor(scene, config) {
-      const updatedConfig = { ...defaultConfig, ...config };
-
-      const {
+    constructor(
+      scene,
+      {
         x,
         y,
-        keys,
-        originX,
-        originY,
+        keys = [],
+        originX = 0.5,
+        originY = 0.5,
+        base = 0,
+        over = base,
+        down = over,
         downCallback,
         upCallback,
-      } = updatedConfig;
+        text = "",
+        textOffset = { x: 0, y: 0 },
+        overTextStyle = {},
+        downTextStyle = {},
+      }
+    ) {
+      super(scene, x, y, key, base);
 
-      if (updatedConfig.over === null)
-        updatedConfig.over = updatedConfig.default;
-      if (updatedConfig.down === null) updatedConfig.down = updatedConfig.over;
-
-      super(scene, x, y, key, updatedConfig.default);
+      this.frames = { base, over, down };
 
       this.hitbox = pixelPerfect
         ? this.scene.input.makePixelPerfect()
@@ -41,37 +32,49 @@ function ButtonFactory(key, pixelPerfect = false) {
 
       this.setActive(true);
 
-      this.config = updatedConfig;
-
       this.isDown = false;
 
       this.setDepth(DEPTH.UIFRONT)
         .setOrigin(originX, originY)
         .setInteractive(this.hitbox);
 
+      this.text = scene.add
+        .text(x + textOffset.x, y + textOffset.y, text, textStyle)
+        .setDepth(DEPTH.UIFRONT + 1)
+        .setOrigin(originX, originY);
+
+      const overTextStyle_ = { ...textStyle, ...overTextStyle };
+      const downTextStyle_ = { ...textStyle, ...downTextStyle };
+
       const handleDown = () => {
         if (!this.active) return;
-        this.setFrame(this.config.down);
+        this.setFrame(down);
+        this.text.setStyle(downTextStyle_);
         this.isDown = true;
-        if (downCallback !== null) downCallback();
+        downCallback?.();
       };
       const handleUp = () => {
         if (!this.active) return;
-        this.setFrame(this.config.over);
+        this.setFrame(over);
+        this.text.setStyle(overTextStyle_);
         this.isDown = false;
-        if (upCallback !== null) upCallback();
+        upCallback?.();
       };
       const handleOver = (pointer) => {
         if (!this.active) return;
         if (!this.isDown) {
           if (pointer.isDown) handleDown();
-          else this.setFrame(this.config.over);
+          else {
+            this.setFrame(over);
+            this.text.setStyle(overTextStyle_);
+          }
         }
       };
       const handleOut = () => {
         if (!this.active) return;
         if (this.isDown) handleUp();
-        this.setFrame(this.config.default);
+        this.setFrame(base);
+        this.text.setStyle(textStyle);
       };
 
       this.on("pointerover", handleOver);
@@ -84,12 +87,20 @@ function ButtonFactory(key, pixelPerfect = false) {
         key.on("down", handleDown);
         key.on("up", handleOut);
       });
+
+      const handleBlur = () => {
+        if (this.isDown) handleUp();
+      };
+      this.scene.game.events.on("blur", handleBlur);
+      this.once("destroy", () =>
+        this.scene.game.events.off("blur", handleBlur)
+      );
     }
 
     show(value = true) {
       this.setVisible(value);
       // Whether hiding or showing, we want the button to be default state.
-      this.setFrame(this.config.default);
+      this.setFrame(this.frames.base);
 
       if (value) {
         this.setInteractive(this.hitbox);

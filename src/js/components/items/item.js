@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 import { DEPTH, TEXT_STYLE } from "../../globals";
 import store from "../../store";
+import { descendingSortedIndex } from "../../utils";
+
+const WHITE_STYLE = { ...TEXT_STYLE, color: "#fff" };
 
 class ShopItem extends Phaser.GameObjects.Container {
   constructor(scene, item) {
@@ -8,6 +11,8 @@ class ShopItem extends Phaser.GameObjects.Container {
 
     this.item = item;
     this.discountAmount = 0;
+
+    const lang = store.getState().settings.language;
 
     this.frame = new Phaser.GameObjects.Sprite(
       this.scene,
@@ -17,26 +22,30 @@ class ShopItem extends Phaser.GameObjects.Container {
       0
     )
       .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIBACK)
       .setInteractive(scene.input.makePixelPerfect());
+    this.descriptionText = new Phaser.GameObjects.Text(
+      this.scene,
+      0,
+      -110,
+      item.description[lang],
+      { ...WHITE_STYLE, fontSize: "24px" }
+    ).setOrigin(0.5, 0.5);
     this.itemIcon = new Phaser.GameObjects.Sprite(
       this.scene,
       0,
       -22,
       this.item.texture,
       this.item.frame
-    )
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
-    this.itemText = new Phaser.GameObjects.Text(
+    ).setOrigin(0.5, 0.5);
+    this.priceText = new Phaser.GameObjects.Text(
       this.scene,
       0,
       80,
       `¥${this.item.price.toLocaleString("en-US")}`,
-      { ...TEXT_STYLE, color: "#fff" }
+      WHITE_STYLE
     )
       .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT);
+      .setDepth(1);
     this.discountSlash = new Phaser.GameObjects.Line(
       this.scene,
       0,
@@ -48,20 +57,19 @@ class ShopItem extends Phaser.GameObjects.Container {
       0xffffff
     )
       .setLineWidth(3)
-      .setDepth(DEPTH.UIFRONT)
       .setVisible(false);
     this.discountText = new Phaser.GameObjects.Text(this.scene, 0, 95, "", {
       ...TEXT_STYLE,
       color: "#fc5854",
     })
       .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.UIFRONT + 1)
       .setVisible(false);
     this.frame.on("pointerdown", this.handlePurchase, this);
     this.add([
       this.frame,
+      this.descriptionText,
       this.itemIcon,
-      this.itemText,
+      this.priceText,
       this.discountSlash,
       this.discountText,
     ]);
@@ -93,9 +101,10 @@ class ShopItem extends Phaser.GameObjects.Container {
   }
 
   setCannotBuy() {
+    this.descriptionText.setColor("#7f7f7f");
     this.frame.removeInteractive().setFrame(1);
     this.itemIcon.setTint(0x7f7f7f);
-    this.itemText.setColor("#7f7f7f");
+    this.priceText.setColor("#7f7f7f");
     this.discountSlash.setStrokeStyle(3, 0x7f7f7f);
     this.discountText.setColor("#7e2c2a");
   }
@@ -106,6 +115,7 @@ export default class Item {
     type,
     {
       name,
+      description = { en: "", ja: "" },
       tier = 0,
       texture = "items",
       frame,
@@ -117,6 +127,7 @@ export default class Item {
   ) {
     this.type = type;
     this.name = name;
+    this.description = description;
     this.tier = tier;
     this.texture = texture;
     this.frame = frame;
@@ -149,7 +160,7 @@ export default class Item {
   }
 
   addToShop(scene) {
-    const shopItem = new ShopItem(scene, this);
+    const shopItem = new ShopItem(scene, this).setDepth(DEPTH.UIBACK);
     scene.add.existing(shopItem);
     return shopItem;
   }

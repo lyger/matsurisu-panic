@@ -4,6 +4,7 @@ import Item from "./item";
 export default class Powerup extends Item {
   constructor({
     name,
+    description,
     tier,
     texture,
     frame = 0,
@@ -20,6 +21,7 @@ export default class Powerup extends Item {
   }) {
     super("powerup", {
       name,
+      description,
       tier,
       texture,
       frame,

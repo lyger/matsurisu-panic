@@ -13,7 +13,6 @@ import Stage from "./stage";
 import { addCurtainsTransition } from "./curtains";
 import sendTweet from "../twitter";
 import { timestampToDateString } from "../utils";
-import DebugCursor from "../components/debugcursor";
 import { StartScreen } from "./uiscenes";
 
 const ReturnButton = ButtonFactory("results-return-buttons", true);
@@ -25,7 +24,6 @@ const SLIDE_DURATION = 800;
 
 class TweetConfirmModal extends Phaser.Scene {
   create({ imgData, score }) {
-    new DebugCursor(this);
     const cover = this.add
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
@@ -76,7 +74,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.buttonNo = new TweetButton(this, {
       x: 230,
       y: 820,
-      default: 0,
+      base: 0,
       over: 1,
       downCallback: () => this.returnToResults(),
     });
@@ -84,7 +82,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.buttonTweet = new TweetButton(this, {
       x: 490,
       y: 820,
-      default: 2,
+      base: 2,
       over: 3,
       downCallback: () => this.handleTweet(),
     });
@@ -93,7 +91,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.buttonOk = new TweetButton(this, {
       x: WIDTH / 2,
       y: 820,
-      default: 4,
+      base: 4,
       over: 5,
       downCallback: () => this.returnToResults(this.doneTweeting),
     }).show(false);
@@ -118,7 +116,7 @@ class TweetConfirmModal extends Phaser.Scene {
     const lang = this.state.settings.language;
     this.confirmText.setText(MSG.CONFIRM_TWEET[lang]);
     this.tweetText.setText(MSG.TWEET[lang].replace("[SCORE]", `${this.score}`));
-    if (lang === "jp") {
+    if (lang === "ja") {
       this.englishButton.setFrame(1).setInteractive();
       this.japaneseButton.setFrame(2).disableInteractive();
     } else {
@@ -249,7 +247,7 @@ export default class Results extends Phaser.Scene {
       },
     });
 
-    this.events.on("wake", ({ hideTweetButton }) => {
+    this.events.on("resume", ({ hideTweetButton }) => {
       if (hideTweetButton)
         this.tweetButton.setVisible(false).disableInteractive();
     });
@@ -257,7 +255,7 @@ export default class Results extends Phaser.Scene {
     this.topButton = new ReturnButton(this, {
       x: 225,
       y: 1190,
-      default: 0,
+      base: 0,
       over: 1,
       upCallback: () => this.handleMainMenu(),
     });
@@ -265,7 +263,7 @@ export default class Results extends Phaser.Scene {
     this.retryButton = new ReturnButton(this, {
       x: 495,
       y: 1190,
-      default: 2,
+      base: 2,
       over: 3,
       upCallback: () => this.handleNewGame(),
     });

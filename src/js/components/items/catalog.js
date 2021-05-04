@@ -11,6 +11,7 @@ function getInitialCatalog() {
       // ========== SPEED ==========
       new Powerup({
         name: "Speed",
+        description: { en: "Speed Boost", ja: "スピードアップ" },
         tier: 1,
         target: "player.physics",
         frame: 5,
@@ -56,6 +57,7 @@ function getInitialCatalog() {
       // ========== JUMP ==========
       new Powerup({
         name: "Jump",
+        description: { en: "Jump Boost", ja: "ジャンプ力アップ" },
         tier: 1,
         target: "player.physics",
         frame: 7,
@@ -105,6 +107,7 @@ function getInitialCatalog() {
       // ========== FLOAT ==========
       new Powerup({
         name: "Float",
+        description: { en: "Slow Fall", ja: "落下速度ダウン" },
         tier: 2,
         target: "stage.matsurisu",
         frame: 3,
@@ -128,6 +131,7 @@ function getInitialCatalog() {
       // ========== SPEED PLUS ==========
       new Powerup({
         name: "SpeedPlus",
+        description: { en: "Speed Boost +", ja: "スピードアップ＋" },
         tier: 3,
         target: "player.physics",
         frame: 6,
@@ -174,6 +178,7 @@ function getInitialCatalog() {
       // ========== JUMP PLUS ==========
       new Powerup({
         name: "JumpPlus",
+        description: { en: "Jump Boost +", ja: "ジャンプ力アップ＋" },
         tier: 4,
         target: "player.physics",
         frame: 8,
@@ -223,6 +228,7 @@ function getInitialCatalog() {
       // ========== FLOAT PLUS ==========
       new Powerup({
         name: "FloatPlus",
+        description: { en: "Slow Fall +", ja: "落下速度ダウン＋" },
         tier: 5,
         target: "stage.matsurisu",
         frame: 4,
@@ -250,6 +256,7 @@ function getInitialCatalog() {
       // ========== 1UP ==========
       new DispatchItem({
         name: "1up",
+        description: { en: "1up", ja: "1UP" },
         tier: 1,
         frame: 1,
         action: { type: "score.gainLife" },
@@ -269,6 +276,7 @@ function getInitialCatalog() {
       // ========== EBIFRION ==========
       new DispatchItem({
         name: "Ebifrion",
+        description: { en: "Score Bonus", ja: "スコアボーナス" },
         tier: 3,
         frame: 0,
         action: { type: "score.buyEbifrion" },

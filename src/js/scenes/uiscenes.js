@@ -14,7 +14,7 @@ export class StartScreen extends Phaser.Scene {
     const button = new Button(this, {
       x: WIDTH / 2,
       y: HEIGHT / 2,
-      default: 0,
+      base: 0,
       hover: 1,
       down: 2,
       upCallback: () => this.startGame(),
@@ -24,8 +24,12 @@ export class StartScreen extends Phaser.Scene {
   }
 
   startGame() {
-    this.scene.add("Stage", Stage, true);
-    this.scene.remove(this.scene.key);
+    addCurtainsTransition({
+      scene: this,
+      targetKey: "Stage",
+      targetClass: Stage,
+      duration: 1000,
+    });
   }
 }
 
@@ -42,7 +46,7 @@ export class PauseScreen extends Phaser.Scene {
     this.button = new Button(this, {
       x: WIDTH / 2,
       y: HEIGHT / 2 + 50,
-      default: 0,
+      base: 0,
       hover: 1,
       down: 2,
       upCallback: () => this.handleResume(),

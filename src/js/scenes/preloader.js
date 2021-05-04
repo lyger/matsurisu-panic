@@ -95,6 +95,10 @@ export default class Preloader extends Phaser.Scene {
       "stage-background",
       PUBLIC_PATH + "/images/stage-background.png"
     );
+    this.load.image(
+      "stage-progress",
+      PUBLIC_PATH + "/images/stage-progress.png"
+    );
 
     this.load.image(
       "stage-scoreboard",

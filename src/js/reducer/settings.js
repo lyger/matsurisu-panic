@@ -2,7 +2,7 @@ export const settingsDefaultState = {
   mute: false,
   volumeMusic: 1,
   volumeSfx: 1,
-  language: "jp",
+  language: "ja",
 };
 
 export default function settingsReducer(state = settingsDefaultState, action) {
@@ -21,7 +21,7 @@ export default function settingsReducer(state = settingsDefaultState, action) {
     case "settings.setJapanese":
       return {
         ...state,
-        language: "jp",
+        language: "ja",
       };
     default:
       return state;

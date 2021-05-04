@@ -19,7 +19,8 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.leftButton = new ControlButtonHorizontal(scene, {
       x: 70,
       y: HEIGHT - 115,
-      default: 2,
+      keys: ["a", "left"],
+      base: 2,
       down: 3,
       downCallback: () => (this._left = true),
       upCallback: () => (this._left = false),
@@ -27,7 +28,8 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.rightButton = new ControlButtonHorizontal(scene, {
       x: 210,
       y: HEIGHT - 115,
-      default: 0,
+      keys: ["d", "right"],
+      base: 0,
       down: 1,
       downCallback: () => (this._right = true),
       upCallback: () => (this._right = false),
@@ -35,7 +37,8 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.upButton = new ControlButtonVertical(scene, {
       x: WIDTH - 140,
       y: HEIGHT - 172.5,
-      default: 0,
+      keys: ["w", "up"],
+      base: 0,
       down: 1,
       downCallback: () => (this._up = true),
       upCallback: () => (this._up = false),
@@ -43,7 +46,8 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.downButton = new ControlButtonVertical(scene, {
       x: WIDTH - 140,
       y: HEIGHT - 57.5,
-      default: 2,
+      keys: ["s", "down"],
+      base: 2,
       down: 3,
       downCallback: () => (this._down = true),
       upCallback: () => (this._down = false),
@@ -52,7 +56,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       x: WIDTH / 2,
       y: HEIGHT - 115,
       keys: ["space"],
-      default: 0,
+      base: 0,
       down: 1,
       downCallback: () => this.usePowerup(),
     })
@@ -64,9 +68,6 @@ export default class Controls extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.UIFRONT + 1)
       .setScale(0.7, 0.7)
       .setVisible(false);
-
-    this.wasdKeys = this.scene.input.keyboard.addKeys("W,A,S,D");
-    this.arrowKeys = this.scene.input.keyboard.addKeys("UP,LEFT,DOWN,RIGHT");
 
     this.add([
       this.leftButton,
@@ -86,7 +87,7 @@ export default class Controls extends Phaser.GameObjects.Container {
     if (powerup !== null) {
       this.powerupButton
         .setActive(true)
-        .setFrame(this.powerupButton.config.default);
+        .setFrame(this.powerupButton.frames.base);
       this.powerupIcon
         .setTexture(powerup.texture)
         .setFrame(powerup.frame)
@@ -124,18 +125,18 @@ export default class Controls extends Phaser.GameObjects.Container {
   }
 
   get left() {
-    return this._left || this.wasdKeys.A.isDown || this.arrowKeys.LEFT.isDown;
+    return this._left;
   }
 
   get right() {
-    return this._right || this.wasdKeys.D.isDown || this.arrowKeys.RIGHT.isDown;
+    return this._right;
   }
 
   get up() {
-    return this._up || this.wasdKeys.W.isDown || this.arrowKeys.UP.isDown;
+    return this._up;
   }
 
   get down() {
-    return this._down || this.wasdKeys.S.isDown || this.arrowKeys.DOWN.isDown;
+    return this._down;
   }
 }

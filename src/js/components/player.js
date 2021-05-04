@@ -199,7 +199,7 @@ export default class Player extends Phaser.GameObjects.Container {
       this.bodySprite.body.setVelocityX(
         this.bodySprite.body.velocity.x * this.modPhysics.slideMultiplier
       );
-      this.scene.events.emit("sound.slide");
+      if (grounded) this.scene.events.emit("sound.slide");
       this.canStartSlide = false;
       this.scene.time.delayedCall(
         this.modPhysics.slideCooldown,
