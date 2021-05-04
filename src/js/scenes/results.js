@@ -51,7 +51,7 @@ class TweetConfirmModal extends Phaser.Scene {
         ...RESULTS_TEXT_STYLE,
         fontSize: "32px",
         align: "center",
-        wordWrap: { width: 540, useAdvancedWrap: true },
+        wordWrap: { width: 580, useAdvancedWrap: true },
       })
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
@@ -126,7 +126,7 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   returnToResults(hideTweetButton = false) {
-    this.scene.resume("Results", { hideTweetButton: hideTweetButton });
+    this.scene.resume("Results", { hideTweetButton });
     this.scene.remove(this.scene.key);
   }
 
@@ -147,14 +147,15 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   handleSuccess({ url }) {
-    this.tweetText.setText(
-      `${MSG.TWEET_SUCCESS[this.state.settings.language]} ${url}`
-    );
+    this.confirmText
+      .setVisible(true)
+      .setText(MSG.TWEET_SUCCESS[this.state.settings.language]);
+    this.tweetText.setText(url);
     const clickArea = this.add
-      .rectangle(WIDTH / 2, 665, 540, 150, 0x000000, 0)
+      .rectangle(WIDTH / 2, 665, 580, 150, 0x000000, 0)
       .setDepth(DEPTH.UIFRONT + 1)
       .setInteractive();
-    clickArea.on("pointerdown", () => window.open(url, "_blank"));
+    clickArea.on("pointerup", () => window.open(url, "_blank"));
     this.doneTweeting = true;
     this.buttonOk.show(true);
   }
@@ -239,7 +240,6 @@ export default class Results extends Phaser.Scene {
       onStart: () =>
         this.game.renderer.snapshotArea(0, 0, 720, 800, (image) => {
           this.imgData = /base64,(.+)/.exec(image.src)[1];
-          console.log("DEBUG: Stored snapshot");
         }),
       onComplete: () => {
         this.tweetButton.setInteractive(this.input.makePixelPerfect());
@@ -247,7 +247,7 @@ export default class Results extends Phaser.Scene {
       },
     });
 
-    this.events.on("resume", ({ hideTweetButton }) => {
+    this.events.on("resume", (_, { hideTweetButton }) => {
       if (hideTweetButton)
         this.tweetButton.setVisible(false).disableInteractive();
     });

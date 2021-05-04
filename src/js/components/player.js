@@ -7,8 +7,8 @@ import { applyModifiersToState, syncSpritePhysics } from "../utils";
 const HITBOX_UP_OFFSET = -45;
 const HITBOX_DOWN_OFFSET = 60;
 const HITBOX_HORIZ_OFFSET = {
-  ".left": -7,
-  ".right": -7,
+  ".left": -9,
+  ".right": 5,
 };
 const HITBOX_HORIZ_CROUCH_OFFSET = {
   ".left": -7,
@@ -34,7 +34,7 @@ export default class Player extends Phaser.GameObjects.Container {
     this.canStartSlide = true;
 
     this.skinName = "matsuri-" + this.state.skin;
-    this.facing = ".right";
+    this.facing = ".left";
 
     this.bodySprite = scene.physics.add
       .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName)

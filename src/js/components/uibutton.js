@@ -19,7 +19,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         text = "",
         textOffset = { x: 0, y: 0 },
         overTextStyle = {},
-        downTextStyle = {},
+        downTextStyle = overTextStyle,
       }
     ) {
       super(scene, x, y, key, base);

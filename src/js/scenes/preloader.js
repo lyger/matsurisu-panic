@@ -72,6 +72,30 @@ export default class Preloader extends Phaser.Scene {
         }
       );
       this.load.spritesheet(
+        `matsuri-${skin}-idle`,
+        PUBLIC_PATH + `/images/matsuri-${skin}-idle.png`,
+        {
+          frameWidth: 225,
+          frameHeight: 300,
+        }
+      );
+      this.load.spritesheet(
+        `matsuri-${skin}-left`,
+        PUBLIC_PATH + `/images/matsuri-${skin}-left.png`,
+        {
+          frameWidth: 225,
+          frameHeight: 300,
+        }
+      );
+      this.load.spritesheet(
+        `matsuri-${skin}-right`,
+        PUBLIC_PATH + `/images/matsuri-${skin}-right.png`,
+        {
+          frameWidth: 225,
+          frameHeight: 300,
+        }
+      );
+      this.load.spritesheet(
         `matsuri-${skin}-down-left`,
         PUBLIC_PATH + `/images/matsuri-${skin}-down-left.png`,
         {
@@ -350,17 +374,17 @@ export default class Preloader extends Phaser.Scene {
     const makeMatsuriAnimations = (baseName) => {
       this.anims.create({
         key: baseName + ".idle.left",
-        frames: [{ key: baseName, frame: 0 }],
+        frames: [{ key: baseName + "-idle", frame: 0 }],
         frameRate: 10,
       });
       this.anims.create({
         key: baseName + ".idle.right",
-        frames: [{ key: baseName, frame: 0 }],
+        frames: [{ key: baseName + "-idle", frame: 1 }],
         frameRate: 10,
       });
       this.anims.create({
         key: baseName + ".run.left",
-        frames: this.anims.generateFrameNumbers(baseName, {
+        frames: this.anims.generateFrameNumbers(baseName + "-left", {
           frames: [0, 1, 2, 3],
         }),
         frameRate: 10,
@@ -368,7 +392,7 @@ export default class Preloader extends Phaser.Scene {
       });
       this.anims.create({
         key: baseName + ".run.right",
-        frames: this.anims.generateFrameNumbers(baseName, {
+        frames: this.anims.generateFrameNumbers(baseName + "-right", {
           frames: [0, 1, 2, 3],
         }),
         frameRate: 10,

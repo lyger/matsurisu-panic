@@ -3,6 +3,7 @@ export const settingsDefaultState = {
   volumeMusic: 1,
   volumeSfx: 1,
   language: "ja",
+  viewedInstructions: false,
 };
 
 export default function settingsReducer(state = settingsDefaultState, action) {
@@ -22,6 +23,11 @@ export default function settingsReducer(state = settingsDefaultState, action) {
       return {
         ...state,
         language: "ja",
+      };
+    case "settings.viewInstructions":
+      return {
+        ...state,
+        viewedInstructions: true,
       };
     default:
       return state;

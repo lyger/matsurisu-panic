@@ -12,7 +12,7 @@ export default function sendTweet(
 ) {
   const tweetData = { message, imageData };
 
-  let twitterAuthWindow, twitterAuthWindowInterval;
+  let twitterAuthWindow, twitterAuthWindowInterval, finishTweetProcess;
 
   const wrappedSuccessCallback = (data) => {
     if (successCallback !== undefined && successCallback !== null)
@@ -20,6 +20,7 @@ export default function sendTweet(
   };
   const wrappedErrorCallback = (data) => {
     clearInterval(twitterAuthWindowInterval);
+    window.removeEventListener("message", finishTweetProcess);
     if (errorCallback !== undefined && errorCallback !== null)
       errorCallback(data);
   };
@@ -48,19 +49,18 @@ export default function sendTweet(
   if (userAuth !== undefined) return postTweet(userAuth);
 
   // Callback for after twitter login
-  function finishTweetProcess(event) {
+  finishTweetProcess = function (event) {
     if (!event.origin.startsWith("https://onitools.moe")) {
       return;
     }
 
     const auth = event.data;
-    console.log(auth);
     userAuth = auth;
 
     postTweet(auth);
 
     window.removeEventListener("message", finishTweetProcess);
-  }
+  };
 
   // Function to open login with Twitter window after initial token retrieval
   function openTwitterAuthWindow(oauth_token) {
@@ -90,7 +90,6 @@ export default function sendTweet(
     })
     .then((json) => {
       if (json.status !== 200) throw new Error(json.error_message);
-      console.log("oauth_token", json.oauth_token);
       openTwitterAuthWindow(json.oauth_token);
     })
     .catch(wrappedErrorCallback);

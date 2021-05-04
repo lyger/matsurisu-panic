@@ -27,4 +27,9 @@ const createStoreWithMiddleware = applyMiddleware(
 )(createStore);
 
 const store = createStoreWithMiddleware(mainReducer, load(localStorageConfig));
+
+// This bit only matters for some playtesters who played during the brief time the Japanese language code was "jp" instead of ISO's "ja"
+if (store.getState().settings.language === "jp")
+  store.dispatch({ type: "settings.setJapanese" });
+
 export default store;
