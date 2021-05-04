@@ -1,17 +1,17 @@
 function applyAirBonus(airborne, state) {
-  if (!airborne) return { ...state, lastAirBonus: 0 };
+  if (!airborne) return state;
   const airCounter = state.airCounter + (state.airForgiveness > 0 ? 1 : 0);
   const airBonus = airCounter * state.bonusPerAir;
   return {
     ...state,
     airCounter: airCounter + 1,
     airForgiveness: 0,
-    lastAirBonus: airBonus,
     score: state.score + airBonus,
   };
 }
 
 export const scoreDefaultState = {
+  stagesCleared: 0,
   score: 0,
   lives: 3,
   money: 0,
@@ -27,10 +27,10 @@ export const scoreDefaultState = {
   airCounter: 0,
   airForgiveness: 0,
   bonusPerAir: 200,
-  lastAirBonus: 0,
   minCombo: 5,
   maxCombo: 25,
   scorePerFullCombo: 3000,
+  feverGauge: 0,
   results: {
     livesMultiplier: 1500,
     moneyMultiplier: 0.2,
@@ -41,7 +41,7 @@ export const scoreDefaultState = {
 export default function scoreReducer(state = scoreDefaultState, action) {
   const { type, payload } = action;
   switch (type) {
-    case "score.catch": {
+    case "score.catchMatsurisu": {
       const newCombo = state.combo + 1;
       const comboBonus =
         Math.max(Math.min(newCombo, state.maxCombo) - state.minCombo, 0) *
@@ -74,19 +74,19 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return stateWithAir;
     }
     case "score.addScore":
-      // Should only be used in the rare case when score needs to be manually adjusted, otherwise use "score.catch"
+      // Should only be used in the rare case when score needs to be manually adjusted, otherwise use "score.catchMatsurisu"
       return {
         ...state,
         score: state.score + payload,
       };
-    case "score.drop":
+    case "score.dropMatsurisu":
       return {
         ...state,
         combo: 0,
         lives: Math.max(state.lives - 1, 0),
       };
     case "score.loseLife":
-      // Should only be used in the rare case when lives need to be manually adjusted, otherwise use "score.drop"
+      // Should only be used in the rare case when lives need to be manually adjusted, otherwise use "score.dropMatsurisu"
       return {
         ...state,
         lives: Math.max(state.lives - (payload || 1), 0),
@@ -114,11 +114,6 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         money: Math.min(state.money + (payload | 1), state.maxMoney),
       };
-    case "score.resetCombo":
-      return {
-        ...state,
-        combo: 0,
-      };
     case "score.resetAir":
       return {
         ...state,
@@ -139,6 +134,13 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         airForgiveness: Math.max(state.airForgiveness - 1, 0),
+      };
+    case "score.winStage":
+      return {
+        ...state,
+        stagesCleared: state.stagesCleared + 1,
+        combo: 0,
+        feverGauge: 0,
       };
     default:
       return state;

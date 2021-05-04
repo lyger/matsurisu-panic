@@ -7,6 +7,7 @@ export default class Powerup extends Item {
     tier,
     texture,
     frame = 0,
+    sound,
     target,
     modifier,
     duration,
@@ -28,6 +29,7 @@ export default class Powerup extends Item {
       buySideEffect,
     });
     if (modifier.key === undefined) modifier.key = "Powerup:" + name;
+    this.sound = sound;
     this.target = target;
     this.modifier = modifier;
     this.duration = duration * 1000;
@@ -88,6 +90,7 @@ export default class Powerup extends Item {
     scene.events.emit("stage.addEffect", {
       texture: this.texture,
       frame: this.frame,
+      sound: this.sound,
       duration: this.duration,
     });
     scene.time.delayedCall(this.duration, () =>

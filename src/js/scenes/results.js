@@ -89,12 +89,13 @@ class TweetConfirmModal extends Phaser.Scene {
       downCallback: () => this.handleTweet(),
     });
 
+    this.doneTweeting = false;
     this.buttonOk = new TweetButton(this, {
       x: WIDTH / 2,
       y: 820,
       default: 4,
       over: 5,
-      downCallback: () => this.returnToResults(),
+      downCallback: () => this.returnToResults(this.doneTweeting),
     }).show(false);
 
     this.add.existing(this.buttonNo);
@@ -126,8 +127,8 @@ class TweetConfirmModal extends Phaser.Scene {
     }
   }
 
-  returnToResults() {
-    this.scene.resume("Results");
+  returnToResults(hideTweetButton = false) {
+    this.scene.resume("Results", { hideTweetButton: hideTweetButton });
     this.scene.remove(this.scene.key);
   }
 
@@ -156,6 +157,7 @@ class TweetConfirmModal extends Phaser.Scene {
       .setDepth(DEPTH.UIFRONT + 1)
       .setInteractive();
     clickArea.on("pointerdown", () => window.open(url, "_blank"));
+    this.doneTweeting = true;
     this.buttonOk.show(true);
   }
 
@@ -247,6 +249,11 @@ export default class Results extends Phaser.Scene {
       },
     });
 
+    this.events.on("wake", ({ hideTweetButton }) => {
+      if (hideTweetButton)
+        this.tweetButton.setVisible(false).disableInteractive();
+    });
+
     this.topButton = new ReturnButton(this, {
       x: 225,
       y: 1190,
@@ -267,8 +274,13 @@ export default class Results extends Phaser.Scene {
     this.add.existing(this.retryButton);
 
     store.dispatch({ type: "highscores.add", payload: this.finalScore });
+    this.state = store.getState();
 
-    this.createHighscores(secondaryDelay);
+    this.createHighscores(
+      secondaryDelay,
+      this.state.highscores.highscores,
+      true
+    );
   }
 
   createUI() {
@@ -294,11 +306,17 @@ export default class Results extends Phaser.Scene {
     const levelFrame = this.add
       .container(WIDTH / 2, 130, [
         new Phaser.GameObjects.Image(this, 0, 0, "results-level"),
-        new Phaser.GameObjects.Text(this, 85, -1, `${this.state.stage.level}`, {
-          ...TEXT_STYLE,
-          color: "#fff",
-          fontSize: "35px",
-        })
+        new Phaser.GameObjects.Text(
+          this,
+          85,
+          -1,
+          `${this.state.score.stagesCleared}`,
+          {
+            ...TEXT_STYLE,
+            color: "#fff",
+            fontSize: "35px",
+          }
+        )
           .setDepth(1)
           .setOrigin(0.5, 0.5),
       ])
@@ -314,41 +332,39 @@ export default class Results extends Phaser.Scene {
     });
   }
 
-  createHighscores(delay) {
+  createHighscores(delay, highscores, local = true) {
     const SCORE_STYLE = { ...RESULTS_TEXT_STYLE, fontSize: "32px" };
     this.state = store.getState();
-    this.state.highscores.highscores
-      .slice(0, 4)
-      .forEach(({ score, time }, index) => {
-        const y = 950 + 50 * index;
-        const scoreText = this.add
-          .text(410, y, `${score}`, SCORE_STYLE)
+    highscores.slice(0, 4).forEach(({ score, time }, index) => {
+      const y = 950 + 50 * index;
+      const scoreText = this.add
+        .text(410, y, `${score}`, SCORE_STYLE)
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(1, 1)
+        .setAlpha(0);
+      const dateText = this.add
+        .text(560, y, timestampToDateString(time), RESULTS_TEXT_STYLE)
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(1, 1)
+        .setAlpha(0);
+      const targets = [scoreText, dateText];
+      if (local && index === this.state.highscores.lastIndex) {
+        scoreText.setColor("#fc5854");
+        dateText.setColor("#fc5854");
+        const newBadge = this.add
+          .image(160, y, "results-new")
+          .setOrigin(0.5, 1)
           .setDepth(DEPTH.UIFRONT)
-          .setOrigin(1, 1)
           .setAlpha(0);
-        const dateText = this.add
-          .text(560, y, timestampToDateString(time), RESULTS_TEXT_STYLE)
-          .setDepth(DEPTH.UIFRONT)
-          .setOrigin(1, 1)
-          .setAlpha(0);
-        const targets = [scoreText, dateText];
-        if (index === this.state.highscores.lastIndex) {
-          scoreText.setColor("#fc5854");
-          dateText.setColor("#fc5854");
-          const newBadge = this.add
-            .image(160, y, "results-new")
-            .setOrigin(0.5, 1)
-            .setDepth(DEPTH.UIFRONT)
-            .setAlpha(0);
-          targets.push(newBadge);
-        }
-        this.tweens.add({
-          targets,
-          alpha: 1,
-          delay: delay + index * 300,
-          duration: 500,
-        });
+        targets.push(newBadge);
+      }
+      this.tweens.add({
+        targets,
+        alpha: 1,
+        delay: delay + index * 300,
+        duration: 500,
       });
+    });
   }
 
   addBonus({ y, delay, duration, value, multiplier = 1 }) {

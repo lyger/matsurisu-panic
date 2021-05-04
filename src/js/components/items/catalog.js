@@ -8,11 +8,13 @@ function getInitialCatalog() {
   return {
     // POWERUPS
     powerups: [
+      // ========== SPEED ==========
       new Powerup({
         name: "Speed",
         tier: 1,
         target: "player.physics",
         frame: 5,
+        sound: "stim",
         modifier: {
           op: "multiply",
           maxVelocity: 1.2,
@@ -51,11 +53,13 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== JUMP ==========
       new Powerup({
         name: "Jump",
         tier: 1,
         target: "player.physics",
         frame: 7,
+        sound: "bunny",
         modifier: {
           op: "multiply",
           jumpVelocity: 1.33,
@@ -98,11 +102,13 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== FLOAT ==========
       new Powerup({
         name: "Float",
         tier: 2,
         target: "stage.matsurisu",
         frame: 3,
+        sound: "balloon",
         modifier: { op: "multiply", fallSpeed: 0.75 },
         duration: 20,
         price: 1500,
@@ -119,11 +125,13 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== SPEED PLUS ==========
       new Powerup({
         name: "SpeedPlus",
         tier: 3,
         target: "player.physics",
         frame: 6,
+        sound: "stim",
         modifier: {
           op: "multiply",
           maxVelocity: 1.33,
@@ -163,11 +171,13 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== JUMP PLUS ==========
       new Powerup({
         name: "JumpPlus",
         tier: 4,
         target: "player.physics",
         frame: 8,
+        sound: "bunny",
         modifier: {
           op: "multiply",
           jumpVelocity: 1.67,
@@ -210,11 +220,13 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== FLOAT PLUS ==========
       new Powerup({
         name: "FloatPlus",
         tier: 5,
         target: "stage.matsurisu",
         frame: 4,
+        sound: "balloon",
         modifier: { op: "multiply", fallSpeed: 0.5 },
         duration: 30,
         price: 3000,
@@ -235,6 +247,7 @@ function getInitialCatalog() {
 
     // DISPATCH ITEMS
     dispatchItems: [
+      // ========== 1UP ==========
       new DispatchItem({
         name: "1up",
         tier: 1,
@@ -253,6 +266,7 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== EBIFRION ==========
       new DispatchItem({
         name: "Ebifrion",
         tier: 3,

@@ -259,6 +259,61 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/matsuri_jazz.ogg",
       PUBLIC_PATH + "/audio/matsuri_jazz.mp3",
     ]);
+
+    this.load.audio("matsurisu-catch", [
+      PUBLIC_PATH + "/audio/Matsurisu_Catch.ogg",
+      PUBLIC_PATH + "/audio/Matsurisu_Catch.mp3",
+    ]);
+    this.load.audio("matsurisu-low-catch", [
+      PUBLIC_PATH + "/audio/Low_Catch.ogg",
+      PUBLIC_PATH + "/audio/Low_Catch.mp3",
+    ]);
+    this.load.audio("coin-catch", [
+      PUBLIC_PATH + "/audio/Coin_Catch.ogg",
+      PUBLIC_PATH + "/audio/Coin_Catch.mp3",
+    ]);
+    [1, 2, 3, 4, 5].forEach((num) => {
+      this.load.audio(`air-catch-${num}`, [
+        PUBLIC_PATH + `/audio/High_Catch_${num}.ogg`,
+        PUBLIC_PATH + `/audio/High_Catch_${num}.mp3`,
+      ]);
+    });
+    this.load.audio("matsurisu-drop", [
+      PUBLIC_PATH + "/audio/Matsurisu_Drop.ogg",
+      PUBLIC_PATH + "/audio/Matsurisu_Drop.mp3",
+    ]);
+
+    this.load.audio("walk", [
+      PUBLIC_PATH + "/audio/Walk.ogg",
+      PUBLIC_PATH + "/audio/Walk.mp3",
+    ]);
+    this.load.audio("crawl", [
+      PUBLIC_PATH + "/audio/Crawl.ogg",
+      PUBLIC_PATH + "/audio/Crawl.mp3",
+    ]);
+    this.load.audio("slide", [
+      PUBLIC_PATH + "/audio/Slide.ogg",
+      PUBLIC_PATH + "/audio/Slide.mp3",
+    ]);
+    this.load.audio("jump", [
+      PUBLIC_PATH + "/audio/Jump.ogg",
+      PUBLIC_PATH + "/audio/Jump.mp3",
+    ]);
+    this.load.audio("jump-boosted", [
+      PUBLIC_PATH + "/audio/Jump_Boosted.ogg",
+      PUBLIC_PATH + "/audio/Jump_Boosted.mp3",
+    ]);
+
+    ["balloon", "bunny", "stim"].forEach((sound) => {
+      this.load.audio(`${sound}-start`, [
+        PUBLIC_PATH + `/audio/${sound}-start.ogg`,
+        PUBLIC_PATH + `/audio/${sound}-start.mp3`,
+      ]);
+      this.load.audio(`${sound}-timeout`, [
+        PUBLIC_PATH + `/audio/${sound}-timeout.ogg`,
+        PUBLIC_PATH + `/audio/${sound}-timeout.mp3`,
+      ]);
+    });
   }
 
   preload() {

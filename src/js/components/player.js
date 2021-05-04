@@ -111,6 +111,8 @@ export default class Player extends Phaser.GameObjects.Container {
 
   disable() {
     this.setActive(false);
+    this.hitBox.body.setVelocity(0).setAcceleration(0);
+    this.hitBox.setActive(false);
     this.bodySprite.setVelocity(0).setAcceleration(0).setGravityY(0);
     this.controls.disable();
   }
@@ -140,6 +142,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     if (startedJump) {
       this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
+      this.scene.events.emit("sound.jump");
       this.emit("jump");
     }
     if (endedJump) {
@@ -196,6 +199,7 @@ export default class Player extends Phaser.GameObjects.Container {
       this.bodySprite.body.setVelocityX(
         this.bodySprite.body.velocity.x * this.modPhysics.slideMultiplier
       );
+      this.scene.events.emit("sound.slide");
       this.canStartSlide = false;
       this.scene.time.delayedCall(
         this.modPhysics.slideCooldown,
@@ -217,6 +221,13 @@ export default class Player extends Phaser.GameObjects.Container {
       (idle ? ".idle" : ".run") +
       this.facing;
     this.bodySprite.anims.play(animName, true);
+
+    if (idle) this.scene.events.emit("sound.idle");
+    else
+      this.scene.events.emit("sound.walk", {
+        crouching,
+        airborne: this.airborne,
+      });
 
     syncSpritePhysics(this.bodySprite, this.hitBox, armOffsetX, armOffsetY);
   }

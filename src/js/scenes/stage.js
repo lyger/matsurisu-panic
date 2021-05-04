@@ -21,9 +21,9 @@ const PauseButton = ButtonFactory("pause-button", true);
 export default class Stage extends Phaser.Scene {
   create() {
     store.dispatch({ type: "stage.increaseLevel" });
-    store.dispatch({ type: "score.resetCombo" });
 
     this.startBgm(GAME_START_DELAY / 2000);
+    this.createSoundListeners();
 
     this.background = this.add
       .image(WIDTH / 2, HEIGHT / 2, "stage-background")
@@ -205,6 +205,8 @@ export default class Stage extends Phaser.Scene {
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.drop", coords);
+        const volume = store.getState().settings.volumeSfx;
+        this.sound.play("matsurisu-drop", { volume: volume * 0.75 });
       }
     );
 
@@ -249,6 +251,68 @@ export default class Stage extends Phaser.Scene {
     this.physics.add.collider(ground, this.matsuri.armSprite);
   }
 
+  createSoundListeners() {
+    const walkSound = this.sound.add("walk", { loop: true });
+    const crawlSound = this.sound.add("crawl", { loop: true });
+
+    this.events.on("sound.catch", ({ type, airCount = 0, isLow = false }) => {
+      const volume = store.getState().settings.volumeSfx;
+      if (airCount > 0)
+        this.sound.play(`air-catch-${Math.min(airCount, 5)}`, { volume });
+      switch (type) {
+        case "matsurisu":
+          if (isLow) this.sound.play("matsurisu-low-catch", { volume });
+          else this.sound.play("matsurisu-catch", { volume });
+          break;
+        case "coin":
+          this.sound.play("coin-catch", { volume });
+          break;
+      }
+    });
+    this.events.on("sound.jump", () => {
+      const state = store.getState();
+      const volume = state.settings.volumeSfx;
+      const boosted = state.player.physics.modifiers.reduce(
+        (acc, mod) => acc || mod.key.startsWith("Jump"),
+        false
+      );
+      this.sound.play("jump" + (boosted ? "-boosted" : ""), { volume });
+    });
+    this.events.on("sound.walk", ({ crouching, airborne }) => {
+      const volume = store.getState().settings.volumeSfx;
+      if (airborne) {
+        walkSound.stop();
+        crawlSound.stop();
+        return;
+      }
+      if (crouching) {
+        walkSound.stop();
+        if (crawlSound.isPlaying) return;
+        crawlSound.play({ volume });
+        return;
+      }
+      if (walkSound.isPlaying) return;
+      walkSound.play({ volume });
+    });
+    this.events.on("sound.slide", () => {
+      const volume = store.getState().settings.volumeSfx;
+      this.sound.play("slide", { volume });
+    });
+    this.events.on("sound.idle", () => {
+      walkSound.stop();
+      crawlSound.stop();
+    });
+
+    this.events.on("destroy", () => {
+      walkSound.stop();
+      crawlSound.stop();
+      walkSound.destroy();
+      crawlSound.destroy();
+      this.bgm?.stop?.();
+      this.bgm?.destroy?.();
+    });
+  }
+
   setAirForgiveness() {
     if (this.matsuri.airborne) return;
     const state = store.getState();
@@ -263,7 +327,7 @@ export default class Stage extends Phaser.Scene {
     const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-samba", {
       loop: true,
-      volume: 0.1 * settings.volumeMusic,
+      volume: 0.075 * settings.volumeMusic,
     });
     this.bgm.play({ delay });
   }
@@ -273,7 +337,7 @@ export default class Stage extends Phaser.Scene {
       targets: this.bgm,
       volume: 0.0,
       duration,
-      onComplete: () => this.bgm.destroy(),
+      // onComplete: () => this.bgm.destroy(),
     });
   }
 
@@ -311,6 +375,7 @@ export default class Stage extends Phaser.Scene {
   winStage() {
     this.events.emit("stage.clearEffects");
     this.pauseButton.setActive(false);
+    store.dispatch({ type: "score.winStage" });
     this.fadeBgm(1000);
     const state = store.getState();
     if (state.stage.level === state.stage.maxLevel) {
@@ -346,7 +411,10 @@ export default class Stage extends Phaser.Scene {
     });
   }
 
-  addEffect({ texture, frame, duration }) {
+  addEffect({ texture, frame, sound, duration }) {
+    const volume = store.getState().settings.volumeSfx;
+    this.sound.play(`${sound}-start`, { volume });
+
     const newEffect = this.add
       .image(0, 0, texture, frame)
       .setOrigin(0.5, 0.5)
@@ -354,7 +422,9 @@ export default class Stage extends Phaser.Scene {
       .setScale(0.75, 0.75);
     this.effects.push(newEffect);
     this.alignEffects();
+
     this.time.delayedCall(duration - EFFECT_FADE_DURATION, () => {
+      this.sound.play(`${sound}-timeout`, { volume });
       this.tweens.add({
         targets: newEffect,
         alpha: 0,

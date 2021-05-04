@@ -19,7 +19,6 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.leftButton = new ControlButtonHorizontal(scene, {
       x: 70,
       y: HEIGHT - 115,
-      keys: ["a", "left"],
       default: 2,
       down: 3,
       downCallback: () => (this._left = true),
@@ -28,7 +27,6 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.rightButton = new ControlButtonHorizontal(scene, {
       x: 210,
       y: HEIGHT - 115,
-      keys: ["d", "right"],
       default: 0,
       down: 1,
       downCallback: () => (this._right = true),
@@ -37,7 +35,6 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.upButton = new ControlButtonVertical(scene, {
       x: WIDTH - 140,
       y: HEIGHT - 172.5,
-      keys: ["w", "up"],
       default: 0,
       down: 1,
       downCallback: () => (this._up = true),
@@ -46,7 +43,6 @@ export default class Controls extends Phaser.GameObjects.Container {
     this.downButton = new ControlButtonVertical(scene, {
       x: WIDTH - 140,
       y: HEIGHT - 57.5,
-      keys: ["s", "down"],
       default: 2,
       down: 3,
       downCallback: () => (this._down = true),
@@ -68,6 +64,9 @@ export default class Controls extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.UIFRONT + 1)
       .setScale(0.7, 0.7)
       .setVisible(false);
+
+    this.wasdKeys = this.scene.input.keyboard.addKeys("W,A,S,D");
+    this.arrowKeys = this.scene.input.keyboard.addKeys("UP,LEFT,DOWN,RIGHT");
 
     this.add([
       this.leftButton,
@@ -125,18 +124,18 @@ export default class Controls extends Phaser.GameObjects.Container {
   }
 
   get left() {
-    return this._left;
+    return this._left || this.wasdKeys.A.isDown || this.arrowKeys.LEFT.isDown;
   }
 
   get right() {
-    return this._right;
+    return this._right || this.wasdKeys.D.isDown || this.arrowKeys.RIGHT.isDown;
   }
 
   get up() {
-    return this._up;
+    return this._up || this.wasdKeys.W.isDown || this.arrowKeys.UP.isDown;
   }
 
   get down() {
-    return this._down;
+    return this._down || this.wasdKeys.S.isDown || this.arrowKeys.DOWN.isDown;
   }
 }
