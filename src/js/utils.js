@@ -1,4 +1,5 @@
-import { CATCH_MESSAGE_STYLE, DEPTH } from "./globals";
+import { CATCH_MESSAGE_STYLE, DEPTH, MSG } from "./globals";
+import store from "./store";
 
 export function applyModifiersToState(state) {
   const modState = { ...state };
@@ -84,20 +85,6 @@ export function timestampToDateString(value) {
   const day = date.getDate();
 
   return `${year}.${month}.${day}`;
-  // let hour = date.getHours();
-  // const minutes = date.getMinutes().toString().padStart(2, "0");
-  // let suffix = "AM";
-
-  // if (hour === 0) {
-  //   hour = 12;
-  // } else if (hour === 12) {
-  //   suffix = "PM";
-  // } else if (hour > 12) {
-  //   hour = hour - 12;
-  //   suffix = "PM";
-  // }
-
-  // return `${year}/${month}/${day} ${hour}:${minutes} ${suffix}`;
 }
 
 export function descendingSortedIndex(array, value, key = (v) => v) {
@@ -110,4 +97,9 @@ export function descendingSortedIndex(array, value, key = (v) => v) {
     else high = mid;
   }
   return low;
+}
+
+export function get_message(key) {
+  const lang = store.getState().settings.language;
+  return MSG[key][lang];
 }

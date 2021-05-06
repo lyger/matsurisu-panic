@@ -55,6 +55,11 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.BGFRONT)
       .setAlpha(0);
 
+    this.debugFever = this.scene.add
+      .text(50, 550, "", TEXT_STYLE)
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.OBJECTBACK);
+
     this.refreshState();
     this.addStageListeners();
   }
@@ -82,11 +87,18 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       });
     });
 
-    this.scene.events.on("money.catch", ({ airborne, x, y }) => {
+    this.scene.events.on("coin.catch", ({ airborne, x, y }) => {
       store.dispatch({ type: "score.catchCoin", payload: { airborne } });
       this.refreshState();
       const airCount = this.maybeShowAirBonus(x, y);
       this.scene.events.emit("sound.catch", { type: "coin", airCount });
+    });
+
+    this.scene.events.on("powerup.catch", ({ airborne, x, y }) => {
+      store.dispatch({ type: "score.catchPowerup", payload: { airborne } });
+      this.refreshState();
+      const airCount = this.maybeShowAirBonus(x, y);
+      this.scene.events.emit("sound.catch", { type: "powerup", airCount });
     });
 
     this.scene.events.on("ebifrion.catch", ({ airborne, x, y }) => {
@@ -99,13 +111,6 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       });
       const airCount = this.maybeShowAirBonus(x, y);
       this.scene.events.emit("sound.catch", { type: "ebifrion", airCount });
-    });
-
-    this.scene.events.on("powerup.catch", ({ airborne, x, y }) => {
-      store.dispatch({ type: "score.catchPowerup", payload: { airborne } });
-      this.refreshState();
-      const airCount = this.maybeShowAirBonus(x, y);
-      this.scene.events.emit("sound.catch", { type: "powerup", airCount });
     });
 
     this.scene.events.on("global.fullCombo", () => {
@@ -126,6 +131,20 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
         return this.scene.events.emit("global.gameOver");
     });
 
+    this.scene.events.on("coin.drop", () => {
+      store.dispatch({ type: "score.dropCoin" });
+      this.refreshState();
+    });
+
+    this.scene.events.on("powerup.drop", () => {
+      store.dispatch({ type: "score.dropPowerup" });
+      this.refreshState();
+    });
+
+    this.scene.events.on("ebifrion.drop", () => {
+      store.dispatch({ type: "score.dropEbifrion" });
+      this.refreshState();
+    });
     return this;
   }
 
@@ -226,6 +245,8 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     if (this.state.combo > oldCombo && this.state.combo % 5 === 0)
       this.emphasizeCombos();
     this.refreshLives();
+
+    this.debugFever.setText(this.state.fever.gauge);
     return this;
   }
 }

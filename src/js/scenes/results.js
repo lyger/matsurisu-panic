@@ -12,8 +12,11 @@ import ButtonFactory from "../components/uibutton";
 import Stage from "./stage";
 import { addCurtainsTransition } from "./curtains";
 import sendTweet from "../twitter";
-import { timestampToDateString } from "../utils";
+import { get_message, timestampToDateString } from "../utils";
 import { StartScreen } from "./uiscenes";
+
+const HIGHSCORES_ENDPOINT =
+  "https://onitools.moe/_matsurisu_panic_auth/highscores.json";
 
 const ReturnButton = ButtonFactory("results-return-buttons", true);
 const TweetButton = ButtonFactory("tweet-confirm-buttons", true);
@@ -28,7 +31,7 @@ class TweetConfirmModal extends Phaser.Scene {
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
       .setInteractive();
-    cover.on("pointerdown", this.returnToResults, this);
+    cover.on("pointerdown", () => this.returnToResults());
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "tweet-confirm-modal")
       .setDepth(DEPTH.UIBACK)
@@ -104,18 +107,16 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   get fullTweetText() {
-    const baseText = MSG.TWEET[this.state.settings.language].replace(
-      "[SCORE]",
-      `${this.score}`
-    );
+    const baseText = get_message("TWEET").replace("[SCORE]", `${this.score}`);
     return `${baseText} http://example.com`;
   }
 
   refreshDisplay() {
     this.state = store.getState();
-    const lang = this.state.settings.language;
-    this.confirmText.setText(MSG.CONFIRM_TWEET[lang]);
-    this.tweetText.setText(MSG.TWEET[lang].replace("[SCORE]", `${this.score}`));
+    this.confirmText.setText(get_message("CONFIRM_TWEET"));
+    this.tweetText.setText(
+      get_message("TWEET").replace("[SCORE]", `${this.score}`)
+    );
     if (lang === "ja") {
       this.englishButton.setFrame(1).setInteractive();
       this.japaneseButton.setFrame(2).disableInteractive();
@@ -136,7 +137,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.confirmText.setVisible(false);
     this.englishButton.setVisible(false).setActive(false);
     this.japaneseButton.setVisible(false).setActive(false);
-    this.tweetText.setText(MSG.TWEET_PROGRESS[this.state.settings.language]);
+    this.tweetText.setText(get_message("TWEET_PROGRESS"));
     sendTweet(
       this.fullTweetText,
       this.imgData,
@@ -147,9 +148,7 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   handleSuccess({ url }) {
-    this.confirmText
-      .setVisible(true)
-      .setText(MSG.TWEET_SUCCESS[this.state.settings.language]);
+    this.confirmText.setVisible(true).setText(get_message("TWEET_SUCCESS"));
     this.tweetText.setText(url);
     const clickArea = this.add
       .rectangle(WIDTH / 2, 665, 580, 150, 0x000000, 0)
@@ -162,7 +161,7 @@ class TweetConfirmModal extends Phaser.Scene {
 
   handleFailure(err) {
     console.log(err);
-    this.tweetText.setText(MSG.TWEET_FAILURE[this.state.settings.language]);
+    this.tweetText.setText(get_message("TWEET_FAILURE"));
     this.buttonOk.show(true);
   }
 }
@@ -248,6 +247,7 @@ export default class Results extends Phaser.Scene {
     });
 
     this.events.on("resume", (_, { hideTweetButton }) => {
+      console.log("Resuming", hideTweetButton);
       if (hideTweetButton)
         this.tweetButton.setVisible(false).disableInteractive();
     });
@@ -274,11 +274,7 @@ export default class Results extends Phaser.Scene {
     store.dispatch({ type: "highscores.add", payload: this.finalScore });
     this.state = store.getState();
 
-    this.createHighscores(
-      secondaryDelay,
-      this.state.highscores.highscores,
-      true
-    );
+    this.showLocalHighscores(secondaryDelay);
   }
 
   createUI() {
@@ -330,32 +326,77 @@ export default class Results extends Phaser.Scene {
     });
   }
 
-  createHighscores(delay, highscores, local = true) {
+  clearHighscores() {
+    this.highscoreElements?.forEach((obj) => obj.destroy());
+    this.highscoreElements = [];
+  }
+
+  showLocalHighscores(delay = 0) {
+    const highscores = this.state.highscores.highscores;
+    const lastIndex = this.state.highscores.lastIndex;
+    this.clearHighscores();
+    this.createHighscores(delay, highscores, lastIndex, ({ score, time }) => [
+      `${score}`,
+      timestampToDateString(time),
+    ]);
+  }
+
+  showGlobalHighscores(delay = 0) {
+    this.clearHighscores();
+    fetch(HIGHSCORES_ENDPOINT)
+      .then((resp) => resp.json())
+      .then(({ highscores }) => {
+        this.createHighscores(delay, highscores, -1, ({ score, name }) => [
+          `${score}`,
+          name,
+        ]);
+      })
+      .catch(() => this.showHighscoresError());
+  }
+
+  showHighscoresError() {
+    const ERROR_STYLE = { ...TEXT_STYLE, fontSize: "32px", color: "#fc5854" };
+    const errorText = this.add
+      .text(WIDTH / 2, 950, get_message("GENERIC_ERROR"), ERROR_STYLE)
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.UIFRONT);
+    this.highscoreElements = [errorText];
+  }
+
+  createHighscores(delay, highscores, lastIndex, rowToText) {
     const SCORE_STYLE = { ...RESULTS_TEXT_STYLE, fontSize: "32px" };
-    this.state = store.getState();
-    highscores.slice(0, 4).forEach(({ score, time }, index) => {
+    const elements = [];
+
+    highscores.slice(0, 4).forEach((row, index) => {
+      const [text1, text2] = rowToText(row);
       const y = 950 + 50 * index;
-      const scoreText = this.add
-        .text(410, y, `${score}`, SCORE_STYLE)
+
+      const primaryText = this.add
+        .text(410, y, text1, SCORE_STYLE)
         .setDepth(DEPTH.UIFRONT)
         .setOrigin(1, 1)
         .setAlpha(0);
-      const dateText = this.add
-        .text(560, y, timestampToDateString(time), RESULTS_TEXT_STYLE)
+      const secondaryText = this.add
+        .text(560, y, text2, RESULTS_TEXT_STYLE)
         .setDepth(DEPTH.UIFRONT)
         .setOrigin(1, 1)
         .setAlpha(0);
-      const targets = [scoreText, dateText];
-      if (local && index === this.state.highscores.lastIndex) {
-        scoreText.setColor("#fc5854");
-        dateText.setColor("#fc5854");
+
+      const targets = [primaryText, secondaryText];
+      elements.push(primaryText, secondaryText);
+
+      if (index === lastIndex) {
+        primaryText.setColor("#fc5854");
+        secondaryText.setColor("#fc5854");
         const newBadge = this.add
           .image(160, y, "results-new")
           .setOrigin(0.5, 1)
           .setDepth(DEPTH.UIFRONT)
           .setAlpha(0);
         targets.push(newBadge);
+        elements.push(newBadge);
       }
+
       this.tweens.add({
         targets,
         alpha: 1,
@@ -363,6 +404,8 @@ export default class Results extends Phaser.Scene {
         duration: 500,
       });
     });
+
+    this.highscoreElements = elements;
   }
 
   addBonus({ y, delay, duration, value, multiplier = 1 }) {

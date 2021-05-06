@@ -185,13 +185,13 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     this.scene.events.on("matsurisu.catch", checkFinished);
     this.scene.events.on("matsurisu.drop", checkFinished);
-    this.scene.events.on("money.catch", checkFinished);
-    this.scene.events.on("money.drop", checkFinished);
+    this.scene.events.on("coin.catch", checkFinished);
+    this.scene.events.on("coin.drop", checkFinished);
 
     this.scene.events.on("matsurisu.catch", this.catchMatsurisu, this);
     this.scene.events.on("matsurisu.drop", this.dropMatsurisu, this);
-    this.scene.events.on("money.catch", this.collectMoney, this);
-    this.scene.events.on("money.drop", this.dropMoney, this);
+    this.scene.events.on("coin.catch", this.collectMoney, this);
+    this.scene.events.on("coin.drop", this.dropMoney, this);
     this.scene.events.on("powerup.catch", this.collectPowerup, this);
     this.scene.events.on("powerup.drop", this.dropPowerup, this);
     this.scene.events.on("ebifrion.catch", this.catchEbifrion, this);

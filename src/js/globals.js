@@ -38,6 +38,7 @@ export const CURTAIN_COLOR_1 = 0xfc5d51;
 export const CURTAIN_COLOR_2 = 0xff4e47;
 
 export const MSG = {
+  GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
   BUY_ITEM: { en: "Buy?", ja: "買いますか？" },
   REPLACE_ITEM: { en: "Buy and replace?", ja: "買って入れ替えますか？" },
   CONFIRM_TWEET: { en: "Send tweet?", ja: "ツイートしますか？" },

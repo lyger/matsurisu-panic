@@ -54,6 +54,9 @@ export class PauseScreen extends Phaser.Scene {
 
     this.add.existing(this.button);
 
+    const escKey = this.input.keyboard.addKey("esc", true, false);
+    escKey.on("down", () => this.handleResume());
+
     // this.debugRect = this.add
     //   .rectangle(WIDTH / 2, 800, 300, 80, 0x0000ff)
     //   .setDepth(DEPTH.UIFRONT)

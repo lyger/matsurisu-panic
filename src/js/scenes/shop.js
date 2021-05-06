@@ -5,6 +5,7 @@ import Scoreboard from "../components/scoreboard";
 import ButtonFactory from "../components/uibutton";
 import { DEPTH, HEIGHT, MSG, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
+import { get_message } from "../utils";
 import { addCurtainsTransition } from "./curtains";
 import Stage from "./stage";
 
@@ -17,7 +18,6 @@ const ShopConfirmButton = ButtonFactory("shop-confirm-buttons", true);
 class ShopConfirmModal extends Phaser.Scene {
   create({ shopItem, buyCallback }) {
     const { item } = shopItem;
-    const lang = store.getState().settings.language;
     const cover = this.add
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
@@ -59,7 +59,12 @@ class ShopConfirmModal extends Phaser.Scene {
 
     if (item.type === "powerup" && currentPowerup !== null) {
       this.add
-        .text(WIDTH / 2, 475, MSG.REPLACE_ITEM[lang], BROWN_TEXT_STYLE_LARGEST)
+        .text(
+          WIDTH / 2,
+          475,
+          get_message("REPLACE_ITEM"),
+          BROWN_TEXT_STYLE_LARGEST
+        )
         .setOrigin(0.5, 0.5)
         .setDepth(DEPTH.UIFRONT);
       this.add
@@ -76,7 +81,7 @@ class ShopConfirmModal extends Phaser.Scene {
         .setOrigin(0.5, 0.5);
     } else {
       this.add
-        .text(WIDTH / 2, 475, MSG.BUY_ITEM[lang], BROWN_TEXT_STYLE_LARGEST)
+        .text(WIDTH / 2, 475, get_message("BUY_ITEM"), BROWN_TEXT_STYLE_LARGEST)
         .setOrigin(0.5, 0.5)
         .setDepth(DEPTH.UIFRONT);
       this.add

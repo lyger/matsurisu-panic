@@ -140,7 +140,7 @@ export default class Stage extends Phaser.Scene {
           airborne,
         };
         money.destroy();
-        this.events.emit("money.catch", data);
+        this.events.emit("coin.catch", data);
         this.setAirForgiveness();
       }
     );
@@ -216,7 +216,7 @@ export default class Stage extends Phaser.Scene {
         y: money.y,
       };
       money.destroy();
-      this.events.emit("money.drop", coords);
+      this.events.emit("coin.drop", coords);
     });
 
     this.physics.add.collider(
@@ -230,6 +230,8 @@ export default class Stage extends Phaser.Scene {
         };
         powerup.destroy();
         this.events.emit("powerup.drop", data);
+        const volume = store.getState().settings.volumeSfx;
+        this.sound.play("powerup-drop", { volume });
       }
     );
 
@@ -303,6 +305,11 @@ export default class Stage extends Phaser.Scene {
       crawlSound.stop();
     });
 
+    this.events.on("global.gameOver", () => {
+      walkSound.stop();
+      crawlSound.stop();
+    });
+
     this.events.on("destroy", () => {
       walkSound.stop();
       crawlSound.stop();
@@ -337,6 +344,7 @@ export default class Stage extends Phaser.Scene {
       targets: this.bgm,
       volume: 0.0,
       duration,
+      onComplete: () => this.bgm.stop(),
     });
   }
 

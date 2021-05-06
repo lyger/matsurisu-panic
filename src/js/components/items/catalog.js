@@ -256,7 +256,7 @@ function getInitialCatalog() {
       // ========== 1UP ==========
       new DispatchItem({
         name: "1up",
-        description: { en: "1up", ja: "1UP" },
+        description: { en: "1-Up", ja: "1UP" },
         tier: 1,
         frame: 1,
         action: { type: "score.gainLife" },
