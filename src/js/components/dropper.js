@@ -35,6 +35,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.createTimer();
     this.createProgressBar();
     this.createEvents();
+
+    this.setupFever();
   }
 
   generateItems() {
@@ -198,6 +200,20 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("ebifrion.drop", this.dropEbifrion, this);
   }
 
+  setupFever() {
+    if (this.state.fever.number === 0) {
+      this.feverStep = 0;
+      this.numFever = 0;
+      this.nextFeverY = Infinity;
+    } else {
+      this.feverStep = (0.8 * this.maximumY) / this.state.fever.number;
+      this.numFever = 0;
+      this.nextFeverY = this.feverStep;
+      // Once fever has been activated for the level, we'll stop spawning more fever items
+      this.scene.events.on("global.fever", () => (this.nextFeverY = Infinity));
+    }
+  }
+
   catchMatsurisu({ x, y }) {
     const rand = Phaser.Math.RND;
     const deltaY = GROUNDHEIGHT - y - 75;
@@ -292,7 +308,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectPowerup({ x, y, target }) {
+  collectPowerup({ x, y, target, replaces }) {
     const powerup = this.scene.add
       .image(x, y, target.texture, target.frame)
       .setDepth(DEPTH.OBJECTDEPTH);
@@ -303,6 +319,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
       duration: 300,
       onComplete: () => powerup.destroy(),
     });
+    if (replaces !== null && replaces !== undefined)
+      this.refundPowerup(replaces);
   }
 
   dropPowerup({ x, y, target }) {
@@ -392,23 +410,40 @@ export default class Dropper extends Phaser.GameObjects.Group {
     return this;
   }
 
-  createExtra(matsurisu, config) {
-    const { key, texture, frame, depth, x, y } = config;
+  createExtra(
+    target,
+    { key, texture, frame, animation, depth = 0, x = 0, y = 0 }
+  ) {
     const newExtra = this.scene.physics.add
-      .sprite(matsurisu.x + x, matsurisu.y + y, texture, frame)
+      .sprite(target.x + x, target.y + y, texture, frame)
       .setDepth(DEPTH.OBJECTDEPTH + depth)
       .setVisible(true)
       .setActive(true);
-    matsurisu.setData(`extra:${key}`, newExtra);
-    const destroyExtra = () => newExtra?.destroy?.();
-    matsurisu.once("destroy", destroyExtra);
+    if (animation !== undefined) newExtra.anims.play(animation, true);
+    target.setData(`extra:${key}`, newExtra);
+    const syncExtra = () => syncSpritePhysics(target, newExtra, x, y);
+    this.scene.events.on("update", syncExtra);
+    const destroyExtra = () => {
+      this.scene.events.off("update", syncExtra);
+      newExtra?.destroy?.();
+    };
+    target.once("destroy", destroyExtra);
     this.scene.events.once("transitionout", () =>
-      matsurisu.off("destroy", destroyExtra)
+      target.off("destroy", destroyExtra)
     );
   }
 
-  addExtra({ key, duration, texture, frame, depth = 0, x = 0, y = 0 }) {
-    const config = { key, texture, frame, depth, x, y };
+  addExtra({
+    key,
+    duration,
+    texture,
+    frame,
+    animation,
+    depth = 0,
+    x = 0,
+    y = 0,
+  }) {
+    const config = { key, texture, frame, animation, depth, x, y };
     this.extraConfigs.push(config);
     this.matsurisu
       .getChildren()
@@ -422,6 +457,35 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
+  makeFeverItem(target) {
+    target.setData("fever", true);
+    target.setTint(0xc161ff);
+    this.createExtra(target, {
+      key: "feverItem",
+      texture: "extra-fever",
+      frame: 0,
+      animation: "extra-fever.burn",
+      depth: -1,
+    });
+    this.nextFeverY = this.nextFeverY + this.feverStep;
+    this.numFever = this.numFever + 1;
+  }
+
+  refundPowerup(powerup) {
+    const newPowerup = this.powerup
+      .create(WIDTH / 2, 64, powerup.texture, powerup.frame, true, true)
+      .setDepth(DEPTH.OBJECTDEPTH)
+      .setVelocityY(this.modPowerup.fallSpeed)
+      .setData({ target: powerup, fever: false, refunded: true });
+    this.scene.tweens.add({
+      targets: newPowerup,
+      alpha: 0,
+      duration: 300,
+      yoyo: true,
+      repeat: Infinity,
+    });
+  }
+
   update(time) {
     this.reloadState();
     const rand = Phaser.Math.RND;
@@ -429,6 +493,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
     const matsurisuDeltaY =
       ((delta - this.matsurisuLastSpawn) / 1000) * this.modMatsurisu.fallSpeed;
     const matsurisuTotalY = this.totalY + matsurisuDeltaY;
+
+    const isNextFeverItem =
+      this.numFever < this.state.fever.number &&
+      matsurisuTotalY > this.nextFeverY;
 
     if (
       this.matsurisuBuffer.length > 0 &&
@@ -443,12 +511,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
         .setDepth(DEPTH.OBJECTDEPTH)
         .setVelocityY(this.modMatsurisu.fallSpeed)
         .setFlipX(rand.frac() > 0.5)
-        .setRotation(rand.frac() * 2 * Math.PI);
+        .setRotation(rand.frac() * 2 * Math.PI)
+        .setData("fever", false);
       newMatsurisu.anims.play("matsurisu-normal.fall");
       newMatsurisu.body.setCircle(45, 30, 30);
       this.extraConfigs.forEach((config) =>
         this.createExtra(newMatsurisu, config)
       );
+      if (isNextFeverItem) this.makeFeverItem(newMatsurisu);
     }
 
     if (
@@ -460,8 +530,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
       const newMoney = this.money
         .create(next.x, -100, "items", 2, true, true)
         .setDepth(DEPTH.OBJECTDEPTH)
-        .setVelocityY(this.modMoney.fallSpeed);
+        .setVelocityY(this.modMoney.fallSpeed)
+        .setData("fever", false);
       newMoney.body.setCircle(40, 24, 24);
+      if (isNextFeverItem) this.makeFeverItem(newMoney);
     }
 
     if (
@@ -481,8 +553,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
         )
         .setDepth(DEPTH.OBJECTDEPTH)
         .setVelocityY(this.modPowerup.fallSpeed)
-        .setData("target", next.target);
+        .setData({ target: next.target, fever: false, refunded: false });
       newPowerup.body.setCircle(40, 24, 24);
+      if (isNextFeverItem) this.makeFeverItem(newPowerup);
     }
 
     if (!this.ebifrionActive && this.ebifrionStartY <= matsurisuTotalY) {
@@ -494,13 +567,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
         duration: this.modEbifrion.fallDuration,
       });
     }
-
-    this.matsurisu.getChildren().forEach((matsurisu) => {
-      this.extraConfigs.forEach(({ key, x, y }) => {
-        const extra = matsurisu.getData(`extra:${key}`);
-        if (extra !== undefined) syncSpritePhysics(matsurisu, extra, x, y);
-      });
-    });
 
     this.progressBar.setCrop(
       0,

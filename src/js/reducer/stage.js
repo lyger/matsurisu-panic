@@ -41,6 +41,12 @@ const ebifrionDefaultState = {
   modifiers: [],
 };
 
+const feverDefaultState = {
+  number: 0,
+  threshold: 0,
+  duration: 20,
+};
+
 export const stageDefaultState = {
   level: 0,
   maxLevel: 10,
@@ -48,6 +54,7 @@ export const stageDefaultState = {
   money: moneyDefaultState,
   powerup: powerupDefaultState,
   ebifrion: ebifrionDefaultState,
+  fever: feverDefaultState,
 };
 
 // This function reaches approx 2.16 by level 10 (n = 9)
@@ -155,6 +162,24 @@ function ebifrionReducer(state = ebifrionDefaultState, action) {
   }
 }
 
+function feverReducer(state = feverDefaultState, action) {
+  const { type, payload } = action;
+  switch (type) {
+    case "stage.increaseLevel":
+      const newLevel = payload;
+      return {
+        ...state,
+        number:
+          newLevel < 3
+            ? 0
+            : Math.min(Math.floor(newLevel * 2 + 2 + (newLevel - 3) / 3), 20),
+        threshold: newLevel < 3 ? 0 : Math.min(newLevel * 2, 15),
+      };
+    default:
+      return state;
+  }
+}
+
 export default function stageReducer(state = stageDefaultState, action) {
   const { type, payload } = action;
   switch (type) {
@@ -168,6 +193,7 @@ export default function stageReducer(state = stageDefaultState, action) {
         money: moneyReducer(state.money, modifiedAction),
         powerup: powerupReducer(state.powerup, modifiedAction),
         ebifrion: ebifrionReducer(state.ebifrion, modifiedAction),
+        fever: feverReducer(state.fever, modifiedAction),
       };
     default:
       return {
@@ -176,6 +202,7 @@ export default function stageReducer(state = stageDefaultState, action) {
         money: moneyReducer(state.money, action),
         powerup: powerupReducer(state.powerup, action),
         ebifrion: ebifrionReducer(state.ebifrion, action),
+        fever: feverReducer(state.fever, action),
       };
   }
 }

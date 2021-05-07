@@ -276,6 +276,11 @@ export default class Preloader extends Phaser.Scene {
       "extra-balloons",
       PUBLIC_PATH + "/images/extra-balloons.png"
     );
+    this.load.spritesheet(
+      "extra-fever",
+      PUBLIC_PATH + "/images/extra-fever.png",
+      { frameWidth: 128, frameHeight: 128 }
+    );
   }
 
   loadSounds() {
@@ -451,6 +456,15 @@ export default class Preloader extends Phaser.Scene {
         frameRate: 5,
         repeat: -1,
       });
+    });
+
+    this.anims.create({
+      key: "extra-fever.burn",
+      frames: this.anims.generateFrameNumbers("extra-fever", {
+        frames: [0, 1],
+      }),
+      frameRate: 5,
+      repeat: -1,
     });
   }
 

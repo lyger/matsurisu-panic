@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { DEPTH, GROUNDHEIGHT, HEIGHT, WIDTH } from "../globals";
+import { DEPTH, GROUNDHEIGHT, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
 import Player from "../components/player";
 import Dropper from "../components/dropper";
 import Scoreboard from "../components/scoreboard";
@@ -36,50 +36,8 @@ export default class Stage extends Phaser.Scene {
     this.createPlayerCollisions();
     this.createGroundCollisions();
 
-    this.events.once("global.gameOver", this.loseStage, this);
-
-    this.events.once("dropper.done", () => {
-      this.time.delayedCall(GAME_END_DELAY, () => {
-        const state = store.getState();
-        if (state.score.combo === state.stage.matsurisu.number) {
-          this.events.emit("global.fullCombo");
-          this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
-        } else this.winStage();
-      });
-    });
-
-    this.events.once("dropper.doneWithFullCombo", () => {
-      this.time.delayedCall(GAME_END_DELAY, () =>
-        this.events.emit("global.fullCombo")
-      );
-      this.time.delayedCall(GAME_END_DELAY * 2, () => this.winStage());
-    });
-
-    this.pauseButton = new PauseButton(this, {
-      x: 45,
-      y: 45,
-      keys: ["esc"],
-      base: 0,
-      over: 1,
-      down: 1,
-      downCallback: () => this.pauseGame(),
-    }).setActive(false);
-    this.add.existing(this.pauseButton);
-
-    this.createMuteButton();
-
-    this.game.events.on("blur", this.pauseGame, this);
-    this.events.once("destroy", () => {
-      this.game.events.off("blur", this.pauseGame, this);
-    });
-
-    this.events.on("stage.addEffect", this.addEffect, this);
-    this.events.on("resume", this.pauseButton.show, this.pauseButton);
-
-    this.time.delayedCall(GAME_START_DELAY, () => {
-      this.events.emit("dropper.start");
-      this.pauseButton.setActive(true);
-    });
+    this.createUIButtons();
+    this.createEvents();
 
     if (this.anims.paused) this.anims.resumeAll();
 
@@ -93,7 +51,18 @@ export default class Stage extends Phaser.Scene {
     });
   }
 
-  createMuteButton() {
+  createUIButtons() {
+    this.pauseButton = new PauseButton(this, {
+      x: 45,
+      y: 45,
+      keys: ["esc"],
+      base: 0,
+      over: 1,
+      down: 1,
+      downCallback: () => this.pauseGame(),
+    }).setActive(false);
+    this.add.existing(this.pauseButton);
+
     const mute = store.getState().settings.mute;
     this.game.sound.mute = mute;
     this.muteButton = this.add
@@ -117,7 +86,7 @@ export default class Stage extends Phaser.Scene {
         const data = {
           x: matsurisu.x,
           y: matsurisu.y,
-          state,
+          isFever: matsurisu.getData("fever"),
           isLow,
           airborne,
         };
@@ -131,12 +100,11 @@ export default class Stage extends Phaser.Scene {
       this.matsuri.hitBox,
       this.dropper.money,
       (player, money) => {
-        const state = store.getState();
         const airborne = this.matsuri.airborne;
         const data = {
           x: money.x,
           y: money.y,
-          state,
+          isFever: money.getData("fever"),
           airborne,
         };
         money.destroy();
@@ -149,14 +117,16 @@ export default class Stage extends Phaser.Scene {
       this.matsuri.hitBox,
       this.dropper.powerup,
       (player, powerup) => {
-        const state = store.getState();
         const target = powerup.getData("target");
+        const isRefunded = powerup.getData("refunded");
+        const replaces = store.getState().player.powerup;
         const airborne = this.matsuri.airborne;
         const data = {
           x: powerup.x,
           y: powerup.y,
-          state,
+          isFever: powerup.getData("fever"),
           target,
+          replaces: isRefunded ? null : replaces,
           airborne,
         };
         store.dispatch({
@@ -251,6 +221,34 @@ export default class Stage extends Phaser.Scene {
 
     this.physics.add.collider(ground, this.matsuri.bodySprite);
     this.physics.add.collider(ground, this.matsuri.armSprite);
+  }
+
+  createEvents() {
+    this.events.once("global.gameOver", this.loseStage, this);
+    this.events.on("global.fever", this.startFever, this);
+
+    this.game.events.on("blur", this.pauseGame, this);
+    this.events.once("destroy", () => {
+      this.game.events.off("blur", this.pauseGame, this);
+    });
+    this.events.on("resume", this.resumeGame, this);
+
+    this.events.on("stage.addEffect", this.addEffect, this);
+
+    this.events.once("dropper.done", () => {
+      this.time.delayedCall(GAME_END_DELAY, () => {
+        const state = store.getState();
+        if (state.score.combo === state.stage.matsurisu.number) {
+          this.events.emit("global.fullCombo");
+          this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
+        } else this.winStage();
+      });
+    });
+
+    this.time.delayedCall(GAME_START_DELAY, () => {
+      this.events.emit("dropper.start");
+      this.pauseButton.setActive(true);
+    });
   }
 
   createSoundListeners() {
@@ -355,15 +353,6 @@ export default class Stage extends Phaser.Scene {
     this.muteButton.setFrame(newMute ? 1 : 0);
   }
 
-  loseStage() {
-    this.time.clearPendingEvents();
-    this.matsuri.disable();
-    this.dropper.pause();
-    this.pauseButton.setActive(false);
-    this.fadeBgm(1000);
-    this.time.delayedCall(GAME_END_DELAY, () => this.gameOver());
-  }
-
   pauseGame() {
     const transitioning = this.scene?.systems?.isTransitioning();
     const paused = this.scene?.isPaused(this.scene.key);
@@ -374,9 +363,36 @@ export default class Stage extends Phaser.Scene {
       paused === undefined
     )
       return;
+    this.sound.pauseAll();
     this.scene.add("PauseScreen", PauseScreen);
     this.scene.launch("PauseScreen");
     this.scene.pause(this.scene.key);
+  }
+
+  resumeGame() {
+    this.pauseButton.show();
+    this.sound.resumeAll();
+  }
+
+  startFever() {
+    console.log("DEBUG starting fever");
+    const debugFeverText = this.add
+      .text(50, 500, "FEVER\nSTART", TEXT_STYLE)
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.OBJECTBACK);
+    const state = store.getState();
+    this.time.delayedCall(state.stage.fever.duration * 1000, () =>
+      debugFeverText.destroy()
+    );
+  }
+
+  loseStage() {
+    this.time.clearPendingEvents();
+    this.matsuri.disable();
+    this.dropper.pause();
+    this.pauseButton.setActive(false);
+    this.fadeBgm(1000);
+    this.time.delayedCall(GAME_END_DELAY, () => this.gameOver());
   }
 
   winStage() {

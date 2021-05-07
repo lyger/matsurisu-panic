@@ -3,6 +3,15 @@ import Phaser from "phaser";
 import { WIDTH, HEIGHT } from "./globals";
 import Preloader from "./scenes/preloader";
 
+// Disable context menu to prevent interference with game input
+document.addEventListener(
+  "contextmenu",
+  function (e) {
+    e.preventDefault();
+  },
+  false
+);
+
 const game = new Phaser.Game({
   parent: "phaser-root",
   type: Phaser.AUTO,

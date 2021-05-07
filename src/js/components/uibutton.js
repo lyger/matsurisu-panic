@@ -91,6 +91,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       const handleBlur = () => {
         if (this.isDown) handleUp();
       };
+      this.scene.events.on("pause", handleBlur);
       this.scene.game.events.on("blur", handleBlur);
       this.once("destroy", () =>
         this.scene.game.events.off("blur", handleBlur)

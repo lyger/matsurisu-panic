@@ -65,39 +65,51 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
   }
 
   addStageListeners() {
-    this.scene.events.on("matsurisu.catch", ({ isLow, airborne, x, y }) => {
-      store.dispatch({
-        type: "score.catchMatsurisu",
-        payload: { isLow, airborne },
-      });
-      this.refreshState();
-      if (isLow) {
-        const multiplier = this.state.lowMultiplier;
-        addTextEffect(this.scene, {
-          x,
-          y: y + 45,
-          text: `LOW! x${multiplier}`,
+    this.scene.events.on(
+      "matsurisu.catch",
+      ({ isLow, isFever, airborne, x, y }) => {
+        store.dispatch({
+          type: "score.catchMatsurisu",
+          payload: { isLow, airborne, isFever },
+        });
+        this.refreshState();
+        if (isLow) {
+          const multiplier = this.state.lowMultiplier;
+          addTextEffect(this.scene, {
+            x,
+            y: y + 45,
+            text: `LOW! x${multiplier}`,
+          });
+        }
+        const airCount = this.maybeShowAirBonus(x, y);
+        this.checkFever();
+        this.scene.events.emit("sound.catch", {
+          type: "matsurisu",
+          isLow,
+          airCount,
         });
       }
-      const airCount = this.maybeShowAirBonus(x, y);
-      this.scene.events.emit("sound.catch", {
-        type: "matsurisu",
-        isLow,
-        airCount,
-      });
-    });
+    );
 
-    this.scene.events.on("coin.catch", ({ airborne, x, y }) => {
-      store.dispatch({ type: "score.catchCoin", payload: { airborne } });
+    this.scene.events.on("coin.catch", ({ airborne, isFever, x, y }) => {
+      store.dispatch({
+        type: "score.catchCoin",
+        payload: { airborne, isFever },
+      });
       this.refreshState();
       const airCount = this.maybeShowAirBonus(x, y);
+      this.checkFever();
       this.scene.events.emit("sound.catch", { type: "coin", airCount });
     });
 
-    this.scene.events.on("powerup.catch", ({ airborne, x, y }) => {
-      store.dispatch({ type: "score.catchPowerup", payload: { airborne } });
+    this.scene.events.on("powerup.catch", ({ airborne, isFever, x, y }) => {
+      store.dispatch({
+        type: "score.catchPowerup",
+        payload: { airborne, isFever },
+      });
       this.refreshState();
       const airCount = this.maybeShowAirBonus(x, y);
+      this.checkFever();
       this.scene.events.emit("sound.catch", { type: "powerup", airCount });
     });
 
@@ -155,6 +167,15 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       addTextEffect(this.scene, { x, y: y - 45, text: `AIR! +${airBonus}` });
     }
     return counter;
+  }
+
+  checkFever() {
+    const feverConfig = store.getState().stage.fever;
+    if (feverConfig.number > 0 && this.state.fever === feverConfig.threshold) {
+      store.dispatch({ type: "score.resetFever" });
+      this.scene.events.emit("global.fever");
+      this.refreshState();
+    }
   }
 
   refreshLives() {
@@ -246,7 +267,8 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       this.emphasizeCombos();
     this.refreshLives();
 
-    this.debugFever.setText(this.state.fever.gauge);
+    this.debugFever.setText(`${this.state.fever}`);
+
     return this;
   }
 }

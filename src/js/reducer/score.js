@@ -10,16 +10,6 @@ function applyAirBonus(airborne, state) {
   };
 }
 
-const feverDefaultState = {
-  gauge: 0,
-  buffer: 0,
-  maxBuffer: 10,
-  perMatsurisuCatch: 1,
-  perMatsurisuDrop: 10,
-  perOtherCatch: 2,
-  perOtherDrop: 5,
-};
-
 export const scoreDefaultState = {
   stagesCleared: 0,
   score: 0,
@@ -40,68 +30,13 @@ export const scoreDefaultState = {
   minCombo: 5,
   maxCombo: 25,
   scorePerFullCombo: 3000,
-  fever: feverDefaultState,
+  fever: 0,
   results: {
     livesMultiplier: 1500,
     moneyMultiplier: 0.2,
     bestComboMultiplier: 200,
   },
 };
-
-function applyBonusToFever(state, bonus) {
-  if (state.buffer === state.maxBuffer) {
-    return {
-      ...state,
-      gauge: state.gauge + bonus,
-    };
-  }
-  const newBuffer = state.buffer + bonus;
-  return {
-    ...state,
-    gauge: state.gauge + Math.max(newBuffer - state.maxBuffer, 0),
-    buffer: Math.min(newBuffer, state.maxBuffer),
-  };
-}
-
-function applyPenaltyToFever(state, penalty) {
-  if (state.buffer === 0)
-    return {
-      ...state,
-      gauge: Math.max(state.gauge - penalty, 0),
-    };
-  if (state.buffer < penalty)
-    return {
-      ...state,
-      gauge: Math.max(state.gauge + state.buffer - penalty, 0),
-      buffer: 0,
-    };
-  return {
-    ...state,
-    buffer: 0,
-  };
-}
-
-function feverReducer(state = feverDefaultState, action) {
-  const { type, payload } = action;
-  switch (type) {
-    case "fever.catchMatsurisu":
-      return applyBonusToFever(state, state.perMatsurisuCatch);
-    case "fever.dropMatsurisu":
-      return applyPenaltyToFever(state, state.perMatsurisuDrop);
-    case "fever.catchOther":
-      return applyBonusToFever(state, state.perOtherCatch);
-    case "fever.dropOther":
-      return applyPenaltyToFever(state, state.perOtherDrop);
-    case "fever.reset":
-      return {
-        ...state,
-        gauge: 0,
-        buffer: 0,
-      };
-    default:
-      return state;
-  }
-}
 
 export default function scoreReducer(state = scoreDefaultState, action) {
   const { type, payload } = action;
@@ -119,7 +54,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         bestCombo: Math.max(newCombo, state.bestCombo),
         score:
           stateWithAir.score + (state.scorePerCatch + comboBonus) * multiplier,
-        fever: feverReducer(state.fever, { type: "fever.catchMatsurisu" }),
+        fever: state.fever + (payload.isFever ? 1 : 0),
       };
     }
     case "score.catchCoin": {
@@ -127,22 +62,19 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...stateWithAir,
         money: Math.min(state.money + state.moneyPerCoin, state.maxMoney),
-        fever: feverReducer(state.fever, { type: "fever.catchOther" }),
+        fever: state.fever + (payload.isFever ? 1 : 0),
       };
     }
     case "score.catchPowerup": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
-      return {
-        ...stateWithAir,
-        fever: feverReducer(state.fever, { type: "fever.catchOther" }),
-      };
+      if (payload.isFever) return { ...stateWithAir, fever: state.fever + 1 };
+      return stateWithAir;
     }
     case "score.catchEbifrion": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
       return {
         ...stateWithAir,
         score: stateWithAir.score + state.scorePerEbifrion,
-        fever: feverReducer(state.fever, { type: "fever.catchOther" }),
       };
     }
     case "score.dropMatsurisu":
@@ -150,14 +82,6 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         combo: 0,
         lives: Math.max(state.lives - 1, 0),
-        fever: feverReducer(state.fever, { type: "fever.dropMatsurisu" }),
-      };
-    case "score.dropCoin":
-    case "score.dropPowerup":
-    case "score.dropEbifrion":
-      return {
-        ...state,
-        fever: feverReducer(state.fever, { type: "fever.dropOther" }),
       };
     case "score.buyEbifrion": {
       return {
@@ -199,6 +123,16 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         airCounter: 0,
         airForgiveness: 0,
       };
+    case "score.addFever":
+      return {
+        ...state,
+        fever: state.fever + 1,
+      };
+    case "score.resetFever":
+      return {
+        ...state,
+        fever: 0,
+      };
     case "score.fullCombo":
       return {
         ...state,
@@ -219,7 +153,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         stagesCleared: state.stagesCleared + 1,
         combo: 0,
-        fever: feverReducer(state.fever, { type: "fever.reset" }),
+        fever: 0,
       };
     default:
       return state;

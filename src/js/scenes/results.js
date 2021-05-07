@@ -117,7 +117,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.tweetText.setText(
       get_message("TWEET").replace("[SCORE]", `${this.score}`)
     );
-    if (lang === "ja") {
+    if (this.state.settings.language === "ja") {
       this.englishButton.setFrame(1).setInteractive();
       this.japaneseButton.setFrame(2).disableInteractive();
     } else {
@@ -247,7 +247,6 @@ export default class Results extends Phaser.Scene {
     });
 
     this.events.on("resume", (_, { hideTweetButton }) => {
-      console.log("Resuming", hideTweetButton);
       if (hideTweetButton)
         this.tweetButton.setVisible(false).disableInteractive();
     });
