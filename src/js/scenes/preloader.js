@@ -315,9 +315,17 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/Matsurisu_Drop.ogg",
       PUBLIC_PATH + "/audio/Matsurisu_Drop.mp3",
     ]);
+    this.load.audio("powerup-catch", [
+      PUBLIC_PATH + "/audio/Powerup_Catch.ogg",
+      PUBLIC_PATH + "/audio/Powerup_Catch.mp3",
+    ]);
     this.load.audio("powerup-drop", [
       PUBLIC_PATH + "/audio/Powerup_Drop.ogg",
       PUBLIC_PATH + "/audio/Powerup_Drop.mp3",
+    ]);
+    this.load.audio("ebifrion-catch", [
+      PUBLIC_PATH + "/audio/Ebifrion_Catch.ogg",
+      PUBLIC_PATH + "/audio/Ebifrion_Catch.mp3",
     ]);
 
     this.load.audio("walk", [

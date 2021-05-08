@@ -19,6 +19,7 @@ export const scoreDefaultState = {
   maxMoney: 99999,
   combo: 0,
   bestCombo: 0,
+  drops: 0,
   moneyPerCoin: 500,
   scorePerCatch: 100,
   scorePerEbifrion: 2000,
@@ -31,6 +32,7 @@ export const scoreDefaultState = {
   maxCombo: 25,
   scorePerFullCombo: 3000,
   fever: 0,
+  invincible: false,
   results: {
     livesMultiplier: 1500,
     moneyMultiplier: 0.2,
@@ -78,9 +80,11 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       };
     }
     case "score.dropMatsurisu":
+      if (state.invincible || payload.bonus) return state;
       return {
         ...state,
         combo: 0,
+        drops: state.drops + 1,
         lives: Math.max(state.lives - 1, 0),
       };
     case "score.buyEbifrion": {
@@ -148,12 +152,23 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...state,
         airForgiveness: Math.max(state.airForgiveness - 1, 0),
       };
-    case "score.winStage":
+    case "global.winStage":
       return {
         ...state,
         stagesCleared: state.stagesCleared + 1,
         combo: 0,
+        drops: 0,
         fever: 0,
+      };
+    case "global.activateFever":
+      return {
+        ...state,
+        invincible: true,
+      };
+    case "global.deactivateFever":
+      return {
+        ...state,
+        invincible: false,
       };
     default:
       return state;

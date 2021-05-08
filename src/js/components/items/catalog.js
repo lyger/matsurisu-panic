@@ -185,8 +185,8 @@ function getInitialCatalog() {
         sound: "bunny",
         modifier: {
           op: "multiply",
-          jumpVelocity: 1.67,
-          gravity: 1.33,
+          jumpVelocity: 1.5,
+          gravity: 1.17,
           jumpAcceleration: 1.33,
           quickFallAcceleration: 1.33,
         },

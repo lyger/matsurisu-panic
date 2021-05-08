@@ -49,6 +49,10 @@ export default class Stage extends Phaser.Scene {
     debugKey2.on("down", () => {
       this.loseStage();
     });
+    const debugKey3 = this.input.keyboard.addKey("c", true, false);
+    debugKey3.on("down", () => {
+      this.events.emit("global.feverStart");
+    });
   }
 
   createUIButtons() {
@@ -169,14 +173,20 @@ export default class Stage extends Phaser.Scene {
       ground,
       this.dropper.matsurisu,
       (ground, matsurisu) => {
-        const coords = {
+        const invincible = store.getState().score.invincible;
+        const bonus = matsurisu.getData("bonus");
+        const data = {
           x: matsurisu.x,
           y: matsurisu.y,
+          rotation: matsurisu.rotation,
+          bonus,
+          invincible,
         };
         matsurisu.destroy();
-        this.events.emit("matsurisu.drop", coords);
+        this.events.emit("matsurisu.drop", data);
         const volume = store.getState().settings.volumeSfx;
-        this.sound.play("matsurisu-drop", { volume: volume * 0.75 });
+        if (!invincible && !bonus)
+          this.sound.play("matsurisu-drop", { volume: volume * 0.75 });
       }
     );
 
@@ -225,7 +235,7 @@ export default class Stage extends Phaser.Scene {
 
   createEvents() {
     this.events.once("global.gameOver", this.loseStage, this);
-    this.events.on("global.fever", this.startFever, this);
+    this.events.on("global.feverStart", this.activateFever, this);
 
     this.game.events.on("blur", this.pauseGame, this);
     this.events.once("destroy", () => {
@@ -238,7 +248,7 @@ export default class Stage extends Phaser.Scene {
     this.events.once("dropper.done", () => {
       this.time.delayedCall(GAME_END_DELAY, () => {
         const state = store.getState();
-        if (state.score.combo === state.stage.matsurisu.number) {
+        if (state.score.drops === 0) {
           this.events.emit("global.fullCombo");
           this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
         } else this.winStage();
@@ -266,6 +276,12 @@ export default class Stage extends Phaser.Scene {
           break;
         case "coin":
           this.sound.play("coin-catch", { volume });
+          break;
+        case "powerup":
+          this.sound.play("powerup-catch", { volume });
+          break;
+        case "ebifrion":
+          this.sound.play("ebifrion-catch", { volume });
           break;
       }
     });
@@ -357,16 +373,16 @@ export default class Stage extends Phaser.Scene {
     const transitioning = this.scene?.systems?.isTransitioning();
     const paused = this.scene?.isPaused(this.scene.key);
     if (
-      transitioning ||
       paused ||
-      transitioning === undefined ||
-      paused === undefined
+      paused === undefined ||
+      transitioning ||
+      transitioning === undefined
     )
-      return;
+      return false;
     this.sound.pauseAll();
-    this.scene.add("PauseScreen", PauseScreen);
-    this.scene.launch("PauseScreen");
+    this.scene.add("PauseScreen", PauseScreen, true);
     this.scene.pause(this.scene.key);
+    return true;
   }
 
   resumeGame() {
@@ -374,16 +390,24 @@ export default class Stage extends Phaser.Scene {
     this.sound.resumeAll();
   }
 
-  startFever() {
+  activateFever() {
     console.log("DEBUG starting fever");
     const debugFeverText = this.add
       .text(50, 500, "FEVER\nSTART", TEXT_STYLE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.OBJECTBACK);
+    store.dispatch({ type: "global.activateFever" });
     const state = store.getState();
-    this.time.delayedCall(state.stage.fever.duration * 1000, () =>
-      debugFeverText.destroy()
+    const feverDuration = state.stage.fever.duration * 1000;
+    this.time.delayedCall(feverDuration - EFFECT_FADE_DURATION, () =>
+      this.events.emit("global.feverTimeout", EFFECT_FADE_DURATION)
     );
+    this.time.delayedCall(feverDuration, () => {
+      console.log("DEBUG ending fever", Date.now());
+      debugFeverText.destroy();
+      store.dispatch({ type: "global.deactivateFever" });
+      this.events.emit("global.feverEnd");
+    });
   }
 
   loseStage() {
@@ -396,9 +420,11 @@ export default class Stage extends Phaser.Scene {
   }
 
   winStage() {
+    this.time.clearPendingEvents();
     this.events.emit("stage.clearEffects");
+    this.dropper.pause();
     this.pauseButton.setActive(false);
-    store.dispatch({ type: "score.winStage" });
+    store.dispatch({ type: "global.winStage" });
     this.fadeBgm(1000);
     const state = store.getState();
     if (state.stage.level === state.stage.maxLevel) {

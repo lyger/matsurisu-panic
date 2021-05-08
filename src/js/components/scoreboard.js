@@ -1,5 +1,12 @@
 import Phaser from "phaser";
-import { DEPTH, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
+import {
+  COMBO_TEXT_COLOR,
+  DEPTH,
+  FEVER_TEXT_COLOR,
+  HEIGHT,
+  TEXT_STYLE,
+  WIDTH,
+} from "../globals";
 import store from "../store";
 import { addTextEffect } from "../utils";
 
@@ -19,7 +26,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
 
     const TEXT_STYLE_COMBO = {
       ...TEXT_STYLE,
-      color: "#182538",
+      color: COMBO_TEXT_COLOR,
     };
 
     this.moneyYenSign = this.scene.add
@@ -54,6 +61,17 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.BGFRONT)
       .setAlpha(0);
+
+    this.feverText = this.scene.add
+      .text(WIDTH / 2, COMBO_HEIGHT - 20, "FEVER", {
+        ...TEXT_STYLE,
+        fontSize: "128px",
+        color: FEVER_TEXT_COLOR,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH.BGFRONT)
+      .setAlpha(0.55)
+      .setVisible(false);
 
     this.debugFever = this.scene.add
       .text(50, 550, "", TEXT_STYLE)
@@ -131,13 +149,13 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       addTextEffect(this.scene, {
         text: `FULL COMBO\n+${state.score.scorePerFullCombo}`,
         x: WIDTH / 2,
-        y: COMBO_HEIGHT,
+        y: COMBO_HEIGHT - 165,
       });
       this.refreshState();
     });
 
-    this.scene.events.on("matsurisu.drop", () => {
-      store.dispatch({ type: "score.dropMatsurisu" });
+    this.scene.events.on("matsurisu.drop", ({ bonus }) => {
+      store.dispatch({ type: "score.dropMatsurisu", payload: { bonus } });
       this.refreshState();
       if (this.state.lives == 0)
         return this.scene.events.emit("global.gameOver");
@@ -157,6 +175,48 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       store.dispatch({ type: "score.dropEbifrion" });
       this.refreshState();
     });
+
+    this.scene.events.on("global.feverStart", () => {
+      this.comboLabel.setVisible(false);
+      this.comboText.setVisible(false);
+      this.feverText.setVisible(true);
+      let colorYellow = true;
+      const feverEvent = this.scene.time.addEvent({
+        delay: 500,
+        loop: true,
+        callback: () => {
+          this.feverText.setColor(
+            colorYellow ? COMBO_TEXT_COLOR : FEVER_TEXT_COLOR
+          );
+          colorYellow = !colorYellow;
+        },
+      });
+      this.feverText.setData("event", feverEvent);
+    });
+
+    this.scene.events.on("global.feverTimeout", (duration) => {
+      this.feverText.getData("event")?.destroy?.();
+      const totalSecs = Math.floor(duration / 1000);
+      const startAt = 1000 - Math.max(duration - totalSecs * 1000, 1);
+      let counter = totalSecs;
+      this.scene.time.addEvent({
+        delay: 1000,
+        repeat: totalSecs - 1,
+        startAt,
+        callback: () => {
+          this.feverText.setText(`${counter}`);
+          this.emphasizeText(this.feverText);
+          counter--;
+        },
+      });
+    });
+
+    this.scene.events.on("global.feverEnd", () => {
+      this.comboLabel.setVisible(true);
+      this.comboText.setVisible(true);
+      this.feverText.setVisible(false);
+    });
+
     return this;
   }
 
@@ -173,7 +233,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     const feverConfig = store.getState().stage.fever;
     if (feverConfig.number > 0 && this.state.fever === feverConfig.threshold) {
       store.dispatch({ type: "score.resetFever" });
-      this.scene.events.emit("global.fever");
+      this.scene.events.emit("global.feverStart");
       this.refreshState();
     }
   }
@@ -222,7 +282,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     if (this.comboLabel.alpha > 0) return;
     this.scene.tweens.add({
       targets: [this.comboLabel, this.comboText],
-      alpha: 1,
+      alpha: 0.4,
       duration: 250,
     });
     return this;
@@ -235,14 +295,15 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     return this;
   }
 
-  emphasizeCombos() {
+  emphasizeText(textObject, style = {}) {
+    if (!textObject.visible) return;
     const effect1 = this.scene.add
-      .text(WIDTH / 2, COMBO_HEIGHT, `${this.state.combo}`, {
-        ...this.comboText.style,
-        color: "#356e81",
+      .text(textObject.x, textObject.y, textObject.text, {
+        ...textObject.style,
+        ...style,
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.BGFRONT + 1)
+      .setDepth(textObject.depth + 1)
       .setAlpha(0.7);
     this.scene.tweens.add({
       targets: effect1,
@@ -264,7 +325,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     this.levelText.setText(`${allState.stage.level}`);
     this.comboText.setText(`${this.state.combo}`);
     if (this.state.combo > oldCombo && this.state.combo % 5 === 0)
-      this.emphasizeCombos();
+      this.emphasizeText(this.comboText);
     this.refreshLives();
 
     this.debugFever.setText(`${this.state.fever}`);

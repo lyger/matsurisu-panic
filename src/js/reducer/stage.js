@@ -2,6 +2,7 @@ import { addModifierWithoutDuplicates } from "../utils";
 
 const matsurisuDefaultState = {
   number: 30,
+  bonusPerSpawn: 0,
   minX: 50,
   maxX: 670,
   minSpacingX: 100,
@@ -82,6 +83,20 @@ function matsurisuReducer(state = matsurisuDefaultState, action) {
         ...state,
         modifiers: state.modifiers.filter(
           (modifier) => modifier.key !== payload
+        ),
+      };
+    case "global.activateFever":
+      return addModifierWithoutDuplicates(state, {
+        key: "Fever:BonusSpawns",
+        op: "add",
+        bonusPerSpawn: 2,
+      });
+    case "global.deactivateFever":
+    case "global.winStage":
+      return {
+        ...state,
+        modifiers: state.modifiers.filter(
+          (modifier) => !modifier.key.startsWith("Fever:")
         ),
       };
     default:
@@ -185,7 +200,7 @@ export default function stageReducer(state = stageDefaultState, action) {
   switch (type) {
     case "stage.increaseLevel":
       const newLevel = state.level + 1;
-      const modifiedAction = { type: "stage.increaseLevel", payload: newLevel };
+      const modifiedAction = { type, payload: newLevel };
       return {
         ...state,
         level: newLevel,

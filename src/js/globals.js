@@ -37,6 +37,11 @@ export const RESULTS_TEXT_STYLE = {
 export const CURTAIN_COLOR_1 = 0xfc5d51;
 export const CURTAIN_COLOR_2 = 0xff4e47;
 
+export const FEVER_TINT = 0xa498ff;
+
+export const FEVER_TEXT_COLOR = "#ff90bc";
+export const COMBO_TEXT_COLOR = "#ffc82e";
+
 export const MSG = {
   GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
   BUY_ITEM: { en: "Buy?", ja: "買いますか？" },
