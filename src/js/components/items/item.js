@@ -145,7 +145,7 @@ export default class Item {
     const state = store.getState();
     return (
       (this.purchaseLimit < 0 || this.numPurchased < this.purchaseLimit) &&
-      this.purchaseConditions.reduce((prev, cond) => prev && cond(state), true)
+      this.purchaseConditions.every((cond) => cond(state))
     );
   }
 

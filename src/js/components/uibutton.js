@@ -72,6 +72,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       };
       const handleOut = () => {
         if (!this.active) return;
+        if (this.keys.some((key) => key.isDown)) return;
         if (this.isDown) handleUp();
         this.setFrame(base);
         this.text.setStyle(textStyle);
@@ -82,10 +83,11 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       this.on("pointerdown", handleDown);
       this.on("pointerup", handleUp);
 
-      keys.forEach((keyName) => {
+      this.keys = keys.map((keyName) => {
         const key = scene.input.keyboard.addKey(keyName, true, false);
         key.on("down", handleDown);
         key.on("up", handleOut);
+        return key;
       });
 
       const handleBlur = () => {

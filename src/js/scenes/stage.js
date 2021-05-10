@@ -288,9 +288,8 @@ export default class Stage extends Phaser.Scene {
     this.events.on("sound.jump", () => {
       const state = store.getState();
       const volume = state.settings.volumeSfx;
-      const boosted = state.player.physics.modifiers.reduce(
-        (acc, mod) => acc || mod.key.startsWith("Jump"),
-        false
+      const boosted = state.player.physics.modifiers.some((mod) =>
+        mod.key.startsWith("Powerup:Jump")
       );
       this.sound.play("jump" + (boosted ? "-boosted" : ""), { volume });
     });

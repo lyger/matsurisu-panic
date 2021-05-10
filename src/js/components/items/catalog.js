@@ -33,6 +33,7 @@ function getInitialCatalog() {
             frequency: 30,
             lifespan: 400,
             follow: scene.matsuri.bodySprite,
+            followOffset: { x: 0, y: 30 },
             radial: true,
             rotate: { min: 0, max: 359 },
             alpha: { start: 0.8, end: 0 },
@@ -43,7 +44,10 @@ function getInitialCatalog() {
           const particlesTop = scene.add
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH + 1);
-          particlesTop.createEmitter(config);
+          particlesTop.createEmitter({
+            ...config,
+            alpha: { start: 0.2, end: 0 },
+          });
           const particlesBot = scene.add
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);
@@ -153,6 +157,7 @@ function getInitialCatalog() {
             frequency: 40,
             lifespan: 400,
             follow: scene.matsuri.bodySprite,
+            followOffset: { x: 0, y: 30 },
             radial: true,
             rotate: { min: 0, max: 359 },
             alpha: { start: 0.8, end: 0 },
@@ -164,7 +169,10 @@ function getInitialCatalog() {
           const particlesTop = scene.add
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH + 1);
-          particlesTop.createEmitter(config);
+          particlesTop.createEmitter({
+            ...config,
+            alpha: { start: 0.2, end: 0 },
+          });
           const particlesBot = scene.add
             .particles("particle-speed")
             .setDepth(DEPTH.PLAYERDEPTH - 1);

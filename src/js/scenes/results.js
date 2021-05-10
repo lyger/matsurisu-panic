@@ -409,7 +409,12 @@ export default class Results extends Phaser.Scene {
 
   addBonus({ y, delay, duration, value, multiplier = 1 }) {
     this.finalScore += value * multiplier;
-    const message = multiplier === 1 ? `${value}` : `${value} × ${multiplier}`;
+    const message =
+      value === 0
+        ? "—"
+        : multiplier === 1
+        ? `${value}`
+        : `${value} × ${multiplier}`;
     const text = this.add
       .text(355, y, message, RESULTS_TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)

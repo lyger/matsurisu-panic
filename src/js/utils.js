@@ -20,9 +20,8 @@ export function applyModifiersToState(state) {
 }
 
 export function addModifierWithoutDuplicates(state, modifier) {
-  const isDuplicate = state.modifiers.reduce(
-    (acc, existingModifier) => acc || existingModifier.key == modifier.key,
-    false
+  const isDuplicate = state.modifiers.some(
+    (existingModifier) => existingModifier.key == modifier.key
   );
   if (isDuplicate) return state;
   return {

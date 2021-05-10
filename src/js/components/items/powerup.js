@@ -51,21 +51,25 @@ export default class Powerup extends Item {
   }
 
   checkConflicts(key) {
-    return this.conflictsWith.reduce(
-      (acc, other) => acc || key === "Powerup:" + other,
-      false
-    );
+    return this.conflictsWith.some((other) => "Powerup:" + other === key);
   }
 
   apply(scene) {
     const oldState = this.getTarget(store.getState());
 
+    if (oldState.modifiers.some((mod) => this.checkConflicts(mod.key)))
+      return false;
+
+    store.dispatch({
+      type: `${this.target}.addModifier`,
+      payload: this.modifier,
+    });
+
+    const newState = this.getTarget(store.getState());
+
     if (
-      oldState.modifiers.reduce(
-        (acc, mod) =>
-          acc || mod.key === this.modifier.key || this.checkConflicts(mod.key),
-        false
-      )
+      newState.modifiers.length === oldState.modifiers.length ||
+      !newState.modifiers.some((mod) => mod.key === this.modifier.key)
     )
       return false;
 
@@ -76,25 +80,7 @@ export default class Powerup extends Item {
       })
     );
 
-    store.dispatch({
-      type: `${this.target}.addModifier`,
-      payload: this.modifier,
-    });
-
-    const newState = this.getTarget(store.getState());
-    const applied = newState.modifiers.reduce(
-      (acc, mod) => acc || mod.key === this.modifier.key,
-      false
-    );
-
-    if (!applied) return false;
-
-    scene.events.emit("stage.addEffect", {
-      texture: this.texture,
-      frame: this.frame,
-      sound: this.sound,
-      duration: this.duration,
-    });
+    scene.events.emit("stage.addEffect", this);
     scene.time.delayedCall(this.duration, () =>
       store.dispatch({
         type: `${this.target}.removeModifier`,
