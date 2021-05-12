@@ -1,37 +1,11 @@
 import Phaser from "phaser";
-import { resetCatalog } from "../components/items/catalog";
 import ButtonFactory from "../components/uibutton";
 import { HEIGHT, WIDTH, TEXT_STYLE, DEPTH } from "../globals";
 import store from "../store";
 import { addCurtainsTransition } from "./curtains";
 import RestartProxy from "./restartproxy";
-import Stage from "./stage";
 
 const Button = ButtonFactory("ui");
-
-export class StartScreen extends Phaser.Scene {
-  create() {
-    const button = new Button(this, {
-      x: WIDTH / 2,
-      y: HEIGHT / 2,
-      base: 0,
-      hover: 1,
-      down: 2,
-      upCallback: () => this.startGame(),
-    });
-
-    this.add.existing(button);
-  }
-
-  startGame() {
-    addCurtainsTransition({
-      scene: this,
-      targetKey: "Stage",
-      targetClass: Stage,
-      duration: 1000,
-    });
-  }
-}
 
 export class PauseScreen extends Phaser.Scene {
   create() {

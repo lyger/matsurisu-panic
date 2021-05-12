@@ -43,6 +43,8 @@ export const FEVER_TEXT_COLOR = "#ff90bc";
 export const COMBO_TEXT_COLOR = "#ffc82e";
 
 export const MSG = {
+  START: { en: "START", ja: "スタート" },
+  CREDITS: { en: "CREDITS", ja: "クレジット" },
   GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
   BUY_ITEM: { en: "Buy?", ja: "買いますか？" },
   REPLACE_ITEM: { en: "Buy and replace?", ja: "買って入れ替えますか？" },

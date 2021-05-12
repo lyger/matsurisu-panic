@@ -121,6 +121,7 @@ export default class Item {
       frame,
       price,
       purchaseLimit = -1,
+      purchaseSound = "shop-buy",
       purchaseConditions,
       buySideEffect = null,
     }
@@ -134,6 +135,7 @@ export default class Item {
     this.price = price;
     this.purchaseLimit = purchaseLimit;
     this.buySideEffect = buySideEffect;
+    this.purchaseSound = purchaseSound;
     this.numPurchased = 0;
     this.purchaseConditions =
       purchaseConditions === undefined || purchaseConditions === null
@@ -152,6 +154,7 @@ export default class Item {
   buy(scene) {
     this.numPurchased++;
     if (this.buySideEffect !== null) this.buySideEffect(scene);
+    scene.playSoundEffect?.(this.purchaseSound);
     this.handleBuy(scene);
   }
 

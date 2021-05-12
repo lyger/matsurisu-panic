@@ -120,16 +120,29 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       this.scene.events.emit("sound.catch", { type: "coin", airCount });
     });
 
-    this.scene.events.on("powerup.catch", ({ airborne, isFever, x, y }) => {
-      store.dispatch({
-        type: "score.catchPowerup",
-        payload: { airborne, isFever },
-      });
-      this.refreshState();
-      const airCount = this.maybeShowAirBonus(x, y);
-      this.checkFever();
-      this.scene.events.emit("sound.catch", { type: "powerup", airCount });
-    });
+    this.scene.events.on(
+      "powerup.catch",
+      ({ airborne, isFever, isRedundant, x, y }) => {
+        store.dispatch({
+          type: "score.catchPowerup",
+          payload: { airborne, isFever, isRedundant },
+        });
+        this.refreshState();
+        const airCount = this.maybeShowAirBonus(x, y);
+        if (isRedundant)
+          addTextEffect(this.scene, {
+            x,
+            y,
+            text: `+${this.state.scorePerRedundantPowerup}`,
+          });
+        this.checkFever();
+        this.scene.events.emit("sound.catch", {
+          type: "powerup",
+          airCount,
+          isRedundant,
+        });
+      }
+    );
 
     this.scene.events.on("ebifrion.catch", ({ airborne, x, y }) => {
       store.dispatch({ type: "score.catchEbifrion", payload: { airborne } });
@@ -145,13 +158,12 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
 
     this.scene.events.on("global.fullCombo", () => {
       store.dispatch({ type: "score.fullCombo" });
-      const state = store.getState();
+      this.refreshState();
       addTextEffect(this.scene, {
-        text: `FULL COMBO\n+${state.score.scorePerFullCombo}`,
         x: WIDTH / 2,
         y: COMBO_HEIGHT - 165,
+        text: `FULL COMBO\n+${this.state.scorePerFullCombo}`,
       });
-      this.refreshState();
     });
 
     this.scene.events.on("matsurisu.drop", ({ bonus }) => {

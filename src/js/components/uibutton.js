@@ -102,8 +102,10 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
 
     show(value = true) {
       this.setVisible(value);
+      this.text.setVisible(value);
       // Whether hiding or showing, we want the button to be default state.
       this.setFrame(this.frames.base);
+      this.text.setStyle(textStyle);
 
       if (value) {
         this.setInteractive(this.hitbox);

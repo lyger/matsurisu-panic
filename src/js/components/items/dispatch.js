@@ -11,6 +11,7 @@ export default class DispatchItem extends Item {
     action,
     price,
     purchaseLimit,
+    purchaseSound,
     purchaseConditions,
     buySideEffect,
   }) {
@@ -22,6 +23,7 @@ export default class DispatchItem extends Item {
       frame,
       price,
       purchaseLimit,
+      purchaseSound,
       purchaseConditions,
       buySideEffect,
     });

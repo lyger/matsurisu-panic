@@ -289,6 +289,7 @@ function getInitialCatalog() {
         frame: 0,
         action: { type: "score.buyEbifrion" },
         price: 4000,
+        purchaseSound: "ebifrion-catch",
         buySideEffect: (scene) => {
           const state = store.getState();
           addTextEffect(scene, {
@@ -304,15 +305,32 @@ function getInitialCatalog() {
 }
 
 export let CATALOG = getInitialCatalog();
+let [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
 
 export function resetCatalog() {
   CATALOG = getInitialCatalog();
+  [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
 }
 
 export function getAvailablePowerups() {
   const state = store.getState();
   const level = state.stage.level;
   return CATALOG.powerups.filter((powerup) => powerup.tier <= level);
+}
+
+export function combinePowerups(powerup1, powerup2) {
+  switch (powerup1.name) {
+    case "Speed":
+      if (powerup2.name.startsWith("Speed")) return SPEED_PLUS;
+      break;
+    case "Jump":
+      if (powerup2.name.startsWith("Jump")) return JUMP_PLUS;
+      break;
+    case "Float":
+      if (powerup2.name.startsWith("Float")) return FLOAT_PLUS;
+      break;
+  }
+  return null;
 }
 
 export function getShopItems() {

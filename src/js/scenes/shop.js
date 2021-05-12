@@ -1,12 +1,11 @@
 import Phaser from "phaser";
 import DebugCursor from "../components/debugcursor";
 import { getShopItems } from "../components/items/catalog";
-import Scoreboard from "../components/scoreboard";
 import ButtonFactory from "../components/uibutton";
 import { DEPTH, HEIGHT, MSG, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
-import { get_message } from "../utils";
-import { addCurtainsTransition } from "./curtains";
+import { getMessage } from "../utils";
+import BaseScene from "./base";
 import Stage from "./stage";
 
 const BROWN_TEXT_STYLE = { ...TEXT_STYLE, color: "#56301b", fontSize: "20px" };
@@ -15,9 +14,10 @@ const BROWN_TEXT_STYLE_LARGEST = { ...BROWN_TEXT_STYLE, fontSize: "40px" };
 
 const ShopConfirmButton = ButtonFactory("shop-confirm-buttons", true);
 
-class ShopConfirmModal extends Phaser.Scene {
+class ShopConfirmModal extends BaseScene {
   create({ shopItem, buyCallback }) {
     const { item } = shopItem;
+    this.playSoundEffect("menu-open", 0.5);
     const cover = this.add
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
@@ -62,7 +62,7 @@ class ShopConfirmModal extends Phaser.Scene {
         .text(
           WIDTH / 2,
           475,
-          get_message("REPLACE_ITEM"),
+          getMessage("REPLACE_ITEM"),
           BROWN_TEXT_STYLE_LARGEST
         )
         .setOrigin(0.5, 0.5)
@@ -81,7 +81,7 @@ class ShopConfirmModal extends Phaser.Scene {
         .setOrigin(0.5, 0.5);
     } else {
       this.add
-        .text(WIDTH / 2, 475, get_message("BUY_ITEM"), BROWN_TEXT_STYLE_LARGEST)
+        .text(WIDTH / 2, 475, getMessage("BUY_ITEM"), BROWN_TEXT_STYLE_LARGEST)
         .setOrigin(0.5, 0.5)
         .setDepth(DEPTH.UIFRONT);
       this.add
@@ -96,7 +96,10 @@ class ShopConfirmModal extends Phaser.Scene {
       base: 0,
       over: 1,
       down: 1,
-      downCallback: () => this.returnToShop(),
+      downCallback: () => {
+        this.playSoundEffect("menu-no", 0.5);
+        this.returnToShop();
+      },
     });
 
     this.buttonYes = new ShopConfirmButton(this, {
@@ -123,7 +126,7 @@ class ShopConfirmModal extends Phaser.Scene {
 
 const ShopButton = ButtonFactory("shop-done-buttons", true);
 
-export default class Shop extends Phaser.Scene {
+export default class Shop extends BaseScene {
   create() {
     const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-jazz", {
@@ -176,6 +179,11 @@ export default class Shop extends Phaser.Scene {
     });
 
     this.add.existing(this.doneButton);
+
+    this.events.on("destroy", () => {
+      this.bgm?.stop?.();
+      this.bgm?.destroy?.();
+    });
 
     this.refreshState();
   }
@@ -290,17 +298,17 @@ export default class Shop extends Phaser.Scene {
       targets: this.bgm,
       volume: 0.0,
       duration,
-      onComplete: () => this.bgm.destroy(),
+      onComplete: () => this.bgm.stop(),
     });
+  }
+
+  playSoundEffect(key, adjustment = 1.0) {
+    const volume = store.getState().settings.volumeSfx;
+    this.sound.play(key, { volume: volume * adjustment });
   }
 
   doneShopping() {
     this.fadeBgm(1000);
-    addCurtainsTransition({
-      scene: this,
-      targetKey: "Stage",
-      targetClass: Stage,
-      duration: 1000,
-    });
+    this.curtainsTo("Stage", Stage);
   }
 }

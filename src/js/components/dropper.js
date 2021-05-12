@@ -215,10 +215,11 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.numFever = 0;
       this.nextFeverY = this.feverStep;
       // Once fever has been activated for the level, we'll stop spawning more fever items
-      this.scene.events.on(
-        "global.feverStart",
-        () => (this.nextFeverY = Infinity)
-      );
+      this.scene.events.on("global.feverStart", () => {
+        console.log("Dropper fever start", Date.now());
+        this.nextFeverY = Infinity;
+        this.generateBonusMatsurisu();
+      });
       this.scene.events.on(
         "global.feverTimeout",
         this.timeoutBonusMatsurisu,
@@ -338,19 +339,30 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  collectPowerup({ x, y, target, replaces }) {
-    const powerup = this.scene.add
-      .image(x, y, target.texture, target.frame)
-      .setDepth(DEPTH.OBJECTDEPTH);
-    this.scene.tweens.add({
-      targets: powerup,
-      alpha: 0,
-      y: y - 100,
-      duration: 300,
-      onComplete: () => powerup.destroy(),
-    });
-    if (replaces !== null && replaces !== undefined)
-      this.refundPowerup(replaces);
+  collectPowerup({ x, y, target, upgraded }) {
+    if (upgraded !== null) {
+      const upgradeEffect = this.scene.add
+        .image(x, y, upgraded.texture, upgraded.frame)
+        .setDepth(DEPTH.OBJECTDEPTH);
+      this.scene.tweens.add({
+        targets: upgradeEffect,
+        scale: 1.5,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => upgradeEffect.destroy(),
+      });
+    } else {
+      const powerup = this.scene.add
+        .image(x, y, target.texture, target.frame)
+        .setDepth(DEPTH.OBJECTDEPTH);
+      this.scene.tweens.add({
+        targets: powerup,
+        alpha: 0,
+        y: y - 100,
+        duration: 300,
+        onComplete: () => powerup.destroy(),
+      });
+    }
   }
 
   dropPowerup({ x, y, target }) {
@@ -548,25 +560,11 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.numFever = this.numFever + 1;
   }
 
-  refundPowerup(powerup) {
-    const newPowerup = this.powerup
-      .create(WIDTH / 2, 64, powerup.texture, powerup.frame, true, true)
-      .setDepth(DEPTH.OBJECTDEPTH)
-      .setVelocityY(this.modPowerup.fallSpeed)
-      .setData({ target: powerup, fever: false, refunded: true });
-    this.scene.tweens.add({
-      targets: newPowerup,
-      alpha: 0,
-      duration: 300,
-      yoyo: true,
-      repeat: Infinity,
-    });
-  }
-
   generateBonusMatsurisu() {
     if (this.modMatsurisu.bonusPerSpawn === 0) return false;
     const rand = Phaser.Math.RND;
     const num = rand.between(1, this.modMatsurisu.bonusPerSpawn);
+    console.log("Generating bonus Matsurisu");
     if (this.matsurisuBuffer.length > 0) {
       const next = this.matsurisuBuffer[0];
       for (let i = 0; i < num; i++) {
@@ -605,7 +603,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .forEach((matsurisu) => {
         if (matsurisu.getData("bonus")) matsurisu.destroy();
       });
-    this.matsurisuBuffer = this.matsurisuBuffer.filter(({ bonus }) => !bonus);
+    let reclaimedDeltaY = 0;
+    this.matsurisuBuffer = this.matsurisuBuffer.filter((config) => {
+      const { bonus } = config;
+      if (bonus) reclaimedDeltaY += config.deltaY;
+      else if (reclaimedDeltaY > 0) {
+        config.deltaY += reclaimedDeltaY;
+        reclaimedDeltaY = 0;
+      }
+      return !bonus;
+    });
   }
 
   update(time) {

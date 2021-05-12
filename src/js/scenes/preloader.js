@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { HEIGHT, PUBLIC_PATH } from "../globals";
 import Curtains from "./curtains";
-import { StartScreen } from "./uiscenes";
+import Title from "./title";
 
 const SKINS = ["normal"];
 const MATSURISU = ["normal"];
@@ -112,6 +112,65 @@ export default class Preloader extends Phaser.Scene {
         }
       );
     });
+  }
+
+  loadTitle() {
+    // DEBUG
+    this.load.image("title-mockup", PUBLIC_PATH + "/images/title-mockup.png");
+    this.load.image(
+      "title-background",
+      PUBLIC_PATH + "/images/title-background.png"
+    );
+    this.load.spritesheet(
+      "title-start-buttons",
+      PUBLIC_PATH + "/images/title-start-buttons.png",
+      {
+        frameWidth: 230,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "title-side-buttons",
+      PUBLIC_PATH + "/images/title-side-buttons.png",
+      {
+        frameWidth: 120,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "title-credit-buttons",
+      PUBLIC_PATH + "/images/title-credit-buttons.png",
+      {
+        frameWidth: 240,
+        frameHeight: 51,
+      }
+    );
+    this.load.image(
+      "title-sparkles",
+      PUBLIC_PATH + "/images/title-sparkles.png"
+    );
+    this.load.image("title-logo", PUBLIC_PATH + "/images/title-logo.png");
+    this.load.image("title-matsuri", PUBLIC_PATH + "/images/title-matsuri.png");
+    this.load.image(
+      "title-ebifrion",
+      PUBLIC_PATH + "/images/title-ebifrion.png"
+    );
+    this.load.image(
+      "title-matsurisu1",
+      PUBLIC_PATH + "/images/title-matsurisu1.png"
+    );
+    this.load.image(
+      "title-matsurisu2",
+      PUBLIC_PATH + "/images/title-matsurisu2.png"
+    );
+    this.load.image(
+      "title-matsurisu3",
+      PUBLIC_PATH + "/images/title-matsurisu3.png"
+    );
   }
 
   loadStage() {
@@ -359,6 +418,25 @@ export default class Preloader extends Phaser.Scene {
         PUBLIC_PATH + `/audio/${sound}-timeout.mp3`,
       ]);
     });
+
+    this.load.audio("shop-buy", [
+      PUBLIC_PATH + "/audio/Buy.ogg",
+      PUBLIC_PATH + "/audio/Buy.mp3",
+    ]);
+
+    this.load.audio("menu-open", [
+      PUBLIC_PATH + "/audio/Open.ogg",
+      PUBLIC_PATH + "/audio/Open.mp3",
+    ]);
+    this.load.audio("menu-no", [
+      PUBLIC_PATH + "/audio/No.ogg",
+      PUBLIC_PATH + "/audio/No.mp3",
+    ]);
+
+    this.load.audio("stage-win", [
+      PUBLIC_PATH + "/audio/Round-End.ogg",
+      PUBLIC_PATH + "/audio/Round-End.mp3",
+    ]);
   }
 
   preload() {
@@ -375,6 +453,7 @@ export default class Preloader extends Phaser.Scene {
 
     this.loadControls();
     this.loadCharacters();
+    this.loadTitle();
     this.loadStage();
     this.loadShop();
     this.loadResults();
@@ -480,6 +559,6 @@ export default class Preloader extends Phaser.Scene {
     this.createAnimations();
     this.scene.add("Curtains", Curtains, false);
     this.scene.bringToTop("Curtains");
-    this.scene.add("Start", StartScreen, true);
+    this.scene.add("Title", Title, true);
   }
 }

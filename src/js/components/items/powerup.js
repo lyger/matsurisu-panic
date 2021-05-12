@@ -14,6 +14,7 @@ export default class Powerup extends Item {
     duration,
     price,
     purchaseLimit,
+    purchaseSound,
     purchaseConditions,
     buySideEffect,
     applySideEffect,
@@ -27,6 +28,7 @@ export default class Powerup extends Item {
       frame,
       price,
       purchaseLimit,
+      purchaseSound,
       purchaseConditions,
       buySideEffect,
     });

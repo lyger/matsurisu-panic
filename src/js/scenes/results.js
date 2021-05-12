@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import {
   DEPTH,
   HEIGHT,
-  MSG,
   RESULTS_TEXT_STYLE,
   TEXT_STYLE,
   WIDTH,
@@ -10,10 +9,10 @@ import {
 import store from "../store";
 import ButtonFactory from "../components/uibutton";
 import Stage from "./stage";
-import { addCurtainsTransition } from "./curtains";
 import sendTweet from "../twitter";
-import { get_message, timestampToDateString } from "../utils";
-import { StartScreen } from "./uiscenes";
+import { getMessage, timestampToDateString } from "../utils";
+import Title from "./title";
+import BaseScene from "./base";
 
 const HIGHSCORES_ENDPOINT =
   "https://onitools.moe/_matsurisu_panic_auth/highscores.json";
@@ -107,15 +106,15 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   get fullTweetText() {
-    const baseText = get_message("TWEET").replace("[SCORE]", `${this.score}`);
+    const baseText = getMessage("TWEET").replace("[SCORE]", `${this.score}`);
     return `${baseText} http://example.com`;
   }
 
   refreshDisplay() {
     this.state = store.getState();
-    this.confirmText.setText(get_message("CONFIRM_TWEET"));
+    this.confirmText.setText(getMessage("CONFIRM_TWEET"));
     this.tweetText.setText(
-      get_message("TWEET").replace("[SCORE]", `${this.score}`)
+      getMessage("TWEET").replace("[SCORE]", `${this.score}`)
     );
     if (this.state.settings.language === "ja") {
       this.englishButton.setFrame(1).setInteractive();
@@ -137,7 +136,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.confirmText.setVisible(false);
     this.englishButton.setVisible(false).setActive(false);
     this.japaneseButton.setVisible(false).setActive(false);
-    this.tweetText.setText(get_message("TWEET_PROGRESS"));
+    this.tweetText.setText(getMessage("TWEET_PROGRESS"));
     sendTweet(
       this.fullTweetText,
       this.imgData,
@@ -148,7 +147,7 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   handleSuccess({ url }) {
-    this.confirmText.setVisible(true).setText(get_message("TWEET_SUCCESS"));
+    this.confirmText.setVisible(true).setText(getMessage("TWEET_SUCCESS"));
     this.tweetText.setText(url);
     const clickArea = this.add
       .rectangle(WIDTH / 2, 665, 580, 150, 0x000000, 0)
@@ -161,12 +160,12 @@ class TweetConfirmModal extends Phaser.Scene {
 
   handleFailure(err) {
     console.log(err);
-    this.tweetText.setText(get_message("TWEET_FAILURE"));
+    this.tweetText.setText(getMessage("TWEET_FAILURE"));
     this.buttonOk.show(true);
   }
 }
 
-export default class Results extends Phaser.Scene {
+export default class Results extends BaseScene {
   create() {
     this.state = store.getState();
     this.createUI();
@@ -356,7 +355,7 @@ export default class Results extends Phaser.Scene {
   showHighscoresError() {
     const ERROR_STYLE = { ...TEXT_STYLE, fontSize: "32px", color: "#fc5854" };
     const errorText = this.add
-      .text(WIDTH / 2, 950, get_message("GENERIC_ERROR"), ERROR_STYLE)
+      .text(WIDTH / 2, 950, getMessage("GENERIC_ERROR"), ERROR_STYLE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
     this.highscoreElements = [errorText];
@@ -439,22 +438,12 @@ export default class Results extends Phaser.Scene {
 
   handleNewGame() {
     store.dispatch({ type: "global.newGame" });
-    addCurtainsTransition({
-      scene: this,
-      targetKey: "Stage",
-      targetClass: Stage,
-      duration: 1000,
-    });
+    this.curtainsTo("Stage", Stage);
   }
 
   handleMainMenu() {
     store.dispatch({ type: "global.newGame" });
-    addCurtainsTransition({
-      scene: this,
-      targetKey: "Start",
-      targetClass: StartScreen,
-      duration: 1000,
-    });
+    this.curtainsTo("Title", Title);
   }
 
   update() {

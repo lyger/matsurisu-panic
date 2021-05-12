@@ -23,6 +23,7 @@ export const scoreDefaultState = {
   moneyPerCoin: 500,
   scorePerCatch: 100,
   scorePerEbifrion: 2000,
+  scorePerRedundantPowerup: 500,
   bonusPerCombo: 5,
   lowMultiplier: 2,
   airCounter: 0,
@@ -69,8 +70,15 @@ export default function scoreReducer(state = scoreDefaultState, action) {
     }
     case "score.catchPowerup": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
-      if (payload.isFever) return { ...stateWithAir, fever: state.fever + 1 };
-      return stateWithAir;
+      const stateWithRedundant = payload.isRedundant
+        ? {
+            ...stateWithAir,
+            score: stateWithAir.score + stateWithAir.scorePerRedundantPowerup,
+          }
+        : stateWithAir;
+      if (payload.isFever)
+        return { ...stateWithRedundant, fever: state.fever + 1 };
+      return stateWithRedundant;
     }
     case "score.catchEbifrion": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
@@ -166,6 +174,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         invincible: true,
       };
     case "global.deactivateFever":
+    case "global.winStage":
       return {
         ...state,
         invincible: false,

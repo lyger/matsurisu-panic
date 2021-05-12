@@ -98,7 +98,7 @@ export function descendingSortedIndex(array, value, key = (v) => v) {
   return low;
 }
 
-export function get_message(key) {
+export function getMessage(key) {
   const lang = store.getState().settings.language;
   return MSG[key][lang];
 }

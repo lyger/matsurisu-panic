@@ -8,8 +8,9 @@ import { PauseScreen } from "./uiscenes";
 import store from "../store";
 import Shop from "./shop";
 import Results from "./results";
-import { addCurtainsTransition } from "./curtains";
 import DebugCursor from "../components/debugcursor";
+import { combinePowerups } from "../components/items/catalog";
+import BaseScene from "./base";
 
 const GAME_START_DELAY = 1000;
 const GAME_END_DELAY = 1000;
@@ -18,7 +19,7 @@ const EFFECT_BLINK_DURATION = 500;
 
 const PauseButton = ButtonFactory("pause-button", true);
 
-export default class Stage extends Phaser.Scene {
+export default class Stage extends BaseScene {
   create() {
     store.dispatch({ type: "stage.increaseLevel" });
 
@@ -122,21 +123,34 @@ export default class Stage extends Phaser.Scene {
       this.dropper.powerup,
       (player, powerup) => {
         const target = powerup.getData("target");
-        const isRefunded = powerup.getData("refunded");
-        const replaces = store.getState().player.powerup;
+        const currentPowerup = store.getState().player.powerup;
         const airborne = this.matsuri.airborne;
         const data = {
           x: powerup.x,
           y: powerup.y,
           isFever: powerup.getData("fever"),
+          isRedundant: false,
+          upgraded: null,
           target,
-          replaces: isRefunded ? null : replaces,
           airborne,
         };
-        store.dispatch({
-          type: "player.setPowerup",
-          payload: target,
-        });
+        if (currentPowerup === null) {
+          store.dispatch({
+            type: "player.setPowerup",
+            payload: target,
+          });
+        } else {
+          const combinedPowerup = combinePowerups(currentPowerup, target);
+          if (combinedPowerup === null) {
+            data.isRedundant = true;
+          } else {
+            store.dispatch({
+              type: "player.setPowerup",
+              payload: combinedPowerup,
+            });
+            data.upgraded = combinedPowerup;
+          }
+        }
         powerup.destroy();
         this.events.emit("powerup.catch", data);
         this.setAirForgiveness();
@@ -185,8 +199,7 @@ export default class Stage extends Phaser.Scene {
         matsurisu.destroy();
         this.events.emit("matsurisu.drop", data);
         const volume = store.getState().settings.volumeSfx;
-        if (!invincible && !bonus)
-          this.sound.play("matsurisu-drop", { volume: volume * 0.75 });
+        if (!invincible && !bonus) this.playSoundEffect("matsurisu-drop", 0.75);
       }
     );
 
@@ -211,7 +224,7 @@ export default class Stage extends Phaser.Scene {
         powerup.destroy();
         this.events.emit("powerup.drop", data);
         const volume = store.getState().settings.volumeSfx;
-        this.sound.play("powerup-drop", { volume });
+        this.playSoundEffect("powerup-drop");
       }
     );
 
@@ -246,7 +259,9 @@ export default class Stage extends Phaser.Scene {
     this.events.on("stage.addEffect", this.addEffect, this);
 
     this.events.once("dropper.done", () => {
+      this.fadeBgm(GAME_END_DELAY);
       this.time.delayedCall(GAME_END_DELAY, () => {
+        this.sound.play("stage-win");
         const state = store.getState();
         if (state.score.drops === 0) {
           this.events.emit("global.fullCombo");
@@ -265,33 +280,35 @@ export default class Stage extends Phaser.Scene {
     const walkSound = this.sound.add("walk", { loop: true });
     const crawlSound = this.sound.add("crawl", { loop: true });
 
-    this.events.on("sound.catch", ({ type, airCount = 0, isLow = false }) => {
-      const volume = store.getState().settings.volumeSfx;
-      if (airCount > 0)
-        this.sound.play(`air-catch-${Math.min(airCount, 5)}`, { volume });
-      switch (type) {
-        case "matsurisu":
-          if (isLow) this.sound.play("matsurisu-low-catch", { volume });
-          else this.sound.play("matsurisu-catch", { volume });
-          break;
-        case "coin":
-          this.sound.play("coin-catch", { volume });
-          break;
-        case "powerup":
-          this.sound.play("powerup-catch", { volume });
-          break;
-        case "ebifrion":
-          this.sound.play("ebifrion-catch", { volume });
-          break;
+    this.events.on(
+      "sound.catch",
+      ({ type, airCount = 0, isLow = false, isRedundant = false }) => {
+        if (airCount > 0)
+          this.playSoundEffect(`air-catch-${Math.min(airCount, 5)}`);
+        switch (type) {
+          case "matsurisu":
+            if (isLow) this.playSoundEffect("matsurisu-low-catch");
+            else this.playSoundEffect("matsurisu-catch");
+            break;
+          case "coin":
+            this.playSoundEffect("coin-catch");
+            break;
+          case "powerup":
+            if (isRedundant) this.playSoundEffect("ebifrion-catch");
+            else this.playSoundEffect("powerup-catch");
+            break;
+          case "ebifrion":
+            this.playSoundEffect("ebifrion-catch");
+            break;
+        }
       }
-    });
+    );
     this.events.on("sound.jump", () => {
       const state = store.getState();
-      const volume = state.settings.volumeSfx;
       const boosted = state.player.physics.modifiers.some((mod) =>
         mod.key.startsWith("Powerup:Jump")
       );
-      this.sound.play("jump" + (boosted ? "-boosted" : ""), { volume });
+      this.playSoundEffect("jump" + (boosted ? "-boosted" : ""));
     });
     this.events.on("sound.walk", ({ crouching, airborne }) => {
       const volume = store.getState().settings.volumeSfx;
@@ -309,10 +326,7 @@ export default class Stage extends Phaser.Scene {
       if (walkSound.isPlaying) return;
       walkSound.play({ volume });
     });
-    this.events.on("sound.slide", () => {
-      const volume = store.getState().settings.volumeSfx;
-      this.sound.play("slide", { volume });
-    });
+    this.events.on("sound.slide", () => this.playSoundEffect("slide"));
     this.events.on("sound.idle", () => {
       walkSound.stop();
       crawlSound.stop();
@@ -424,27 +438,17 @@ export default class Stage extends Phaser.Scene {
     this.dropper.pause();
     this.pauseButton.setActive(false);
     store.dispatch({ type: "global.winStage" });
-    this.fadeBgm(1000);
+    // this.fadeBgm(1000);
     const state = store.getState();
     if (state.stage.level === state.stage.maxLevel) {
       this.gameOver();
     } else {
-      addCurtainsTransition({
-        scene: this,
-        targetKey: "Shop",
-        targetClass: Shop,
-        duration: 1000,
-      });
+      this.curtainsTo("Shop", Shop);
     }
   }
 
   gameOver() {
-    addCurtainsTransition({
-      scene: this,
-      targetKey: "Results",
-      targetClass: Results,
-      duration: 1000,
-    });
+    this.curtainsTo("Results", Results);
   }
 
   alignEffects() {
@@ -460,8 +464,7 @@ export default class Stage extends Phaser.Scene {
   }
 
   addEffect({ texture, frame, sound, duration }) {
-    const volume = store.getState().settings.volumeSfx;
-    this.sound.play(`${sound}-start`, { volume });
+    this.playSoundEffect(`${sound}-start`);
 
     const newEffect = this.add
       .image(0, 0, texture, frame)
@@ -472,7 +475,7 @@ export default class Stage extends Phaser.Scene {
     this.alignEffects();
 
     this.time.delayedCall(duration - EFFECT_FADE_DURATION, () => {
-      this.sound.play(`${sound}-timeout`, { volume });
+      this.playSoundEffect(`${sound}-timeout`);
       this.tweens.add({
         targets: newEffect,
         alpha: 0,
