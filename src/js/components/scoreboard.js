@@ -257,6 +257,8 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     this.livesTop.clear(true, true);
     this.livesBot.clear(true, true);
 
+    if (numLivesTop < 1) return;
+
     this.livesTop.createMultiple({
       key: "stage-scoreboard-life",
       quantity: numLivesTop,

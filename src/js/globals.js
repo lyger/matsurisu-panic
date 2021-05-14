@@ -41,3 +41,6 @@ export const FEVER_TINT = 0xa498ff;
 
 export const FEVER_TEXT_COLOR = "#ff90bc";
 export const COMBO_TEXT_COLOR = "#ffc82e";
+
+export const STAGE_BGM_VOLUME_FACTOR = 0.075;
+export const SHOP_BGM_VOLUME_FACTOR = 0.5;

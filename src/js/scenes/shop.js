@@ -1,8 +1,13 @@
 import Phaser from "phaser";
-import DebugCursor from "../components/debugcursor";
 import { getShopItems } from "../components/items/catalog";
 import ButtonFactory from "../components/uibutton";
-import { DEPTH, HEIGHT, MSG, TEXT_STYLE, WIDTH } from "../globals";
+import {
+  DEPTH,
+  HEIGHT,
+  SHOP_BGM_VOLUME_FACTOR,
+  TEXT_STYLE,
+  WIDTH,
+} from "../globals";
 import store from "../store";
 import { getMessage } from "../utils";
 import BaseScene from "./base";
@@ -128,7 +133,7 @@ export default class Shop extends BaseScene {
     const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-jazz", {
       loop: true,
-      volume: 0.5 * settings.volumeMusic,
+      volume: SHOP_BGM_VOLUME_FACTOR * settings.volumeMusic,
     });
     this.bgm.play();
 

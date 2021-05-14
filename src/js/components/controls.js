@@ -22,6 +22,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       keys: ["a", "left"],
       base: 2,
       down: 3,
+      allowHoldIn: true,
       downCallback: () => (this._left = true),
       upCallback: () => (this._left = false),
     });
@@ -31,6 +32,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       keys: ["d", "right"],
       base: 0,
       down: 1,
+      allowHoldIn: true,
       downCallback: () => (this._right = true),
       upCallback: () => (this._right = false),
     });
@@ -40,6 +42,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       keys: ["w", "up"],
       base: 0,
       down: 1,
+      allowHoldIn: true,
       downCallback: () => (this._up = true),
       upCallback: () => (this._up = false),
     });
@@ -49,6 +52,7 @@ export default class Controls extends Phaser.GameObjects.Container {
       keys: ["s", "down"],
       base: 2,
       down: 3,
+      allowHoldIn: true,
       downCallback: () => (this._down = true),
       upCallback: () => (this._down = false),
     });

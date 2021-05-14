@@ -372,6 +372,23 @@ export default class Preloader extends Phaser.Scene {
     );
   }
 
+  loadPause() {
+    this.load.image(
+      "pause-screen-logo",
+      PUBLIC_PATH + "/images/pause-screen-logo.png"
+    );
+    this.load.spritesheet(
+      "pause-screen-buttons",
+      PUBLIC_PATH + "/images/pause-screen-buttons.png",
+      {
+        frameWidth: 230,
+        frameHeight: 81,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+  }
+
   loadItems() {
     this.load.spritesheet("items", PUBLIC_PATH + "/images/items.png", {
       frameWidth: 128,
@@ -489,7 +506,7 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/No.mp3",
     ]);
 
-    this.load.audio("stage-win", [
+    this.load.audio("stage-full-combo", [
       PUBLIC_PATH + "/audio/Round-End.ogg",
       PUBLIC_PATH + "/audio/Round-End.mp3",
     ]);
@@ -514,13 +531,9 @@ export default class Preloader extends Phaser.Scene {
     this.loadStage();
     this.loadShop();
     this.loadResults();
+    this.loadPause();
     this.loadItems();
     this.loadSounds();
-
-    this.load.spritesheet("ui", PUBLIC_PATH + "/images/ui_buttons.png", {
-      frameWidth: 200,
-      frameHeight: 100,
-    });
   }
 
   createAnimations() {

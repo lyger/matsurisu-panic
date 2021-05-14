@@ -40,6 +40,11 @@ const MSG = {
     ja: "アイテム発動で\nいろんな効果があるよ！",
   },
 
+  PAUSE_CONTINUE: { en: "Continue", ja: "続ける" },
+  PAUSE_RESTART: { en: "Restart", ja: "やり直す" },
+  PAUSE_MAIN: { en: "Main Menu", ja: "TOPへ" },
+  PAUSE_SETTINGS: { en: "Settings", ja: "設定" },
+
   BUY_ITEM: { en: "Buy?", ja: "買いますか？" },
   REPLACE_ITEM: { en: "Buy and replace?", ja: "買って入れ替えますか？" },
 

@@ -14,6 +14,7 @@ import { getMessage, timestampToDateString } from "../utils";
 import Title from "./title";
 import BaseScene from "./base";
 import Toggle from "../components/toggle";
+import { BaseModal } from "./modal";
 
 const HIGHSCORES_ENDPOINT =
   "https://onitools.moe/_matsurisu_panic_auth/highscores.json";
@@ -25,13 +26,9 @@ const SLIDE_DISTANCE = 100;
 const SLIDE_DELAY = 400;
 const SLIDE_DURATION = 800;
 
-class TweetConfirmModal extends Phaser.Scene {
-  create({ imgData, score }) {
-    const cover = this.add
-      .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
-      .setDepth(DEPTH.BGBACK)
-      .setInteractive();
-    cover.on("pointerdown", () => this.returnToResults());
+class TweetConfirmModal extends BaseModal {
+  create({ parentSceneKey, imgData, score }) {
+    super.create({ parentSceneKey, popup: false, closeButton: false });
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "tweet-confirm-modal")
       .setDepth(DEPTH.UIBACK)
@@ -80,7 +77,7 @@ class TweetConfirmModal extends Phaser.Scene {
       y: 820,
       base: 0,
       over: 1,
-      downCallback: () => this.returnToResults(),
+      downCallback: () => this.returnToParent({ hideTweetButton: false }),
     });
 
     this.buttonTweet = new TweetButton(this, {
@@ -97,7 +94,8 @@ class TweetConfirmModal extends Phaser.Scene {
       y: 820,
       base: 4,
       over: 5,
-      downCallback: () => this.returnToResults(this.doneTweeting),
+      downCallback: () =>
+        this.returnToParent({ hideTweetButton: this.doneTweeting }),
     }).show(false);
 
     this.refreshDisplay();
@@ -113,11 +111,6 @@ class TweetConfirmModal extends Phaser.Scene {
     this.tweetText.setText(
       getMessage("TWEET").replace("[SCORE]", `${this.score}`)
     );
-  }
-
-  returnToResults(hideTweetButton = false) {
-    this.scene.resume("Results", { hideTweetButton });
-    this.scene.remove(this.scene.key);
   }
 
   handleTweet() {
@@ -417,6 +410,7 @@ export default class Results extends BaseScene {
   handleTweet() {
     this.scene.pause();
     this.scene.add("TweetConfirmModal", TweetConfirmModal, true, {
+      parentSceneKey: this.scene.key,
       imgData: this.imgData,
       score: this.finalScore,
     });

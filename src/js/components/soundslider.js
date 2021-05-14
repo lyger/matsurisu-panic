@@ -10,12 +10,19 @@ export default class SoundSlider extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.target = target;
     this.left = -SLIDER_WIDTH / 2;
-    this.frame = new Phaser.GameObjects.Image(
-      scene,
-      0,
-      0,
-      "sound-slider-frame"
-    ).setDepth(DEPTH.UIBACK);
+    this.frame = new Phaser.GameObjects.Image(scene, 0, 0, "sound-slider-frame")
+      .setDepth(DEPTH.UIBACK)
+      .setInteractive(this.scene.input.makePixelPerfect());
+    this.frameLeft = (this.frame.width - SLIDER_WIDTH) / 2;
+    this.frame.on("pointerdown", (pointer, downX) => {
+      const newValue =
+        Phaser.Math.Clamp(downX - this.frameLeft, 0, SLIDER_WIDTH) /
+        SLIDER_WIDTH;
+      store.dispatch({ ...changeAction, payload: newValue });
+      changeCallback?.(newValue);
+      this.refreshState();
+      this.playSampleSound();
+    });
     this.gauge = new Phaser.GameObjects.Sprite(
       scene,
       0,
@@ -33,9 +40,7 @@ export default class SoundSlider extends Phaser.GameObjects.Container {
       changeCallback?.(newValue);
       this.refreshState();
     });
-    this.knob.on("dragend", () => {
-      this.scene.sound.play("menu-no", { volume: 0.5 * this.value });
-    });
+    this.knob.on("dragend", this.playSampleSound, this);
 
     this.add([this.frame, this.gauge, this.knob]);
     this.scene.add.existing(this);
@@ -47,10 +52,16 @@ export default class SoundSlider extends Phaser.GameObjects.Container {
     this.scene.input.setDraggable(this.knob, !value);
     if (value) {
       this.gauge.setCrop(0, 0, 0, 10);
+      this.frame.disableInteractive();
       this.knob.x = this.left;
     } else {
+      this.frame.setInteractive(this.scene.input.makePixelPerfect());
       this.refreshState();
     }
+  }
+
+  playSampleSound() {
+    this.scene.sound.play("menu-no", { volume: 0.5 * this.value });
   }
 
   refreshState() {

@@ -1,4 +1,3 @@
-import DebugCursor from "../components/debugcursor";
 import SoundSlider from "../components/soundslider";
 import Toggle from "../components/toggle";
 import ButtonFactory from "../components/uibutton";
@@ -30,35 +29,50 @@ const BROWN_STYLE_LG = {
   color: "#56301b",
 };
 
-class BaseModal extends BaseScene {
-  create({ parentSceneKey }) {
+export class BaseModal extends BaseScene {
+  create({
+    parentSceneKey,
+    popup = true,
+    closeButton = true,
+    closeOnCover = true,
+  }) {
     this.parentSceneKey = parentSceneKey;
     this.events.once("create", () => this.playSoundEffect("menu-open", 0.5));
     const cover = this.add
       .rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.5)
       .setDepth(DEPTH.BGBACK)
       .setInteractive();
-    cover.on("pointerdown", this.returnToParent, this);
-    this.add
-      .image(WIDTH / 2, HEIGHT / 2 - 100, "modal-blank")
-      .setDepth(DEPTH.UIBACK)
-      .setOrigin(0.5, 0.5)
-      .setInteractive(this.input.makePixelPerfect());
-
-    this.buttonClose = new CloseButton(this, {
-      x: WIDTH / 2,
-      y: 930,
-      text: getMessage("CLOSE"),
-      base: 0,
-      over: 1,
-      overTextStyle: { color: "#7f7f7f" },
-      downCallback: () => this.returnToParent(),
-    });
+    if (closeOnCover)
+      cover.on("pointerdown", (pointer, x, y, event) => {
+        event?.stopPropagation();
+        this.returnToParent();
+      });
+    if (popup) {
+      this.add
+        .image(WIDTH / 2, HEIGHT / 2 - 100, "modal-blank")
+        .setDepth(DEPTH.UIBACK)
+        .setOrigin(0.5, 0.5)
+        .setInteractive(this.input.makePixelPerfect());
+    }
+    if (closeButton) {
+      this.buttonClose = new CloseButton(this, {
+        x: WIDTH / 2,
+        y: 930,
+        text: getMessage("CLOSE"),
+        base: 0,
+        over: 1,
+        overTextStyle: { color: "#7f7f7f" },
+        upCallback: () => this.returnToParent(),
+      });
+    }
   }
 
-  returnToParent() {
-    this.scene.resume(this.parentSceneKey);
-    this.scene.remove(this.scene.key);
+  returnToParent(args) {
+    this.events.once("pause", () => {
+      this.scene.resume(this.parentSceneKey, args);
+      this.scene.remove(this.scene.key);
+    });
+    this.scene.pause();
   }
 }
 
@@ -136,8 +150,6 @@ const ClearButton = ButtonFactory("modal-clear-buttons", false, BROWN_STYLE_LG);
 export class SettingsModal extends BaseModal {
   create(args) {
     super.create(args);
-
-    new DebugCursor(this);
 
     this.soundLabel = this.add
       .text(
@@ -240,6 +252,11 @@ export class SettingsModal extends BaseModal {
     });
 
     this.refreshDisplay();
+
+    if (this.soundToggle.state === true) {
+      this.musicSlider.setMute();
+      this.sfxSlider.setMute();
+    }
   }
 
   refreshDisplay() {

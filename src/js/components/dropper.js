@@ -216,7 +216,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.nextFeverY = this.feverStep;
       // Once fever has been activated for the level, we'll stop spawning more fever items
       this.scene.events.on("global.feverStart", () => {
-        console.log("Dropper fever start", Date.now());
         this.nextFeverY = Infinity;
         this.generateBonusMatsurisu();
       });
@@ -564,7 +563,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (this.modMatsurisu.bonusPerSpawn === 0) return false;
     const rand = Phaser.Math.RND;
     const num = rand.between(1, this.modMatsurisu.bonusPerSpawn);
-    console.log("Generating bonus Matsurisu");
     if (this.matsurisuBuffer.length > 0) {
       const next = this.matsurisuBuffer[0];
       for (let i = 0; i < num; i++) {

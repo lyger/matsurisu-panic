@@ -20,6 +20,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         textOffset = { x: 0, y: 0 },
         overTextStyle = {},
         downTextStyle = overTextStyle,
+        allowHoldIn = false,
       }
     ) {
       super(scene, x, y, key, base);
@@ -46,24 +47,28 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       const overTextStyle_ = { ...textStyle, ...overTextStyle };
       const downTextStyle_ = { ...textStyle, ...downTextStyle };
 
-      const handleDown = () => {
+      const handleDown = (pointer, x, y, event) => {
         if (!this.active) return;
+        event?.stopPropagation();
         this.setFrame(down);
         this.text.setStyle(downTextStyle_);
         this.isDown = true;
         downCallback?.();
       };
-      const handleUp = () => {
+      const handleUp = (pointer, x, y, event) => {
         if (!this.active) return;
+        event?.stopPropagation();
         this.setFrame(over);
         this.text.setStyle(overTextStyle_);
-        this.isDown = false;
-        upCallback?.();
+        if (this.isDown) {
+          this.isDown = false;
+          upCallback?.();
+        }
       };
       const handleOver = (pointer) => {
         if (!this.active) return;
         if (!this.isDown) {
-          if (pointer.isDown) handleDown();
+          if (allowHoldIn && pointer.isDown) handleDown();
           else {
             this.setFrame(over);
             this.text.setStyle(overTextStyle_);

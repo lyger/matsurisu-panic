@@ -30,9 +30,6 @@ const sideEffects = (storeAPI) => (next) => (action) => {
     case "settings.toggleMute":
       if (gameRef !== undefined) gameRef.sound.mute = newState.settings.mute;
       break;
-    case "global.clearData":
-      console.log(newState);
-      break;
   }
 
   return result;

@@ -1,14 +1,20 @@
 import Phaser from "phaser";
-import { DEPTH, GROUNDHEIGHT, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
+import {
+  DEPTH,
+  GROUNDHEIGHT,
+  HEIGHT,
+  STAGE_BGM_VOLUME_FACTOR,
+  TEXT_STYLE,
+  WIDTH,
+} from "../globals";
 import Player from "../components/player";
 import Dropper from "../components/dropper";
 import Scoreboard from "../components/scoreboard";
 import ButtonFactory from "../components/uibutton";
-import { PauseScreen } from "./uiscenes";
+import PauseScreen from "./pause";
 import store from "../store";
 import Shop from "./shop";
 import Results from "./results";
-import DebugCursor from "../components/debugcursor";
 import { combinePowerups } from "../components/items/catalog";
 import BaseScene from "./base";
 import { InstructionsModal } from "./modal";
@@ -263,9 +269,9 @@ export default class Stage extends BaseScene {
     this.events.once("dropper.done", () => {
       this.fadeBgm(GAME_END_DELAY);
       this.time.delayedCall(GAME_END_DELAY, () => {
-        this.sound.play("stage-win");
         const state = store.getState();
         if (state.score.drops === 0) {
+          this.sound.play("stage-full-combo");
           this.events.emit("global.fullCombo");
           this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
         } else this.winStage();
@@ -363,7 +369,7 @@ export default class Stage extends BaseScene {
     const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-samba", {
       loop: true,
-      volume: 0.075 * settings.volumeMusic,
+      volume: STAGE_BGM_VOLUME_FACTOR * settings.volumeMusic,
     });
     this.bgm.play({ delay });
   }
@@ -379,7 +385,7 @@ export default class Stage extends BaseScene {
 
   toggleMute() {
     store.dispatch({ type: "settings.toggleMute" });
-    this.muteButton.setFrame(newMute ? 1 : 0);
+    this.muteButton.setFrame(store.getState().settings.mute ? 1 : 0);
   }
 
   maybeShowInstructions() {
@@ -390,7 +396,6 @@ export default class Stage extends BaseScene {
       parentSceneKey: this.scene.key,
     });
     this.scene.moveBelow("Curtains", "InstructionsModal");
-    // this.scene.moveBelow("InstructionsModal", this.scene.key);
     this.scene.launch("InstructionsModal");
   }
 
@@ -405,18 +410,23 @@ export default class Stage extends BaseScene {
     )
       return false;
     this.sound.pauseAll();
-    this.scene.add("PauseScreen", PauseScreen, true);
+    this.scene.add("PauseScreen", PauseScreen, true, {
+      parentSceneKey: this.scene.key,
+    });
     this.scene.pause();
     return true;
   }
 
   resumeGame() {
+    const state = store.getState();
     this.pauseButton.show();
+    this.muteButton.setFrame(state.settings.mute ? 1 : 0);
     this.sound.resumeAll();
+    const volumeMusic = state.settings.volumeMusic;
+    this.bgm.setVolume(STAGE_BGM_VOLUME_FACTOR * volumeMusic);
   }
 
   activateFever() {
-    console.log("DEBUG starting fever");
     const debugFeverText = this.add
       .text(50, 500, "FEVER\nSTART", TEXT_STYLE)
       .setOrigin(0.5, 0.5)
@@ -428,7 +438,6 @@ export default class Stage extends BaseScene {
       this.events.emit("global.feverTimeout", EFFECT_FADE_DURATION)
     );
     this.time.delayedCall(feverDuration, () => {
-      console.log("DEBUG ending fever", Date.now());
       debugFeverText.destroy();
       store.dispatch({ type: "global.deactivateFever" });
       this.events.emit("global.feverEnd");
@@ -451,7 +460,6 @@ export default class Stage extends BaseScene {
     this.dropper.pause();
     this.pauseButton.setActive(false);
     store.dispatch({ type: "global.winStage" });
-    // this.fadeBgm(1000);
     const state = store.getState();
     if (state.stage.level === state.stage.maxLevel) {
       this.gameOver();
