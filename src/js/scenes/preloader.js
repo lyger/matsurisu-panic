@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { HEIGHT, PUBLIC_PATH } from "../globals";
+import store from "../store";
 import Curtains from "./curtains";
 import Title from "./title";
 
@@ -115,8 +116,6 @@ export default class Preloader extends Phaser.Scene {
   }
 
   loadTitle() {
-    // DEBUG
-    this.load.image("title-mockup", PUBLIC_PATH + "/images/title-mockup.png");
     this.load.image(
       "title-background",
       PUBLIC_PATH + "/images/title-background.png"
@@ -146,7 +145,7 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/title-credit-buttons.png",
       {
         frameWidth: 240,
-        frameHeight: 51,
+        frameHeight: 50,
       }
     );
     this.load.image(
@@ -170,6 +169,63 @@ export default class Preloader extends Phaser.Scene {
     this.load.image(
       "title-matsurisu3",
       PUBLIC_PATH + "/images/title-matsurisu3.png"
+    );
+  }
+
+  loadModals() {
+    this.load.image("modal-blank", PUBLIC_PATH + "/images/modal-blank.png");
+    this.load.spritesheet(
+      "modal-close-buttons",
+      PUBLIC_PATH + "/images/modal-close-buttons.png",
+      {
+        frameWidth: 230,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "modal-nav-buttons",
+      PUBLIC_PATH + "/images/modal-nav-buttons.png",
+      {
+        frameWidth: 63,
+        frameHeight: 66,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "modal-toggle-buttons",
+      PUBLIC_PATH + "/images/modal-toggle-buttons.png",
+      {
+        frameWidth: 160,
+        frameHeight: 60,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "modal-clear-buttons",
+      PUBLIC_PATH + "/images/modal-clear-buttons.png",
+      {
+        frameWidth: 255,
+        frameHeight: 60,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.image("controls-info", PUBLIC_PATH + "/images/controls-info.png");
+    this.load.image(
+      "sound-slider-frame",
+      PUBLIC_PATH + "/images/sound-slider-frame.png"
+    );
+    this.load.image(
+      "sound-slider-gauge",
+      PUBLIC_PATH + "/images/sound-slider-gauge.png"
+    );
+    this.load.image(
+      "sound-slider-knob",
+      PUBLIC_PATH + "/images/sound-slider-knob.png"
     );
   }
 
@@ -454,6 +510,7 @@ export default class Preloader extends Phaser.Scene {
     this.loadControls();
     this.loadCharacters();
     this.loadTitle();
+    this.loadModals();
     this.loadStage();
     this.loadShop();
     this.loadResults();
@@ -556,6 +613,7 @@ export default class Preloader extends Phaser.Scene {
   }
 
   create() {
+    this.game.sound.mute = store.getState().settings.mute;
     this.createAnimations();
     this.scene.add("Curtains", Curtains, false);
     this.scene.bringToTop("Curtains");

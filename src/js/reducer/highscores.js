@@ -22,6 +22,8 @@ export default function highscoresReducer(state, action) {
         highscores: newHighscores,
         lastIndex: index,
       };
+    case "global.clearData":
+      return highscoresDefaultState;
     default:
       return state;
   }

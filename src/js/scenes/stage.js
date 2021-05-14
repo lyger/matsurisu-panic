@@ -11,6 +11,7 @@ import Results from "./results";
 import DebugCursor from "../components/debugcursor";
 import { combinePowerups } from "../components/items/catalog";
 import BaseScene from "./base";
+import { InstructionsModal } from "./modal";
 
 const GAME_START_DELAY = 1000;
 const GAME_END_DELAY = 1000;
@@ -22,6 +23,8 @@ const PauseButton = ButtonFactory("pause-button", true);
 export default class Stage extends BaseScene {
   create() {
     store.dispatch({ type: "stage.increaseLevel" });
+
+    this.maybeShowInstructions();
 
     this.startBgm(GAME_START_DELAY / 2000);
     this.createSoundListeners();
@@ -66,7 +69,6 @@ export default class Stage extends BaseScene {
       down: 1,
       downCallback: () => this.pauseGame(),
     }).setActive(false);
-    this.add.existing(this.pauseButton);
 
     const mute = store.getState().settings.mute;
     this.game.sound.mute = mute;
@@ -377,9 +379,19 @@ export default class Stage extends BaseScene {
 
   toggleMute() {
     store.dispatch({ type: "settings.toggleMute" });
-    const newMute = store.getState().settings.mute;
-    this.game.sound.mute = newMute;
     this.muteButton.setFrame(newMute ? 1 : 0);
+  }
+
+  maybeShowInstructions() {
+    const shown = store.getState().settings.viewedInstructions;
+    if (shown) return;
+    this.scene.pause();
+    this.scene.add("InstructionsModal", InstructionsModal, false, {
+      parentSceneKey: this.scene.key,
+    });
+    this.scene.moveBelow("Curtains", "InstructionsModal");
+    // this.scene.moveBelow("InstructionsModal", this.scene.key);
+    this.scene.launch("InstructionsModal");
   }
 
   pauseGame() {
@@ -394,7 +406,7 @@ export default class Stage extends BaseScene {
       return false;
     this.sound.pauseAll();
     this.scene.add("PauseScreen", PauseScreen, true);
-    this.scene.pause(this.scene.key);
+    this.scene.pause();
     return true;
   }
 
@@ -433,6 +445,7 @@ export default class Stage extends BaseScene {
   }
 
   winStage() {
+    this.matsuri.disable();
     this.time.clearPendingEvents();
     this.events.emit("stage.clearEffects");
     this.dropper.pause();

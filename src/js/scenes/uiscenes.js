@@ -26,8 +26,6 @@ export class PauseScreen extends Phaser.Scene {
       upCallback: () => this.handleResume(),
     });
 
-    this.add.existing(this.button);
-
     const escKey = this.input.keyboard.addKey("esc", true, false);
     escKey.on("down", () => this.handleResume());
 

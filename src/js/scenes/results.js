@@ -13,6 +13,7 @@ import sendTweet from "../twitter";
 import { getMessage, timestampToDateString } from "../utils";
 import Title from "./title";
 import BaseScene from "./base";
+import Toggle from "../components/toggle";
 
 const HIGHSCORES_ENDPOINT =
   "https://onitools.moe/_matsurisu_panic_auth/highscores.json";
@@ -58,19 +59,20 @@ class TweetConfirmModal extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
 
-    this.englishButton = this.add
-      .image(275, 545, "tweet-language-buttons", 0)
-      .setDepth(DEPTH.UIFRONT);
-    this.japaneseButton = this.add
-      .image(445, 545, "tweet-language-buttons", 2)
-      .setDepth(DEPTH.UIFRONT);
-    this.englishButton.on("pointerdown", () => {
-      store.dispatch({ type: "settings.setEnglish" });
-      this.refreshDisplay();
-    });
-    this.japaneseButton.on("pointerdown", () => {
-      store.dispatch({ type: "settings.setJapanese" });
-      this.refreshDisplay();
+    this.languageToggle = new Toggle(this, {
+      texture: "tweet-language-buttons",
+      x: WIDTH / 2,
+      y: 545,
+      spacing: 170,
+      target: "settings.language",
+      leftState: "ja",
+      leftBase: 3,
+      leftSelected: 2,
+      rightBase: 1,
+      rightSelected: 0,
+      actionLeft: { type: "settings.setJapanese" },
+      actionRight: { type: "settings.setEnglish" },
+      toggleCallback: () => this.refreshDisplay(),
     });
 
     this.buttonNo = new TweetButton(this, {
@@ -98,10 +100,6 @@ class TweetConfirmModal extends Phaser.Scene {
       downCallback: () => this.returnToResults(this.doneTweeting),
     }).show(false);
 
-    this.add.existing(this.buttonNo);
-    this.add.existing(this.buttonTweet);
-    this.add.existing(this.buttonOk);
-
     this.refreshDisplay();
   }
 
@@ -111,18 +109,10 @@ class TweetConfirmModal extends Phaser.Scene {
   }
 
   refreshDisplay() {
-    this.state = store.getState();
     this.confirmText.setText(getMessage("CONFIRM_TWEET"));
     this.tweetText.setText(
       getMessage("TWEET").replace("[SCORE]", `${this.score}`)
     );
-    if (this.state.settings.language === "ja") {
-      this.englishButton.setFrame(1).setInteractive();
-      this.japaneseButton.setFrame(2).disableInteractive();
-    } else {
-      this.englishButton.setFrame(0).disableInteractive();
-      this.japaneseButton.setFrame(3).setInteractive();
-    }
   }
 
   returnToResults(hideTweetButton = false) {
@@ -134,8 +124,7 @@ class TweetConfirmModal extends Phaser.Scene {
     this.buttonNo.show(false);
     this.buttonTweet.show(false);
     this.confirmText.setVisible(false);
-    this.englishButton.setVisible(false).setActive(false);
-    this.japaneseButton.setVisible(false).setActive(false);
+    this.languageToggle.setVisible(false).setActive(false);
     this.tweetText.setText(getMessage("TWEET_PROGRESS"));
     sendTweet(
       this.fullTweetText,
@@ -265,9 +254,6 @@ export default class Results extends BaseScene {
       over: 3,
       upCallback: () => this.handleNewGame(),
     });
-
-    this.add.existing(this.topButton);
-    this.add.existing(this.retryButton);
 
     store.dispatch({ type: "highscores.add", payload: this.finalScore });
     this.state = store.getState();
@@ -429,7 +415,7 @@ export default class Results extends BaseScene {
   }
 
   handleTweet() {
-    this.scene.pause(this.scene.key);
+    this.scene.pause();
     this.scene.add("TweetConfirmModal", TweetConfirmModal, true, {
       imgData: this.imgData,
       score: this.finalScore,

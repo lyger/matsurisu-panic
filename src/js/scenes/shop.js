@@ -113,9 +113,6 @@ class ShopConfirmModal extends BaseScene {
         this.returnToShop();
       },
     });
-
-    this.add.existing(this.buttonNo);
-    this.add.existing(this.buttonYes);
   }
 
   returnToShop() {
@@ -157,7 +154,7 @@ export default class Shop extends BaseScene {
         shopItem.destroy();
         this.refreshState();
       };
-      this.scene.pause(this.scene.key);
+      this.scene.pause();
       this.scene.add("ShopConfirmModal", ShopConfirmModal, true, {
         shopItem,
         buyCallback,
@@ -177,8 +174,6 @@ export default class Shop extends BaseScene {
       over: 1,
       downCallback: () => this.doneShopping(),
     });
-
-    this.add.existing(this.doneButton);
 
     this.events.on("destroy", () => {
       this.bgm?.stop?.();

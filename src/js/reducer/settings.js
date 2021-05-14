@@ -14,6 +14,16 @@ export default function settingsReducer(state = settingsDefaultState, action) {
         ...state,
         mute: !state.mute,
       };
+    case "settings.setVolumeMusic":
+      return {
+        ...state,
+        volumeMusic: payload,
+      };
+    case "settings.setVolumeSfx":
+      return {
+        ...state,
+        volumeSfx: payload,
+      };
     case "settings.setEnglish":
       return {
         ...state,
@@ -29,6 +39,8 @@ export default function settingsReducer(state = settingsDefaultState, action) {
         ...state,
         viewedInstructions: true,
       };
+    case "global.clearData":
+      return settingsDefaultState;
     default:
       return state;
   }

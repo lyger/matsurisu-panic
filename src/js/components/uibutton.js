@@ -98,6 +98,8 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       this.once("destroy", () =>
         this.scene.game.events.off("blur", handleBlur)
       );
+
+      this.scene.add.existing(this);
     }
 
     show(value = true) {
@@ -114,6 +116,10 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       }
 
       return this;
+    }
+
+    setText(text) {
+      this.text.setText(text);
     }
   }
 

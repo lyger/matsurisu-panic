@@ -2,6 +2,7 @@ import "../scss/app.scss";
 import Phaser from "phaser";
 import { WIDTH, HEIGHT } from "./globals";
 import Preloader from "./scenes/preloader";
+import { setStoreGameRef } from "./store";
 
 // Disable context menu to prevent interference with game input
 document.addEventListener(
@@ -30,3 +31,5 @@ const game = new Phaser.Game({
   resolution: 1,
   scene: Preloader,
 });
+
+setStoreGameRef(game);

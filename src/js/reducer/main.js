@@ -10,8 +10,8 @@ export const mainDefaultState = {
   player: playerDefaultState,
   score: scoreDefaultState,
   shop: shopDefaultState,
-  settings: settingsDefaultState,
-  highscores: highscoresDefaultState,
+  settings: { ...settingsDefaultState },
+  highscores: { ...highscoresDefaultState },
 };
 
 export default function mainReducer(state = mainDefaultState, action) {

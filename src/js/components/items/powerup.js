@@ -1,4 +1,5 @@
 import store from "../../store";
+import { traverseState } from "../../utils";
 import Item from "./item";
 
 export default class Powerup extends Item {
@@ -48,16 +49,12 @@ export default class Powerup extends Item {
     store.dispatch({ type: "player.setPowerup", payload: this });
   }
 
-  getTarget(state) {
-    return this.target.split(".").reduce((st, key) => st[key], state);
-  }
-
   checkConflicts(key) {
     return this.conflictsWith.some((other) => "Powerup:" + other === key);
   }
 
   apply(scene) {
-    const oldState = this.getTarget(store.getState());
+    const oldState = traverseState(store.getState(), this.target);
 
     if (oldState.modifiers.some((mod) => this.checkConflicts(mod.key)))
       return false;
@@ -67,7 +64,7 @@ export default class Powerup extends Item {
       payload: this.modifier,
     });
 
-    const newState = this.getTarget(store.getState());
+    const newState = traverseState(store.getState(), this.target);
 
     if (
       newState.modifiers.length === oldState.modifiers.length ||

@@ -1,4 +1,5 @@
-import { CATCH_MESSAGE_STYLE, DEPTH, MSG } from "./globals";
+import { CATCH_MESSAGE_STYLE, DEPTH } from "./globals";
+import MSG from "./messages";
 import store from "./store";
 
 export function applyModifiersToState(state) {
@@ -101,4 +102,8 @@ export function descendingSortedIndex(array, value, key = (v) => v) {
 export function getMessage(key) {
   const lang = store.getState().settings.language;
   return MSG[key][lang];
+}
+
+export function traverseState(state, path) {
+  return path.split(".").reduce((st, key) => st[key], state);
 }

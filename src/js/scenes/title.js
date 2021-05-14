@@ -2,6 +2,7 @@ import ButtonFactory from "../components/uibutton";
 import { DEPTH, HEIGHT, TEXT_STYLE, WIDTH } from "../globals";
 import { getMessage } from "../utils";
 import BaseScene from "./base";
+import { InstructionsModal, CreditsModal, SettingsModal } from "./modal";
 import Stage from "./stage";
 
 const FADE_DURATION = 600;
@@ -13,7 +14,7 @@ const StartButton = ButtonFactory("title-start-buttons", true, {
   fontSize: "50px",
 });
 const SideButton = ButtonFactory("title-side-buttons", true);
-const CreditButton = ButtonFactory("title-credit-buttons", false, {
+const CreditButton = ButtonFactory("title-credit-buttons", true, {
   ...TEXT_STYLE,
   color: "#fff",
   fontSize: "28px",
@@ -29,8 +30,7 @@ export default class Title extends BaseScene {
       alpha: 1,
       duration: 500,
     });
-    // this.add.image(WIDTH / 2, HEIGHT / 2, "title-mockup").setAlpha(0.2);
-    const startButton = new StartButton(this, {
+    this.startButton = new StartButton(this, {
       x: WIDTH / 2,
       y: HEIGHT - 145,
       base: 0,
@@ -39,27 +39,35 @@ export default class Title extends BaseScene {
       overTextStyle: { color: "#7f7f7f" },
       upCallback: () => this.startGame(),
     }).show(false);
-    const settingsButton = new SideButton(this, {
+    this.settingsButton = new SideButton(this, {
       x: WIDTH / 2 - 195,
       y: HEIGHT - 145,
       base: 0,
       over: 1,
+      downCallback: () =>
+        this.scene.add("SettingsModal", SettingsModal, true, {
+          parentSceneKey: this.scene.key,
+        }),
     }).show(false);
-    const controlsButton = new SideButton(this, {
+    this.controlsButton = new SideButton(this, {
       x: WIDTH / 2 + 195,
       y: HEIGHT - 145,
       base: 2,
       over: 3,
+      downCallback: () =>
+        this.scene.add("InstructionsModal", InstructionsModal, true, {
+          parentSceneKey: this.scene.key,
+        }),
     }).show(false);
-    const creditsButton = new CreditButton(this, {
+    this.creditsButton = new CreditButton(this, {
       x: WIDTH / 2,
       y: HEIGHT - 34,
       text: getMessage("CREDITS"),
+      downCallback: () =>
+        this.scene.add("CreditsModal", CreditsModal, true, {
+          parentSceneKey: this.scene.key,
+        }),
     }).show(false);
-    this.add.existing(startButton);
-    this.add.existing(settingsButton);
-    this.add.existing(controlsButton);
-    this.add.existing(creditsButton);
 
     this.createContrail({
       texture: "title-matsurisu1",
@@ -117,11 +125,13 @@ export default class Title extends BaseScene {
     });
     this.time.delayedCall(START_DELAY + 900, () => {
       this.add.image(WIDTH / 2, HEIGHT / 2, "title-sparkles");
-      startButton.show(true);
-      settingsButton.show(true);
-      controlsButton.show(true);
-      creditsButton.show(true);
+      this.startButton.show(true);
+      this.settingsButton.show(true);
+      this.controlsButton.show(true);
+      this.creditsButton.show(true);
     });
+
+    this.events.on("rerender", this.refreshDisplay, this);
   }
 
   createContrail({
@@ -183,6 +193,11 @@ export default class Title extends BaseScene {
       });
     });
     return newItem;
+  }
+
+  refreshDisplay() {
+    this.startButton.setText(getMessage("START"));
+    this.creditsButton.setText(getMessage("CREDITS"));
   }
 
   startGame() {

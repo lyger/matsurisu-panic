@@ -41,22 +41,3 @@ export const FEVER_TINT = 0xa498ff;
 
 export const FEVER_TEXT_COLOR = "#ff90bc";
 export const COMBO_TEXT_COLOR = "#ffc82e";
-
-export const MSG = {
-  START: { en: "START", ja: "スタート" },
-  CREDITS: { en: "CREDITS", ja: "クレジット" },
-  GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
-  BUY_ITEM: { en: "Buy?", ja: "買いますか？" },
-  REPLACE_ITEM: { en: "Buy and replace?", ja: "買って入れ替えますか？" },
-  CONFIRM_TWEET: { en: "Send tweet?", ja: "ツイートしますか？" },
-  TWEET: {
-    en: "I scored [SCORE] points! #TestHashtag",
-    ja: "[SCORE]点を達成しました！ #テストハッシュタグ",
-  },
-  TWEET_PROGRESS: { en: "Sending...", ja: "送信中…" },
-  TWEET_SUCCESS: { en: "Tweet sent!", ja: "ツイート成功！" },
-  TWEET_FAILURE: {
-    en: "Failed to send tweet!",
-    ja: "ツイートを送信できませんでした",
-  },
-};
