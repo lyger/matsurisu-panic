@@ -102,6 +102,7 @@ export default class Stage extends BaseScene {
           isFever: matsurisu.getData("fever"),
           isLow,
           airborne,
+          risuType: matsurisu.getData("risuType"),
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.catch", data);
@@ -201,8 +202,10 @@ export default class Stage extends BaseScene {
           x: matsurisu.x,
           y: matsurisu.y,
           rotation: matsurisu.rotation,
+          flip: matsurisu.flipX,
           bonus,
           invincible,
+          risuType: matsurisu.getData("risuType"),
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.drop", data);
@@ -427,20 +430,78 @@ export default class Stage extends BaseScene {
   }
 
   activateFever() {
-    const debugFeverText = this.add
-      .text(50, 500, "FEVER\nSTART", TEXT_STYLE)
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.OBJECTBACK);
+    const feverBack = this.add
+      .image(WIDTH / 2, HEIGHT / 2, "stage-background-fever")
+      .setDepth(DEPTH.BGBACK + 1);
     store.dispatch({ type: "global.activateFever" });
     const state = store.getState();
     const feverDuration = state.stage.fever.duration * 1000;
     this.time.delayedCall(feverDuration - EFFECT_FADE_DURATION, () =>
       this.events.emit("global.feverTimeout", EFFECT_FADE_DURATION)
     );
+    const spotlights = [
+      {
+        x: -360,
+        color: "green",
+        rotation: 0.16 * Math.PI,
+        delta: 0.07 * Math.PI,
+      },
+      {
+        x: WIDTH + 360,
+        color: "green",
+        rotation: -0.16 * Math.PI,
+        delta: -0.07 * Math.PI,
+      },
+      {
+        x: -100,
+        color: "yellow",
+        rotation: 0.18 * Math.PI,
+        delta: 0.16 * Math.PI,
+      },
+      {
+        x: WIDTH + 100,
+        color: "yellow",
+        rotation: -0.18 * Math.PI,
+        delta: -0.16 * Math.PI,
+      },
+    ].map(({ x, color, rotation, delta }) => {
+      const spotlight = this.add
+        .image(x, 980, `fever-spotlight-${color}`)
+        .setDepth(DEPTH.BGFRONT)
+        .setOrigin(0.5, 1)
+        .setBlendMode(Phaser.BlendModes.SCREEN)
+        .setRotation(rotation);
+      const spotlightTween = this.tweens.add({
+        targets: spotlight,
+        rotation: rotation + delta,
+        duration: 1500,
+        ease: "Quad.easeInOut",
+        yoyo: true,
+        repeat: Infinity,
+      });
+      return { target: spotlight, tween: spotlightTween };
+    });
+
     this.time.delayedCall(feverDuration, () => {
-      debugFeverText.destroy();
       store.dispatch({ type: "global.deactivateFever" });
       this.events.emit("global.feverEnd");
+      this.tweens.add({
+        targets: feverBack,
+        alpha: 0,
+        duration: 500,
+        onComplete: () => feverBack.destroy(),
+      });
+      spotlights.forEach(({ target, tween }) =>
+        this.tweens.add({
+          targets: target,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => {
+            this.tweens.remove(tween);
+            target.destroy();
+          },
+        })
+      );
     });
   }
 

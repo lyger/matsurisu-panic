@@ -274,7 +274,7 @@ export class SettingsModal extends BaseModal {
   }
 }
 
-const CREDITS_TOP = 380;
+const CREDITS_TOP = 370;
 const CREDITS_SPACING = 35;
 const CREDITS_INTERVAL = 90;
 const CREDITS_MARGIN = 230;
@@ -296,6 +296,7 @@ export class CreditsModal extends PagedModal {
       "Stryv",
       "Xrave",
       "ここあ",
+      "ソエルティライチ",
       "バリカツオ",
       "小倉もみじ",
     ];
@@ -389,7 +390,7 @@ export class CreditsModal extends PagedModal {
         this.add
           .text(
             CREDITS_MARGIN,
-            CREDITS_TOP + CREDITS_SPACING - 16,
+            CREDITS_TOP + CREDITS_SPACING - 20,
             playtesters.slice(0, Math.ceil(playtesters.length / 2)).join("\n"),
             {
               ...BROWN_STYLE_LG,

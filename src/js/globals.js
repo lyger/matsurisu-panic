@@ -37,9 +37,9 @@ export const RESULTS_TEXT_STYLE = {
 export const CURTAIN_COLOR_1 = 0xfc5d51;
 export const CURTAIN_COLOR_2 = 0xff4e47;
 
-export const FEVER_TINT = 0xa498ff;
+export const FEVER_TINT = 0xffffff;
 
-export const FEVER_TEXT_COLOR = "#ff90bc";
+export const FEVER_TEXT_COLOR = "#ffff5a";
 export const COMBO_TEXT_COLOR = "#ffc82e";
 
 export const STAGE_BGM_VOLUME_FACTOR = 0.075;

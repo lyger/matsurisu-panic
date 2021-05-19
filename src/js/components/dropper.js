@@ -6,7 +6,7 @@ import { getAvailablePowerups } from "./items/catalog";
 
 const PBAR_WIDTH = 676;
 const PBAR_HEIGHT = 16;
-const PBAR_Y = 332;
+const PBAR_Y = 331;
 const TIMEOUT_BLINK_DURATION = 455;
 
 function euclidean(x, y) {
@@ -207,16 +207,23 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   setupFever() {
     if (this.state.fever.number === 0) {
+      this.feverActive = false;
       this.feverStep = 0;
       this.numFever = 0;
       this.nextFeverY = Infinity;
     } else {
+      this.feverActive = false;
       this.feverStep = (0.8 * this.maximumY) / this.state.fever.number;
       this.numFever = 0;
       this.nextFeverY = this.feverStep;
-      // Once fever has been activated for the level, we'll stop spawning more fever items
       this.scene.events.on("global.feverStart", () => {
+        this.feverActive = true;
+        // Once fever has been activated for the level, we'll stop spawning more fever items
         this.nextFeverY = Infinity;
+        this.matsurisu.getChildren().forEach((matsurisu) => {
+          matsurisu.anims.play("matsurisu-light.fall");
+          matsurisu.setData("risuType", "light");
+        });
         this.generateBonusMatsurisu();
       });
       this.scene.events.on(
@@ -224,11 +231,18 @@ export default class Dropper extends Phaser.GameObjects.Group {
         this.timeoutBonusMatsurisu,
         this
       );
-      this.scene.events.on("global.feverEnd", this.clearBonusMatsurisu, this);
+      this.scene.events.on("global.feverEnd", () => {
+        this.feverActive = false;
+        this.matsurisu.getChildren().forEach((matsurisu) => {
+          matsurisu.anims.play("matsurisu-normal.fall");
+          matsurisu.setData("risuType", "normal");
+        });
+        this.clearBonusMatsurisu();
+      });
     }
   }
 
-  catchMatsurisu({ x, y }) {
+  catchMatsurisu({ x, y, risuType }) {
     const rand = Phaser.Math.RND;
     const deltaY = GROUNDHEIGHT - y - 75;
     if (deltaY > 0) {
@@ -242,7 +256,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
         fallPath,
         x,
         y,
-        "matsurisu-normal-land",
+        `matsurisu-${risuType}-land`,
         0
       )
         .setOrigin(0.5, 0.5)
@@ -256,7 +270,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
         },
         onComplete: () => {
           matsurisu.setDepth(DEPTH.OBJECTBACK);
-          matsurisu.anims.play("matsurisu-normal.stand");
+          matsurisu.anims.play(`matsurisu-${risuType}.stand`);
           this.scene.tweens.add({
             targets: matsurisu,
             alpha: 0,
@@ -268,11 +282,11 @@ export default class Dropper extends Phaser.GameObjects.Group {
       });
     } else {
       const matsurisu = this.scene.add
-        .sprite(x, GROUNDHEIGHT - 75, "matsurisu-normal-land", 1)
+        .sprite(x, GROUNDHEIGHT - 75, `matsurisu-${risuType}-land`, 1)
         .setOrigin(0.5, 0.5)
         .setDepth(DEPTH.OBJECTBACK)
         .setFlipX(rand.frac() > 0.5);
-      matsurisu.anims.play("matsurisu-normal.stand");
+      matsurisu.anims.play(`matsurisu-${risuType}.stand`);
       this.scene.tweens.add({
         targets: matsurisu,
         alpha: 0,
@@ -283,13 +297,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
     }
   }
 
-  dropMatsurisu({ x, y, rotation, bonus }) {
+  dropMatsurisu({ x, y, rotation, flip, bonus, risuType }) {
     const state = store.getState();
     if (state.score.invincible || bonus) {
       const matsurisu = this.scene.add
-        .image(x, y, "matsurisu-normal", 0)
+        .image(x, y, `matsurisu-${risuType}`, 0)
         .setRotation(rotation)
-        .setDepth(DEPTH.OBJECTDEPTH);
+        .setDepth(DEPTH.OBJECTDEPTH)
+        .setFlipX(flip);
       if (bonus) matsurisu.setTint(FEVER_TINT);
       this.scene.tweens.add({
         targets: matsurisu,
@@ -453,17 +468,17 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   createMatsurisu({ x, bonus }) {
     const rand = Phaser.Math.RND;
+    const risuType = this.feverActive ? (bonus ? "fever" : "light") : "normal";
     const newMatsurisu = this.matsurisu
       .create(x, -100, "matsurisu-normal", 0, true, true)
       .setDepth(DEPTH.OBJECTDEPTH)
       .setVelocityY(this.modMatsurisu.fallSpeed)
       .setFlipX(rand.frac() > 0.5)
       .setRotation(rand.frac() * 2 * Math.PI)
-      .setData({ fever: false, bonus });
-    newMatsurisu.anims.play("matsurisu-normal.fall");
+      .setData({ fever: false, bonus, risuType });
+    newMatsurisu.anims.play(`matsurisu-${risuType}.fall`);
     newMatsurisu.body.setCircle(45, 30, 30);
     if (bonus) {
-      newMatsurisu.setTint(FEVER_TINT);
       const syncAlpha = () => newMatsurisu.setAlpha(this.syncProps.bonusAlpha);
       this.scene.events.on("update", syncAlpha);
       const removeSyncAlpha = () => this.scene.events.off("update", syncAlpha);
@@ -525,7 +540,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     key,
     duration,
     texture,
-    frame,
+    frame = 0,
     animation,
     depth = 0,
     x = 0,
@@ -547,12 +562,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   makeFeverItem(target) {
     target.setData("fever", true);
-    target.setTint(FEVER_TINT);
     this.createExtra(target, {
       key: "feverItem",
       texture: "extra-fever",
-      frame: 0,
-      animation: "extra-fever.burn",
       depth: -1,
     });
     this.nextFeverY = this.nextFeverY + this.feverStep;
@@ -633,7 +645,11 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.totalY += matsurisuDeltaY;
 
       const newMatsurisu = this.createMatsurisu(next);
-      if (isNextFeverItem) this.makeFeverItem(newMatsurisu);
+      if (isNextFeverItem) {
+        this.makeFeverItem(newMatsurisu);
+        newMatsurisu.anims.play("matsurisu-light.fall");
+        newMatsurisu.setData("risuType", "light");
+      }
 
       if (!next.bonus) this.generateBonusMatsurisu();
     }

@@ -166,6 +166,8 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         stagesCleared: state.stagesCleared + 1,
         combo: 0,
         drops: 0,
+        airCounter: 0,
+        airForgiveness: 0,
         fever: 0,
       };
     case "global.activateFever":

@@ -3,7 +3,6 @@ import {
   COMBO_TEXT_COLOR,
   DEPTH,
   FEVER_TEXT_COLOR,
-  HEIGHT,
   TEXT_STYLE,
   WIDTH,
 } from "../globals";
@@ -13,11 +12,112 @@ import { addTextEffect } from "../utils";
 const STATS_OFFSET = 55;
 const LIVES_OFFSET_TOP = -15;
 const LIVES_OFFSET_BOT = 11;
-const COMBO_HEIGHT = 575;
+const COMBO_HEIGHT = 580;
+const WHEEL_HEIGHT = 550;
 
-export default class Scoreboard extends Phaser.GameObjects.Container {
+const FEVER_TICKS = 24;
+const FEVER_ARC = (2 * Math.PI) / FEVER_TICKS;
+const FEVER_PHI = -Math.PI / 2 - FEVER_ARC / 2;
+
+class FeverWheel extends Phaser.GameObjects.Container {
+  constructor(scene, x, y) {
+    super(scene, x, y);
+    this.wheelFront = this.scene.add.image(0, 0, "fever-wheel-front");
+    this.wheelBack = this.scene.add.image(0, 0, "fever-wheel-back");
+    this.frontClip = this.scene.add.graphics().setVisible(false);
+    this.backClip = this.scene.add.graphics().setVisible(false);
+    this.wheelFront.mask = new Phaser.Display.Masks.BitmapMask(
+      this.scene,
+      this.frontClip
+    );
+    this.wheelBack.mask = new Phaser.Display.Masks.BitmapMask(
+      this.scene,
+      this.backClip
+    );
+    this.isCountdown = false;
+
+    this.startTween = undefined;
+    this.endTween = undefined;
+    this.startValue = 0;
+    this.endValue = 0;
+    this.lastStartTicks = -1;
+    this.lastEndTicks = -1;
+
+    this.update();
+
+    this.add([this.wheelFront, this.wheelBack, this.frontClip, this.backClip]);
+    this.scene.add.existing(this);
+  }
+
+  setValue(value) {
+    if (this.isCountdown) return;
+    if (this.endTween !== undefined) {
+      this.endTween.stop();
+      this.scene.tweens.remove(this.endTween);
+    }
+    this.endTween = this.scene.tweens.add({
+      targets: this,
+      endValue: value,
+      duration: 300,
+      onUpdate: this.update,
+      onUpdateScope: this,
+    });
+    if (value >= 1) this.startCountdown();
+  }
+
+  startCountdown() {
+    this.isCountdown = true;
+    const feverDuration = store.getState().stage.fever.duration;
+    this.endTween = this.scene.tweens.add({
+      targets: this,
+      startValue: 1,
+      duration: feverDuration * 1000,
+      onUpdate: this.update,
+      onUpdateScope: this,
+    });
+  }
+
+  update() {
+    const startTicks = Math.round(this.startValue * FEVER_TICKS);
+    const endTicks = Math.round(this.endValue * FEVER_TICKS);
+    if (startTicks === this.lastStartTicks && endTicks === this.lastEndTicks)
+      return;
+    this.lastStartTicks = startTicks;
+    this.lastEndTicks = endTicks;
+    this.frontClip
+      .clear()
+      .lineStyle(60, 0, 1)
+      .beginPath()
+      .arc(
+        this.x,
+        this.y,
+        160,
+        FEVER_PHI + startTicks * FEVER_ARC,
+        FEVER_PHI + endTicks * FEVER_ARC,
+        false
+      )
+      .strokePath()
+      .closePath();
+    this.backClip
+      .clear()
+      .lineStyle(60, 0, 1)
+      .beginPath()
+      .arc(
+        this.x,
+        this.y,
+        160,
+        FEVER_PHI + endTicks * FEVER_ARC,
+        FEVER_PHI + 2 * Math.PI + startTicks * FEVER_ARC,
+        false
+      )
+      .strokePath()
+      .closePath();
+  }
+}
+
+export default class Scoreboard extends Phaser.GameObjects.GameObject {
   constructor(scene) {
-    super(scene);
+    super(scene, "Scoreboard");
 
     this.scene.add
       .image(WIDTH / 2, 10, "stage-scoreboard")
@@ -62,21 +162,9 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       .setDepth(DEPTH.BGFRONT)
       .setAlpha(0);
 
-    this.feverText = this.scene.add
-      .text(WIDTH / 2, COMBO_HEIGHT - 20, "FEVER", {
-        ...TEXT_STYLE,
-        fontSize: "128px",
-        color: FEVER_TEXT_COLOR,
-      })
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.BGFRONT)
-      .setAlpha(0.55)
-      .setVisible(false);
-
-    this.debugFever = this.scene.add
-      .text(50, 550, "", TEXT_STYLE)
-      .setOrigin(0.5, 0.5)
-      .setDepth(DEPTH.OBJECTBACK);
+    this.feverWheel = new FeverWheel(this.scene, WIDTH / 2, WHEEL_HEIGHT)
+      .setVisible(false)
+      .setDepth(DEPTH.BGFRONT);
 
     this.refreshState();
     this.addStageListeners();
@@ -189,44 +277,25 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
     });
 
     this.scene.events.on("global.feverStart", () => {
-      this.comboLabel.setVisible(false);
-      this.comboText.setVisible(false);
-      this.feverText.setVisible(true);
-      let colorYellow = true;
-      const feverEvent = this.scene.time.addEvent({
-        delay: 500,
-        loop: true,
-        callback: () => {
-          this.feverText.setColor(
-            colorYellow ? COMBO_TEXT_COLOR : FEVER_TEXT_COLOR
-          );
-          colorYellow = !colorYellow;
-        },
-      });
-      this.feverText.setData("event", feverEvent);
-    });
-
-    this.scene.events.on("global.feverTimeout", (duration) => {
-      this.feverText.getData("event")?.destroy?.();
-      const totalSecs = Math.floor(duration / 1000);
-      const startAt = 1000 - Math.max(duration - totalSecs * 1000, 1);
-      let counter = totalSecs;
-      this.scene.time.addEvent({
-        delay: 1000,
-        repeat: totalSecs - 1,
-        startAt,
-        callback: () => {
-          this.feverText.setText(`${counter}`);
-          this.emphasizeText(this.feverText);
-          counter--;
+      this.comboLabel.setColor(FEVER_TEXT_COLOR).setAlpha(0.8);
+      this.comboText.setColor(FEVER_TEXT_COLOR).setAlpha(0.8);
+      this.emphasizeText({
+        text: "FEVER",
+        x: WIDTH / 2,
+        y: WHEEL_HEIGHT,
+        depth: DEPTH.BGFRONT,
+        visible: true,
+        style: {
+          ...TEXT_STYLE,
+          color: FEVER_TEXT_COLOR,
+          fontSize: "128px",
         },
       });
     });
 
     this.scene.events.on("global.feverEnd", () => {
-      this.comboLabel.setVisible(true);
-      this.comboText.setVisible(true);
-      this.feverText.setVisible(false);
+      this.comboLabel.setColor(COMBO_TEXT_COLOR).setAlpha(0.4);
+      this.comboText.setColor(COMBO_TEXT_COLOR).setAlpha(0.4);
     });
 
     return this;
@@ -331,6 +400,7 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
   refreshState() {
     const oldCombo = this.state.combo;
     const allState = store.getState();
+    const feverCfg = allState.stage.fever;
     this.state = allState.score;
     if (this.state.combo >= this.state.minCombo) this.showCombos();
     else this.hideCombos();
@@ -342,7 +412,10 @@ export default class Scoreboard extends Phaser.GameObjects.Container {
       this.emphasizeText(this.comboText);
     this.refreshLives();
 
-    this.debugFever.setText(`${this.state.fever}`);
+    if (feverCfg.number > 0) {
+      this.feverWheel.setVisible(true);
+      this.feverWheel.setValue(this.state.fever / feverCfg.threshold);
+    }
 
     return this;
   }

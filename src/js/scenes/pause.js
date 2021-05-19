@@ -26,6 +26,7 @@ export default class PauseScreen extends BaseModal {
       .setInteractive(this.input.makePixelPerfect());
 
     this.lock = false;
+    this.debounce = true;
 
     this.continueButton = new Button(this, {
       x: WIDTH / 2,
@@ -67,10 +68,12 @@ export default class PauseScreen extends BaseModal {
 
     this.events.on("rerender", this.refreshDisplay, this);
     this.events.on("resume", () => (this.lock = false));
+
+    this.time.delayedCall(300, () => (this.debounce = false));
   }
 
   handleContinue() {
-    if (this.lock) return;
+    if (this.lock || this.debounce) return;
     this.lock = true;
     this.returnToParent();
   }

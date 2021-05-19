@@ -28,7 +28,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     const { PLAYERDEPTH } = DEPTH;
 
-    this.controls = new Controls(scene);
+    this.controls = new Controls(scene).setDepth(DEPTH.BGFRONT);
     this.airborne = false;
     this.sliding = false;
     this.canStartSlide = true;
@@ -37,7 +37,7 @@ export default class Player extends Phaser.GameObjects.Container {
     this.facing = ".left";
 
     this.bodySprite = scene.physics.add
-      .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName)
+      .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName + "-idle")
       .setSize(100, 230)
       .setOffset(60, 50)
       .setDepth(PLAYERDEPTH)

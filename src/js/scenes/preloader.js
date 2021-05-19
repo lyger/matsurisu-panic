@@ -5,7 +5,7 @@ import Curtains from "./curtains";
 import Title from "./title";
 
 const SKINS = ["normal"];
-const MATSURISU = ["normal"];
+const MATSURISU = ["normal", "light", "fever"];
 
 export default class Preloader extends Phaser.Scene {
   constructor() {
@@ -49,10 +49,6 @@ export default class Preloader extends Phaser.Scene {
           frameHeight: 150,
         }
       );
-      this.load.image(
-        `matsurisu-${risuType}-die`,
-        PUBLIC_PATH + `/images/matsurisu-${risuType}-die.png`
-      );
       this.load.spritesheet(
         `matsurisu-${risuType}-land`,
         PUBLIC_PATH + `/images/matsurisu-${risuType}-land.png`,
@@ -62,16 +58,12 @@ export default class Preloader extends Phaser.Scene {
         }
       );
     });
+    this.load.image(
+      "matsurisu-normal-die",
+      PUBLIC_PATH + "/images/matsurisu-normal-die.png"
+    );
 
     SKINS.forEach((skin) => {
-      this.load.spritesheet(
-        `matsuri-${skin}`,
-        PUBLIC_PATH + `/images/matsuri-${skin}.png`,
-        {
-          frameWidth: 225,
-          frameHeight: 300,
-        }
-      );
       this.load.spritesheet(
         `matsuri-${skin}-idle`,
         PUBLIC_PATH + `/images/matsuri-${skin}-idle.png`,
@@ -235,6 +227,10 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/stage-background.png"
     );
     this.load.image(
+      "stage-background-fever",
+      PUBLIC_PATH + "/images/stage-background-fever.png"
+    );
+    this.load.image(
       "stage-progress",
       PUBLIC_PATH + "/images/stage-progress.png"
     );
@@ -246,6 +242,23 @@ export default class Preloader extends Phaser.Scene {
     this.load.image(
       "stage-scoreboard-life",
       PUBLIC_PATH + "/images/stage-scoreboard-life.png"
+    );
+
+    this.load.image(
+      "fever-spotlight-green",
+      PUBLIC_PATH + "/images/fever-spotlight-green.png"
+    );
+    this.load.image(
+      "fever-spotlight-yellow",
+      PUBLIC_PATH + "/images/fever-spotlight-yellow.png"
+    );
+    this.load.image(
+      "fever-wheel-back",
+      PUBLIC_PATH + "/images/fever-wheel-back.png"
+    );
+    this.load.image(
+      "fever-wheel-front",
+      PUBLIC_PATH + "/images/fever-wheel-front.png"
     );
 
     this.load.spritesheet(
@@ -408,11 +421,7 @@ export default class Preloader extends Phaser.Scene {
       "extra-balloons",
       PUBLIC_PATH + "/images/extra-balloons.png"
     );
-    this.load.spritesheet(
-      "extra-fever",
-      PUBLIC_PATH + "/images/extra-fever.png",
-      { frameWidth: 128, frameHeight: 128 }
-    );
+    this.load.image("extra-fever", PUBLIC_PATH + "/images/extra-fever.png");
   }
 
   loadSounds() {
@@ -596,32 +605,23 @@ export default class Preloader extends Phaser.Scene {
       makeMatsuriAnimations(`matsuri-${skin}`);
     });
 
-    MATSURISU.forEach((skin) => {
+    MATSURISU.forEach((risuType) => {
       this.anims.create({
-        key: `matsurisu-${skin}.fall`,
-        frames: this.anims.generateFrameNumbers(`matsurisu-${skin}`, {
+        key: `matsurisu-${risuType}.fall`,
+        frames: this.anims.generateFrameNumbers(`matsurisu-${risuType}`, {
           frames: [0, 1],
         }),
         frameRate: 5,
         repeat: -1,
       });
       this.anims.create({
-        key: `matsurisu-${skin}.stand`,
-        frames: this.anims.generateFrameNumbers(`matsurisu-${skin}-land`, {
+        key: `matsurisu-${risuType}.stand`,
+        frames: this.anims.generateFrameNumbers(`matsurisu-${risuType}-land`, {
           frames: [1, 2],
         }),
         frameRate: 5,
         repeat: -1,
       });
-    });
-
-    this.anims.create({
-      key: "extra-fever.burn",
-      frames: this.anims.generateFrameNumbers("extra-fever", {
-        frames: [0, 1],
-      }),
-      frameRate: 5,
-      repeat: -1,
     });
   }
 
