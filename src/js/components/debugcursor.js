@@ -1,5 +1,3 @@
-import Phaser from "phaser";
-
 export default class DebugCursor {
   constructor(scene) {
     const coordText = scene.add

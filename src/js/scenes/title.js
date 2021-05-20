@@ -37,6 +37,8 @@ export default class Title extends BaseScene {
       over: 1,
       text: getMessage("START"),
       overTextStyle: { color: "#7f7f7f" },
+      overSound: "menu-click",
+      downSound: "menu-click",
       upCallback: () => this.startGame(),
     }).show(false);
     this.settingsButton = new SideButton(this, {
@@ -44,6 +46,7 @@ export default class Title extends BaseScene {
       y: HEIGHT - 145,
       base: 0,
       over: 1,
+      overSound: "menu-click",
       downCallback: () =>
         this.scene.add("SettingsModal", SettingsModal, true, {
           parentSceneKey: this.scene.key,
@@ -54,6 +57,7 @@ export default class Title extends BaseScene {
       y: HEIGHT - 145,
       base: 2,
       over: 3,
+      overSound: "menu-click",
       downCallback: () =>
         this.scene.add("InstructionsModal", InstructionsModal, true, {
           parentSceneKey: this.scene.key,

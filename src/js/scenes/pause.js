@@ -35,6 +35,8 @@ export default class PauseScreen extends BaseModal {
       base: 0,
       over: 1,
       overTextStyle: { color: "#7f7f7f" },
+      overSound: "menu-click",
+      downSound: "menu-click",
       keys: ["esc"],
       upCallback: () => this.handleContinue(),
     });
@@ -45,6 +47,8 @@ export default class PauseScreen extends BaseModal {
       base: 2,
       over: 3,
       overTextStyle: { color: "#7f7f7f" },
+      overSound: "menu-click",
+      downSound: "menu-click",
       upCallback: () => this.handleNewGame(),
     });
     this.mainButton = new Button(this, {
@@ -54,6 +58,8 @@ export default class PauseScreen extends BaseModal {
       base: 2,
       over: 3,
       overTextStyle: { color: "#7f7f7f" },
+      overSound: "menu-click",
+      downSound: "menu-click",
       upCallback: () => this.handleMainMenu(),
     });
     this.settingsButton = new Button(this, {
@@ -63,6 +69,7 @@ export default class PauseScreen extends BaseModal {
       base: 2,
       over: 3,
       overTextStyle: { color: "#7f7f7f" },
+      overSound: "menu-click",
       upCallback: () => this.handleSettings(),
     });
 

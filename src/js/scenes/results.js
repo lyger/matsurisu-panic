@@ -21,6 +21,7 @@ const HIGHSCORES_ENDPOINT =
 
 const ReturnButton = ButtonFactory("results-return-buttons", true);
 const TweetButton = ButtonFactory("tweet-confirm-buttons", true);
+const SelfWorldButton = ButtonFactory("results-self-world-buttons", true);
 
 const SLIDE_DISTANCE = 100;
 const SLIDE_DELAY = 400;
@@ -77,6 +78,9 @@ class TweetConfirmModal extends BaseModal {
       y: 820,
       base: 0,
       over: 1,
+      overSound: "menu-click",
+      downSound: "menu-no",
+      downSoundAdjustment: 0.5,
       downCallback: () => this.returnToParent({ hideTweetButton: false }),
     });
 
@@ -85,6 +89,8 @@ class TweetConfirmModal extends BaseModal {
       y: 820,
       base: 2,
       over: 3,
+      overSound: "menu-click",
+      downSound: "menu-click",
       downCallback: () => this.handleTweet(),
     });
 
@@ -94,6 +100,8 @@ class TweetConfirmModal extends BaseModal {
       y: 820,
       base: 4,
       over: 5,
+      overSound: "menu-click",
+      downSound: "menu-click",
       downCallback: () =>
         this.returnToParent({ hideTweetButton: this.doneTweeting }),
     }).show(false);
@@ -111,6 +119,7 @@ class TweetConfirmModal extends BaseModal {
     this.tweetText.setText(
       getMessage("TWEET").replace("[SCORE]", `${this.score}`)
     );
+    this.scene.get(this.parentSceneKey).events.emit("rerender");
   }
 
   handleTweet() {
@@ -151,6 +160,12 @@ export default class Results extends BaseScene {
   create() {
     this.state = store.getState();
     this.createUI();
+
+    if (this.state.score.stagesCleared === this.state.stage.maxLevel)
+      this.sound.play("win-music", {
+        volume: 0.5 * this.state.settings.volumeMusic,
+        delay: SLIDE_DELAY / 1000,
+      });
 
     this.counter = { score: this.state.score.score };
     this.finalScore = 0;
@@ -232,11 +247,44 @@ export default class Results extends BaseScene {
         this.tweetButton.setVisible(false).disableInteractive();
     });
 
+    this.worldButton = new SelfWorldButton(this, {
+      x: 645,
+      y: 1075,
+      base: 0,
+      over: 1,
+      overSound: "menu-click",
+      downSound: "menu-click",
+      upCallback: () => this.showGlobalHighscores(),
+    })
+      .show(false)
+      .setAlpha(0);
+
+    this.selfButton = new SelfWorldButton(this, {
+      x: 645,
+      y: 1075,
+      base: 2,
+      over: 3,
+      overSound: "menu-click",
+      downSound: "menu-click",
+      upCallback: () => this.showLocalHighscores(),
+    }).show(false);
+
+    this.time.delayedCall(secondaryDelay + 5 * 300, () => {
+      this.worldButton.show(true).setAlpha(0);
+      this.tweens.add({
+        targets: this.worldButton,
+        alpha: 1,
+        duration: 300,
+      });
+    });
+
     this.topButton = new ReturnButton(this, {
       x: 225,
       y: 1190,
       base: 0,
       over: 1,
+      overSound: "menu-click",
+      downSound: "menu-click",
       upCallback: () => this.handleMainMenu(),
     });
 
@@ -245,6 +293,8 @@ export default class Results extends BaseScene {
       y: 1190,
       base: 2,
       over: 3,
+      overSound: "menu-click",
+      downSound: "menu-click",
       upCallback: () => this.handleNewGame(),
     });
 
@@ -252,6 +302,8 @@ export default class Results extends BaseScene {
     this.state = store.getState();
 
     this.showLocalHighscores(secondaryDelay);
+
+    this.events.on("rerender", this.refreshDisplay, this);
   }
 
   createUI() {
@@ -306,43 +358,80 @@ export default class Results extends BaseScene {
   clearHighscores() {
     this.highscoreElements?.forEach((obj) => obj.destroy());
     this.highscoreElements = [];
+    this.highscoresTitle?.destroy();
   }
 
   showLocalHighscores(delay = 0) {
+    this.highscoresTitleMessage = "RESULTS_PERSONAL_BESTS";
+    this.worldButton.show(true);
+    this.selfButton.show(false);
     const highscores = this.state.highscores.highscores;
     const lastIndex = this.state.highscores.lastIndex;
     this.clearHighscores();
-    this.createHighscores(delay, highscores, lastIndex, ({ score, time }) => [
-      `${score}`,
-      timestampToDateString(time),
-    ]);
+    this.createHighscores({
+      delay,
+      highscores,
+      lastIndex,
+      rowToText: ({ score, time }) => [`${score}`, timestampToDateString(time)],
+    });
   }
 
   showGlobalHighscores(delay = 0) {
+    this.highscoresTitleMessage = "RESULTS_WORLD_BESTS";
+    this.worldButton.show(false);
+    this.selfButton.show(true);
     this.clearHighscores();
     fetch(HIGHSCORES_ENDPOINT)
       .then((resp) => resp.json())
       .then(({ highscores }) => {
-        this.createHighscores(delay, highscores, -1, ({ score, name }) => [
-          `${score}`,
-          name,
-        ]);
+        this.createHighscores({
+          delay,
+          highscores,
+          lastIndex: -1,
+          rowToText: ({ score, name }) => [`${score}`, name],
+        });
       })
-      .catch(() => this.showHighscoresError());
+      .catch((err) => this.showHighscoresError(err.toString().split(": ")));
   }
 
-  showHighscoresError() {
-    const ERROR_STYLE = { ...TEXT_STYLE, fontSize: "32px", color: "#fc5854" };
-    const errorText = this.add
-      .text(WIDTH / 2, 950, getMessage("GENERIC_ERROR"), ERROR_STYLE)
+  showHighscoresError(details = []) {
+    this.highscoresTitleMessage = "GENERIC_ERROR";
+    const ERROR_STYLE = { ...TEXT_STYLE, fontSize: "36px", color: "#fc5854" };
+    const DETAILS_STYLE = {
+      ...RESULTS_TEXT_STYLE,
+      fontSize: "24px",
+      wordWrap: { width: 330, useAdvancedWrap: true },
+    };
+    this.highscoresTitle = this.add
+      .text(WIDTH / 2, 875, getMessage("GENERIC_ERROR"), ERROR_STYLE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
-    this.highscoreElements = [errorText];
+    this.highscoreElements = details.map((text, index) =>
+      this.add
+        .text(245, 950 + 50 * index, text, DETAILS_STYLE)
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(0, 1)
+    );
   }
 
-  createHighscores(delay, highscores, lastIndex, rowToText) {
+  createHighscores({ delay, highscores, lastIndex, rowToText }) {
     const SCORE_STYLE = { ...RESULTS_TEXT_STYLE, fontSize: "32px" };
     const elements = [];
+
+    this.highscoresTitle = this.add
+      .text(WIDTH / 2, 875, getMessage(this.highscoresTitleMessage), {
+        ...RESULTS_TEXT_STYLE,
+        fontSize: "36px",
+      })
+      .setDepth(DEPTH.UIFRONT)
+      .setOrigin(0.5, 0.5)
+      .setAlpha(0);
+    this.tweens.add({
+      targets: this.highscoresTitle,
+      alpha: 1,
+      delay,
+      duration: 500,
+    });
 
     highscores.slice(0, 4).forEach((row, index) => {
       const [text1, text2] = rowToText(row);
@@ -377,7 +466,7 @@ export default class Results extends BaseScene {
       this.tweens.add({
         targets,
         alpha: 1,
-        delay: delay + index * 300,
+        delay: delay + (index + 1) * 300,
         duration: 500,
       });
     });
@@ -405,6 +494,10 @@ export default class Results extends BaseScene {
       duration,
     });
     return text;
+  }
+
+  refreshDisplay() {
+    this.highscoresTitle?.setText(getMessage(this.highscoresTitleMessage));
   }
 
   handleTweet() {

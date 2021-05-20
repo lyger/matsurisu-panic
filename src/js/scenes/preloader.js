@@ -347,6 +347,16 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/results-tweet-button.png"
     );
     this.load.spritesheet(
+      "results-self-world-buttons",
+      PUBLIC_PATH + "/images/results-self-world-buttons.png",
+      {
+        frameWidth: 60,
+        frameHeight: 64,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
       "results-return-buttons",
       PUBLIC_PATH + "/images/results-return-buttons.png",
       {
@@ -433,6 +443,10 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/matsuri_jazz.ogg",
       PUBLIC_PATH + "/audio/matsuri_jazz.mp3",
     ]);
+    this.load.audio("win-music", [
+      PUBLIC_PATH + "/audio/Win-Music.ogg",
+      PUBLIC_PATH + "/audio/Win-Music.mp3",
+    ]);
 
     this.load.audio("matsurisu-catch", [
       PUBLIC_PATH + "/audio/Matsurisu_Catch.ogg",
@@ -509,6 +523,10 @@ export default class Preloader extends Phaser.Scene {
     this.load.audio("menu-open", [
       PUBLIC_PATH + "/audio/Open.ogg",
       PUBLIC_PATH + "/audio/Open.mp3",
+    ]);
+    this.load.audio("menu-click", [
+      PUBLIC_PATH + "/audio/Click.ogg",
+      PUBLIC_PATH + "/audio/Click.mp3",
     ]);
     this.load.audio("menu-no", [
       PUBLIC_PATH + "/audio/No.ogg",

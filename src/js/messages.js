@@ -59,6 +59,9 @@ const MSG = {
     en: "Failed to send tweet!",
     ja: "ツイートを送信できませんでした",
   },
+
+  RESULTS_PERSONAL_BESTS: { en: "Personal Bests", ja: "ベストスコア" },
+  RESULTS_WORLD_BESTS: { en: "World Bests", ja: "世界のベストスコア" },
 };
 
 export default MSG;

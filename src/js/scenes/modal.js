@@ -62,6 +62,8 @@ export class BaseModal extends BaseScene {
         base: 0,
         over: 1,
         overTextStyle: { color: "#7f7f7f" },
+        overSound: "menu-click",
+        downSound: "menu-click",
         upCallback: () => this.returnToParent(),
       });
     }
@@ -94,6 +96,8 @@ class PagedModal extends BaseModal {
       y: NAV_HEIGHT,
       base: 0,
       over: 1,
+      overSound: "menu-click",
+      downSound: "menu-click",
       downCallback: () => this.goToPrevious(),
     });
     this.nextButton = new NavButton(this, {
@@ -101,6 +105,8 @@ class PagedModal extends BaseModal {
       y: NAV_HEIGHT,
       base: 2,
       over: 3,
+      overSound: "menu-click",
+      downSound: "menu-click",
       downCallback: () => this.goToNext(),
     });
     this.pageText = this.add

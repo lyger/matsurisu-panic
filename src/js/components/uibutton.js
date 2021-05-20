@@ -20,6 +20,10 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         textOffset = { x: 0, y: 0 },
         overTextStyle = {},
         downTextStyle = overTextStyle,
+        overSound,
+        downSound,
+        overSoundAdjustment = 1,
+        downSoundAdjustment = 1,
         allowHoldIn = false,
       }
     ) {
@@ -53,6 +57,8 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         this.setFrame(down);
         this.text.setStyle(downTextStyle_);
         this.isDown = true;
+        if (downSound !== undefined)
+          this.scene.playSoundEffect?.(downSound, downSoundAdjustment);
         downCallback?.();
       };
       const handleUp = (pointer, x, y, event) => {
@@ -72,6 +78,8 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
           else {
             this.setFrame(over);
             this.text.setStyle(overTextStyle_);
+            if (overSound !== undefined)
+              this.scene.playSoundEffect?.(overSound, overSoundAdjustment);
           }
         }
       };
@@ -125,6 +133,8 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
 
     setText(text) {
       this.text.setText(text);
+
+      return this;
     }
   }
 

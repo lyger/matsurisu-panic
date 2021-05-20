@@ -101,8 +101,10 @@ class ShopConfirmModal extends BaseScene {
       base: 0,
       over: 1,
       down: 1,
+      overSound: "menu-click",
+      downSound: "menu-no",
+      downSoundAdjustment: 0.5,
       downCallback: () => {
-        this.playSoundEffect("menu-no", 0.5);
         this.returnToShop();
       },
     });
@@ -113,6 +115,7 @@ class ShopConfirmModal extends BaseScene {
       base: 2,
       over: 3,
       down: 3,
+      overSound: "menu-click",
       downCallback: () => {
         buyCallback();
         this.returnToShop();
@@ -177,6 +180,8 @@ export default class Shop extends BaseScene {
       y: 1195,
       base: 0,
       over: 1,
+      overSound: "menu-click",
+      downSound: "menu-click",
       downCallback: () => this.doneShopping(),
     });
 
