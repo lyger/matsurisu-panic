@@ -16,7 +16,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         down = over,
         downCallback,
         upCallback,
-        text = "",
+        text,
         textOffset = { x: 0, y: 0 },
         overTextStyle = {},
         downTextStyle = overTextStyle,
@@ -43,10 +43,11 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         .setOrigin(originX, originY)
         .setInteractive(this.hitbox);
 
-      this.text = scene.add
-        .text(x + textOffset.x, y + textOffset.y, text, textStyle)
-        .setDepth(DEPTH.UIFRONT + 1)
-        .setOrigin(originX, originY);
+      if (text !== undefined || text !== "")
+        this.text = scene.add
+          .text(x + textOffset.x, y + textOffset.y, text, textStyle)
+          .setDepth(DEPTH.UIFRONT + 1)
+          .setOrigin(originX, originY);
 
       const overTextStyle_ = { ...textStyle, ...overTextStyle };
       const downTextStyle_ = { ...textStyle, ...downTextStyle };
@@ -55,7 +56,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         if (!this.active) return;
         event?.stopPropagation();
         this.setFrame(down);
-        this.text.setStyle(downTextStyle_);
+        this.text?.setStyle(downTextStyle_);
         this.isDown = true;
         if (downSound !== undefined)
           this.scene.playSoundEffect?.(downSound, downSoundAdjustment);
@@ -65,7 +66,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         if (!this.active) return;
         event?.stopPropagation();
         this.setFrame(over);
-        this.text.setStyle(overTextStyle_);
+        this.text?.setStyle(overTextStyle_);
         if (this.isDown) {
           this.isDown = false;
           upCallback?.();
@@ -77,7 +78,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
           if (allowHoldIn && pointer.isDown) handleDown();
           else {
             this.setFrame(over);
-            this.text.setStyle(overTextStyle_);
+            this.text?.setStyle(overTextStyle_);
             if (overSound !== undefined)
               this.scene.playSoundEffect?.(overSound, overSoundAdjustment);
           }
@@ -88,7 +89,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
         if (this.keys.some((key) => key.isDown)) return;
         if (this.isDown) handleUp();
         this.setFrame(base);
-        this.text.setStyle(textStyle);
+        this.text?.setStyle(textStyle);
       };
 
       this.on("pointerover", handleOver);
@@ -117,10 +118,10 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
 
     show(value = true) {
       this.setVisible(value);
-      this.text.setVisible(value);
+      this.text?.setVisible(value);
       // Whether hiding or showing, we want the button to be default state.
       this.setFrame(this.frames.base);
-      this.text.setStyle(textStyle);
+      this.text?.setStyle(textStyle);
 
       if (value) {
         this.setInteractive(this.hitbox);
@@ -132,7 +133,7 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
     }
 
     setText(text) {
-      this.text.setText(text);
+      this.text?.setText(text);
 
       return this;
     }

@@ -4,8 +4,8 @@ import Controls from "./controls";
 import { WIDTH, PLAYERHEIGHT, DEPTH } from "../globals";
 import { applyModifiersToState, syncSpritePhysics } from "../utils";
 
-const HITBOX_UP_OFFSET = -45;
-const HITBOX_DOWN_OFFSET = 60;
+const HITBOX_UP_OFFSET = -40;
+const HITBOX_DOWN_OFFSET = 70;
 const HITBOX_HORIZ_OFFSET = {
   ".left": -9,
   ".right": 5,
@@ -18,6 +18,56 @@ const HITBOX_HORIZ_CROUCH_OFFSET = {
 // function syncSpriteAnimations(from, to) {
 //   to.anims.setProgress(from.anims.getProgress());
 // }
+
+class PlayerBody extends Phaser.GameObjects.Container {
+  constructor(scene, x, y, state) {
+    super(scene, x, y);
+
+    this.scene.physics.add.existing(this);
+
+    this.updateState(state);
+    this.bodySprite = new Phaser.GameObjects.Sprite(
+      scene,
+      0,
+      0,
+      this.skinName + "-idle"
+    );
+    this.equipment = this.state.equipment.map(({ depth, animationName }) => {
+      const equipmentTexture = "equipment-" + animationName;
+      const equipmentSprite = new Phaser.GameObjects.Sprite(
+        scene,
+        0,
+        0,
+        equipmentTexture + "-idle"
+      );
+      return { depth, texture: equipmentTexture, sprite: equipmentSprite };
+    });
+    const children = [{ depth: 0, sprite: this.bodySprite }].concat(
+      this.equipment
+    );
+    children.sort((a, b) => a.depth - b.depth);
+    children.forEach(({ sprite }) => {
+      this.scene.add.existing(sprite);
+      this.add(sprite);
+    });
+
+    this.scene.add.existing(this);
+  }
+
+  updateState(state) {
+    this.state = state;
+    this.skinName = "matsuri-" + this.state.skin;
+    return this;
+  }
+
+  playAnimation(animSuffix) {
+    this.bodySprite.anims.play(this.skinName + animSuffix, true);
+    this.equipment.forEach(({ texture, sprite }) =>
+      sprite.anims.play(texture + animSuffix, true)
+    );
+    return this;
+  }
+}
 
 export default class Player extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -36,15 +86,19 @@ export default class Player extends Phaser.GameObjects.Container {
     this.skinName = "matsuri-" + this.state.skin;
     this.facing = ".left";
 
-    this.bodySprite = scene.physics.add
-      .sprite(WIDTH / 2, PLAYERHEIGHT, this.skinName + "-idle")
-      .setSize(100, 230)
-      .setOffset(60, 50)
-      .setDepth(PLAYERDEPTH)
-      .setCollideWorldBounds(true)
-      .setDragX(this.modPhysics.drag);
+    this.playerBody = new PlayerBody(
+      scene,
+      WIDTH / 2,
+      PLAYERHEIGHT,
+      this.state
+    );
+    this.playerBody.setDepth(PLAYERDEPTH);
 
-    this.bodySprite.body
+    this.playerBody.body
+      .setSize(100, 230)
+      .setOffset(-52, -100)
+      .setCollideWorldBounds(true)
+      .setDragX(this.modPhysics.drag)
       .setMaxVelocityX(this.modPhysics.maxVelocity)
       .setGravityY(this.modPhysics.gravity);
 
@@ -59,7 +113,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     this.setDepth(PLAYERDEPTH);
 
-    this.add([this.bodySprite]);
+    this.add([this.playerBody]);
 
     scene.add.existing(this);
   }
@@ -82,9 +136,9 @@ export default class Player extends Phaser.GameObjects.Container {
 
   applyPhysicsToSprites() {
     this.skinName = "matsuri-" + this.state.skin;
-    this.bodySprite.setDragX(this.modPhysics.drag);
 
-    this.bodySprite.body
+    this.playerBody.body
+      .setDragX(this.modPhysics.drag)
       .setMaxVelocityX(this.modPhysics.maxVelocity)
       .setGravityY(this.modPhysics.gravity);
 
@@ -97,6 +151,8 @@ export default class Player extends Phaser.GameObjects.Container {
   reloadState() {
     const newState = store.getState().player;
     if (this.state === newState) return;
+
+    this.playerBody.updateState(this.state);
 
     this.controls.refreshPowerup();
 
@@ -113,7 +169,7 @@ export default class Player extends Phaser.GameObjects.Container {
     this.setActive(false);
     this.hitBox.body.setVelocity(0).setAcceleration(0);
     this.hitBox.setActive(false);
-    this.bodySprite.setVelocity(0).setAcceleration(0).setGravityY(0);
+    this.playerBody.body.setVelocity(0).setAcceleration(0).setGravityY(0);
     this.controls.disable();
   }
 
@@ -133,7 +189,7 @@ export default class Player extends Phaser.GameObjects.Container {
     const jumping = this.controls.up;
 
     // Vertical movement
-    const grounded = this.bodySprite.body.touching.down;
+    const grounded = this.playerBody.body.touching.down;
     const quickFall = crouching && !grounded;
     const startedJump = jumping && grounded;
     const endedJump = this.airborne && grounded;
@@ -141,7 +197,7 @@ export default class Player extends Phaser.GameObjects.Container {
     this.airborne = !grounded;
 
     if (startedJump) {
-      this.bodySprite.setVelocityY(-this.modPhysics.jumpVelocity);
+      this.playerBody.body.setVelocityY(-this.modPhysics.jumpVelocity);
       this.scene.events.emit("sound.jump");
       this.emit("jump");
     }
@@ -155,15 +211,15 @@ export default class Player extends Phaser.GameObjects.Container {
       : quickFall
       ? this.modPhysics.quickFallAcceleration
       : 0;
-    this.bodySprite.setAccelerationY(accelerationY);
+    this.playerBody.body.setAccelerationY(accelerationY);
 
     // Horizontal movement
     const sliding =
       crouching &&
-      Math.abs(this.bodySprite.body.velocity.x) >
+      Math.abs(this.playerBody.body.velocity.x) >
         this.extraPhysics.crouchMaxVelocity &&
       (this.sliding ||
-        Math.abs(this.bodySprite.body.velocity.x) >
+        Math.abs(this.playerBody.body.velocity.x) >
           this.extraPhysics.slideThresholdVelocity);
     const startedSliding =
       sliding && this.canStartSlide && sliding !== this.sliding;
@@ -177,7 +233,7 @@ export default class Player extends Phaser.GameObjects.Container {
       armOffsetX = HITBOX_HORIZ_CROUCH_OFFSET[this.facing];
       armOffsetY = HITBOX_DOWN_OFFSET;
       if (!sliding)
-        this.bodySprite.body.setMaxVelocityX(
+        this.playerBody.body.setMaxVelocityX(
           this.extraPhysics.crouchMaxVelocity
         );
       this.hitBox.body.setSize(
@@ -187,7 +243,7 @@ export default class Player extends Phaser.GameObjects.Container {
     } else {
       armOffsetX = HITBOX_HORIZ_OFFSET[this.facing];
       armOffsetY = HITBOX_UP_OFFSET;
-      this.bodySprite.body.setMaxVelocityX(this.modPhysics.maxVelocity);
+      this.playerBody.body.setMaxVelocityX(this.modPhysics.maxVelocity);
       this.hitBox.body.setSize(
         this.modPhysics.hitBoxWidth,
         this.modPhysics.hitBoxHeight
@@ -195,9 +251,9 @@ export default class Player extends Phaser.GameObjects.Container {
     }
 
     if (startedSliding) {
-      this.bodySprite.body.setMaxVelocityX(this.extraPhysics.slideMaxVelocity);
-      this.bodySprite.body.setVelocityX(
-        this.bodySprite.body.velocity.x * this.modPhysics.slideMultiplier
+      this.playerBody.body.setMaxVelocityX(this.extraPhysics.slideMaxVelocity);
+      this.playerBody.body.setVelocityX(
+        this.playerBody.body.velocity.x * this.modPhysics.slideMultiplier
       );
       if (grounded) this.scene.events.emit("sound.slide");
       this.canStartSlide = false;
@@ -213,14 +269,11 @@ export default class Player extends Phaser.GameObjects.Container {
         : right
         ? this.modPhysics.acceleration
         : -this.modPhysics.acceleration;
-    this.bodySprite.setAccelerationX(accelerationX);
+    this.playerBody.body.setAccelerationX(accelerationX);
 
-    const animName =
-      this.skinName +
-      (crouching ? "-down" : "") +
-      (idle ? ".idle" : ".run") +
-      this.facing;
-    this.bodySprite.anims.play(animName, true);
+    const animSuffix =
+      (crouching ? "-down" : "") + (idle ? ".idle" : ".run") + this.facing;
+    this.playerBody.playAnimation(animSuffix);
 
     if (idle) this.scene.events.emit("sound.idle");
     else
@@ -229,6 +282,6 @@ export default class Player extends Phaser.GameObjects.Container {
         airborne: this.airborne,
       });
 
-    syncSpritePhysics(this.bodySprite, this.hitBox, armOffsetX, armOffsetY);
+    syncSpritePhysics(this.playerBody, this.hitBox, armOffsetX, armOffsetY);
   }
 }

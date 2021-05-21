@@ -2,6 +2,7 @@ import { DEPTH } from "../../globals";
 import store from "../../store";
 import { addTextEffect, chooseFromArray } from "../../utils";
 import DispatchItem from "./dispatch";
+import Equipment from "./equipment";
 import Powerup from "./powerup";
 
 function getInitialCatalog() {
@@ -32,7 +33,7 @@ function getInitialCatalog() {
             frame: [0, 1, 2, 3],
             frequency: 30,
             lifespan: 400,
-            follow: scene.matsuri.bodySprite,
+            follow: scene.matsuri.playerBody,
             followOffset: { x: 0, y: 30 },
             radial: true,
             rotate: { min: 0, max: 359 },
@@ -96,8 +97,8 @@ function getInitialCatalog() {
           emitter.explode(0);
           const jumpCallback = () => {
             emitter.setPosition(
-              scene.matsuri.bodySprite.x,
-              scene.matsuri.bodySprite.y + 100
+              scene.matsuri.playerBody.x,
+              scene.matsuri.playerBody.y + 100
             );
             emitter.explode();
           };
@@ -156,7 +157,7 @@ function getInitialCatalog() {
             frame: [0, 1, 2, 3],
             frequency: 40,
             lifespan: 400,
-            follow: scene.matsuri.bodySprite,
+            follow: scene.matsuri.playerBody,
             followOffset: { x: 0, y: 30 },
             radial: true,
             rotate: { min: 0, max: 359 },
@@ -221,8 +222,8 @@ function getInitialCatalog() {
           emitter.explode(0);
           const jumpCallback = () => {
             emitter.setPosition(
-              scene.matsuri.bodySprite.x,
-              scene.matsuri.bodySprite.y + 100
+              scene.matsuri.playerBody.x,
+              scene.matsuri.playerBody.y + 100
             );
             emitter.explode();
           };
@@ -301,6 +302,22 @@ function getInitialCatalog() {
         },
       }),
     ],
+
+    // EQUIPMENT ITEMS
+    equipmentItems: [
+      new Equipment({
+        name: "Glasses",
+        description: { en: "Foresight", ja: "未来視" },
+        tier: 2,
+        texture: "equipment-glasses-icon",
+        frame: 0,
+        price: 5000,
+        purchaseLimit: 1,
+        animationName: "glasses",
+        depth: 1,
+        onActivation: () => store.dispatch({ type: "stage.showPreview" }),
+      }),
+    ],
   };
 }
 
@@ -339,9 +356,12 @@ export function getShopItems() {
   const level = state.stage.level;
   const filteredItems = CATALOG.powerups
     .concat(CATALOG.dispatchItems)
+    .concat(CATALOG.equipmentItems)
     .filter((item) => {
       return (
-        item.tier <= level && item.canBuy && item.name !== player.powerup?.name
+        item.tier <= level &&
+        item.canBuy &&
+        (item.type !== "powerup" || item.name !== player.powerup?.name)
       );
     });
 

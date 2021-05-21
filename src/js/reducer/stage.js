@@ -51,6 +51,7 @@ const feverDefaultState = {
 export const stageDefaultState = {
   level: 0,
   maxLevel: 10,
+  showPreview: false,
   matsurisu: matsurisuDefaultState,
   money: moneyDefaultState,
   powerup: powerupDefaultState,
@@ -209,6 +210,16 @@ export default function stageReducer(state = stageDefaultState, action) {
         powerup: powerupReducer(state.powerup, modifiedAction),
         ebifrion: ebifrionReducer(state.ebifrion, modifiedAction),
         fever: feverReducer(state.fever, modifiedAction),
+      };
+    case "stage.showPreview":
+      return {
+        ...state,
+        showPreview: true,
+      };
+    case "stage.hidePreview":
+      return {
+        ...state,
+        showPreview: false,
       };
     default:
       return {

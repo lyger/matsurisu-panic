@@ -8,6 +8,8 @@ const PBAR_WIDTH = 676;
 const PBAR_HEIGHT = 16;
 const PBAR_Y = 331;
 const TIMEOUT_BLINK_DURATION = 455;
+const PREVIEW_DELTA_Y = 400;
+const PREVIEW_MIN_SCALE = 0.2;
 
 function euclidean(x, y) {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
@@ -23,6 +25,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.matsurisu = this.scene.physics.add.group();
     this.money = this.scene.physics.add.group();
     this.powerup = this.scene.physics.add.group();
+    this.preview = this.scene.add.group();
     this.extraConfigs = [];
     this.syncProps = {
       bonusAlpha: 1,
@@ -160,6 +163,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.add.existing(this.ebifrion);
     this.scene.physics.add.existing(this.ebifrion);
     this.ebifrion.body.setCircle(40, 24, 24);
+
+    // GENERATE PREVIEWS
+    if (this.state.showPreview) {
+      let previewY = 0;
+      this.previewBuffer = this.matsurisuBuffer.map(({ deltaY, x }) => {
+        previewY += deltaY;
+        return { y: previewY, x };
+      });
+      this.matsurisuBuffer[0].deltaY += PREVIEW_DELTA_Y;
+    } else this.previewBuffer = [];
   }
 
   createTimer() {
@@ -495,7 +508,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .create(x, -100, "items", 2, true, true)
       .setDepth(DEPTH.OBJECTDEPTH)
       .setVelocityY(this.modMoney.fallSpeed)
-      .setData("fever", false);
+      .setData({ fever: false, lucky: false });
     newMoney.body.setCircle(40, 24, 24);
     return newMoney;
   }
@@ -508,6 +521,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .setData({ target, fever: false, refunded: false });
     newPowerup.body.setCircle(40, 24, 24);
     return newPowerup;
+  }
+
+  createPreview({ x, y }) {
+    const newPreview = this.preview
+      .create(x, 20, "matsurisu-preview", 0, true, true)
+      .setDepth(DEPTH.OBJECTDEPTH)
+      .setOrigin(0.5, 0)
+      .setScale(PREVIEW_MIN_SCALE)
+      .setData("startY", y);
+    newPreview.anims.play("matsurisu-preview.blink");
   }
 
   createExtra(
@@ -625,6 +648,20 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
+  updatePreviews(currentY) {
+    this.preview
+      .getChildren()
+      .slice()
+      .forEach((preview) => {
+        const deltaY = currentY - preview.getData("startY");
+        if (deltaY > PREVIEW_DELTA_Y) return preview.destroy();
+        const newScale =
+          (1 - PREVIEW_MIN_SCALE) * (deltaY / PREVIEW_DELTA_Y) +
+          PREVIEW_MIN_SCALE;
+        preview.setScale(newScale);
+      });
+  }
+
   update(time) {
     this.reloadState();
     const delta = this.timer.elapsed;
@@ -683,6 +720,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
         duration: this.modEbifrion.fallDuration,
       });
     }
+
+    if (
+      this.previewBuffer.length > 0 &&
+      this.previewBuffer[0].y < matsurisuTotalY
+    ) {
+      const next = this.previewBuffer.shift();
+      this.createPreview(next);
+    }
+
+    this.updatePreviews(matsurisuTotalY);
 
     this.progressBar.setCrop(
       0,

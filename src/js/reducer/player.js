@@ -23,6 +23,7 @@ const playerPhysicsDefaultState = {
 export const playerDefaultState = {
   skin: "normal",
   powerup: null,
+  equipment: [],
   physics: playerPhysicsDefaultState,
 };
 
@@ -82,6 +83,12 @@ export default function playerReducer(state = playerDefaultState, action) {
       return {
         ...state,
         powerup: null,
+      };
+    case "player.addEquipment":
+      if (state.equipment.some(({ key }) => key === payload.key)) return state;
+      return {
+        ...state,
+        equipment: state.equipment.concat([payload]),
       };
     default:
       return {

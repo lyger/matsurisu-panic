@@ -5,6 +5,10 @@ import Curtains from "./curtains";
 import Title from "./title";
 
 const SKINS = ["normal"];
+const EQUIPMENT = ["glasses"];
+const CHARACTER_PREFIXES = SKINS.map((skin) => "matsuri-" + skin).concat(
+  EQUIPMENT.map((equipment) => "equipment-" + equipment)
+);
 const MATSURISU = ["normal", "light", "fever"];
 
 export default class Preloader extends Phaser.Scene {
@@ -63,48 +67,64 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/matsurisu-normal-die.png"
     );
 
-    SKINS.forEach((skin) => {
+    CHARACTER_PREFIXES.forEach((prefix) => {
       this.load.spritesheet(
-        `matsuri-${skin}-idle`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-idle.png`,
+        `${prefix}-idle`,
+        PUBLIC_PATH + `/images/${prefix}-idle.png`,
         {
           frameWidth: 225,
           frameHeight: 300,
         }
       );
       this.load.spritesheet(
-        `matsuri-${skin}-left`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-left.png`,
+        `${prefix}-left`,
+        PUBLIC_PATH + `/images/${prefix}-left.png`,
         {
           frameWidth: 225,
           frameHeight: 300,
         }
       );
       this.load.spritesheet(
-        `matsuri-${skin}-right`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-right.png`,
+        `${prefix}-right`,
+        PUBLIC_PATH + `/images/${prefix}-right.png`,
         {
           frameWidth: 225,
           frameHeight: 300,
         }
       );
       this.load.spritesheet(
-        `matsuri-${skin}-down-left`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-down-left.png`,
+        `${prefix}-down-left`,
+        PUBLIC_PATH + `/images/${prefix}-down-left.png`,
         {
           frameWidth: 225,
           frameHeight: 300,
         }
       );
       this.load.spritesheet(
-        `matsuri-${skin}-down-right`,
-        PUBLIC_PATH + `/images/matsuri-${skin}-down-right.png`,
+        `${prefix}-down-right`,
+        PUBLIC_PATH + `/images/${prefix}-down-right.png`,
         {
           frameWidth: 225,
           frameHeight: 300,
         }
       );
     });
+
+    EQUIPMENT.forEach((name) =>
+      this.load.image(
+        `equipment-${name}-icon`,
+        PUBLIC_PATH + `/images/equipment-${name}-icon.png`
+      )
+    );
+
+    this.load.spritesheet(
+      `matsurisu-preview`,
+      PUBLIC_PATH + `/images/matsurisu-preview.png`,
+      {
+        frameWidth: 150,
+        frameHeight: 150,
+      }
+    );
   }
 
   loadTitle() {
@@ -252,13 +272,15 @@ export default class Preloader extends Phaser.Scene {
       "fever-spotlight-yellow",
       PUBLIC_PATH + "/images/fever-spotlight-yellow.png"
     );
-    this.load.image(
-      "fever-wheel-back",
-      PUBLIC_PATH + "/images/fever-wheel-back.png"
-    );
-    this.load.image(
-      "fever-wheel-front",
-      PUBLIC_PATH + "/images/fever-wheel-front.png"
+    this.load.spritesheet(
+      "fever-wheel",
+      PUBLIC_PATH + "/images/fever-wheel.png",
+      {
+        frameWidth: 380,
+        frameHeight: 380,
+        margin: 1,
+        spacing: 2,
+      }
     );
 
     this.load.spritesheet(
@@ -564,7 +586,7 @@ export default class Preloader extends Phaser.Scene {
   }
 
   createAnimations() {
-    const makeMatsuriAnimations = (baseName) => {
+    const makeCharacterAnimations = (baseName) => {
       this.anims.create({
         key: baseName + ".idle.left",
         frames: [{ key: baseName + "-idle", frame: 0 }],
@@ -619,8 +641,8 @@ export default class Preloader extends Phaser.Scene {
       });
     };
 
-    SKINS.forEach((skin) => {
-      makeMatsuriAnimations(`matsuri-${skin}`);
+    CHARACTER_PREFIXES.forEach((prefix) => {
+      makeCharacterAnimations(prefix);
     });
 
     MATSURISU.forEach((risuType) => {
@@ -640,6 +662,15 @@ export default class Preloader extends Phaser.Scene {
         frameRate: 5,
         repeat: -1,
       });
+    });
+
+    this.anims.create({
+      key: "matsurisu-preview.blink",
+      frames: this.anims.generateFrameNumbers("matsurisu-preview", {
+        frames: [0, 1],
+      }),
+      frameRate: 5,
+      repeat: -1,
     });
   }
 

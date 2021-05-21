@@ -16,48 +16,30 @@ const COMBO_HEIGHT = 580;
 const WHEEL_HEIGHT = 550;
 
 const FEVER_TICKS = 24;
-const FEVER_ARC = (2 * Math.PI) / FEVER_TICKS;
-const FEVER_PHI = -Math.PI / 2 - FEVER_ARC / 2;
 
 class FeverWheel extends Phaser.GameObjects.Container {
   constructor(scene, x, y) {
     super(scene, x, y);
-    this.wheelFront = this.scene.add.image(0, 0, "fever-wheel-front");
-    this.wheelBack = this.scene.add.image(0, 0, "fever-wheel-back");
-    this.frontClip = this.scene.add.graphics().setVisible(false);
-    this.backClip = this.scene.add.graphics().setVisible(false);
-    this.wheelFront.mask = new Phaser.Display.Masks.BitmapMask(
-      this.scene,
-      this.frontClip
-    );
-    this.wheelBack.mask = new Phaser.Display.Masks.BitmapMask(
-      this.scene,
-      this.backClip
-    );
+    this.wheel = this.scene.add.image(0, 0, "fever-wheel", 0);
     this.isCountdown = false;
 
-    this.startTween = undefined;
-    this.endTween = undefined;
-    this.startValue = 0;
-    this.endValue = 0;
-    this.lastStartTicks = -1;
-    this.lastEndTicks = -1;
+    this.tween = undefined;
+    this.value = 0;
+    this.lastFrame = 0;
 
-    this.update();
-
-    this.add([this.wheelFront, this.wheelBack, this.frontClip, this.backClip]);
+    this.add(this.wheel);
     this.scene.add.existing(this);
   }
 
   setValue(value) {
     if (this.isCountdown) return;
-    if (this.endTween !== undefined) {
-      this.endTween.stop();
-      this.scene.tweens.remove(this.endTween);
+    if (this.tween !== undefined) {
+      this.tween.stop();
+      this.scene.tweens.remove(this.tween);
     }
-    this.endTween = this.scene.tweens.add({
+    this.tween = this.scene.tweens.add({
       targets: this,
-      endValue: value,
+      value,
       duration: 300,
       onUpdate: this.update,
       onUpdateScope: this,
@@ -70,48 +52,19 @@ class FeverWheel extends Phaser.GameObjects.Container {
     const feverDuration = store.getState().stage.fever.duration;
     this.endTween = this.scene.tweens.add({
       targets: this,
-      startValue: 1,
-      duration: feverDuration * 1000,
+      value: 2,
+      delay: 300,
+      duration: feverDuration * 1000 - 300,
       onUpdate: this.update,
       onUpdateScope: this,
     });
   }
 
   update() {
-    const startTicks = Math.round(this.startValue * FEVER_TICKS);
-    const endTicks = Math.round(this.endValue * FEVER_TICKS);
-    if (startTicks === this.lastStartTicks && endTicks === this.lastEndTicks)
-      return;
-    this.lastStartTicks = startTicks;
-    this.lastEndTicks = endTicks;
-    this.frontClip
-      .clear()
-      .lineStyle(60, 0, 1)
-      .beginPath()
-      .arc(
-        this.x,
-        this.y,
-        160,
-        FEVER_PHI + startTicks * FEVER_ARC,
-        FEVER_PHI + endTicks * FEVER_ARC,
-        false
-      )
-      .strokePath()
-      .closePath();
-    this.backClip
-      .clear()
-      .lineStyle(60, 0, 1)
-      .beginPath()
-      .arc(
-        this.x,
-        this.y,
-        160,
-        FEVER_PHI + endTicks * FEVER_ARC,
-        FEVER_PHI + 2 * Math.PI + startTicks * FEVER_ARC,
-        false
-      )
-      .strokePath()
-      .closePath();
+    const frame = Math.round(this.value * FEVER_TICKS) % (FEVER_TICKS * 2);
+    if (frame === this.lastFrame) return;
+    this.lastFrame = frame;
+    this.wheel.setFrame(frame);
   }
 }
 

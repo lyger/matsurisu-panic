@@ -4,7 +4,6 @@ import {
   GROUNDHEIGHT,
   HEIGHT,
   STAGE_BGM_VOLUME_FACTOR,
-  TEXT_STYLE,
   WIDTH,
 } from "../globals";
 import Player from "../components/player";
@@ -29,6 +28,8 @@ const PauseButton = ButtonFactory("pause-button", true);
 export default class Stage extends BaseScene {
   create() {
     store.dispatch({ type: "stage.increaseLevel" });
+
+    this.activateEquipment();
 
     this.maybeShowInstructions();
 
@@ -253,7 +254,7 @@ export default class Stage extends BaseScene {
       }
     );
 
-    this.physics.add.collider(ground, this.matsuri.bodySprite);
+    this.physics.add.collider(ground, this.matsuri.playerBody);
     this.physics.add.collider(ground, this.matsuri.armSprite);
   }
 
@@ -356,6 +357,11 @@ export default class Stage extends BaseScene {
       this.bgm?.stop?.();
       this.bgm?.destroy?.();
     });
+  }
+
+  activateEquipment() {
+    const state = store.getState();
+    state.player.equipment.forEach(({ target }) => target.apply(this));
   }
 
   setAirForgiveness() {
