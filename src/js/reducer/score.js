@@ -62,9 +62,14 @@ export default function scoreReducer(state = scoreDefaultState, action) {
     }
     case "score.catchCoin": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
+      const multiplier = payload.isLucky ? 2 : 1;
+      // DEBUG
       return {
         ...stateWithAir,
-        money: Math.min(state.money + state.moneyPerCoin, state.maxMoney),
+        money: Math.min(
+          state.money + multiplier * state.moneyPerCoin,
+          state.maxMoney
+        ),
         fever: state.fever + (payload.isFever ? 1 : 0),
       };
     }

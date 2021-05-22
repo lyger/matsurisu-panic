@@ -242,10 +242,13 @@ export default class Results extends BaseScene {
       },
     });
 
-    this.events.on("resume", (_, { hideTweetButton }) => {
-      if (hideTweetButton)
-        this.tweetButton.setVisible(false).disableInteractive();
-    });
+    this.events.on(
+      "resume",
+      (_, { hideTweetButton } = { hideTweetButton: false }) => {
+        if (hideTweetButton)
+          this.tweetButton.setVisible(false).disableInteractive();
+      }
+    );
 
     this.worldButton = new SelfWorldButton(this, {
       x: 645,

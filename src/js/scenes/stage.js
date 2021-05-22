@@ -29,9 +29,9 @@ export default class Stage extends BaseScene {
   create() {
     store.dispatch({ type: "stage.increaseLevel" });
 
-    this.activateEquipment();
-
     this.maybeShowInstructions();
+
+    this.activateEquipment();
 
     this.startBgm(GAME_START_DELAY / 2000);
     this.createSoundListeners();
@@ -120,6 +120,7 @@ export default class Stage extends BaseScene {
           x: money.x,
           y: money.y,
           isFever: money.getData("fever"),
+          isLucky: money.getData("lucky"),
           airborne,
         };
         money.destroy();
@@ -361,7 +362,9 @@ export default class Stage extends BaseScene {
 
   activateEquipment() {
     const state = store.getState();
-    state.player.equipment.forEach(({ target }) => target.apply(this));
+    state.player.equipment
+      .filter(({ accessory }) => !accessory)
+      .forEach(({ target }) => target?.apply(this));
   }
 
   setAirForgiveness() {

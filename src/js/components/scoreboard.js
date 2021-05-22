@@ -150,16 +150,19 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
       }
     );
 
-    this.scene.events.on("coin.catch", ({ airborne, isFever, x, y }) => {
-      store.dispatch({
-        type: "score.catchCoin",
-        payload: { airborne, isFever },
-      });
-      this.refreshState();
-      const airCount = this.maybeShowAirBonus(x, y);
-      this.checkFever();
-      this.scene.events.emit("sound.catch", { type: "coin", airCount });
-    });
+    this.scene.events.on(
+      "coin.catch",
+      ({ airborne, isFever, isLucky, x, y }) => {
+        store.dispatch({
+          type: "score.catchCoin",
+          payload: { airborne, isFever, isLucky },
+        });
+        this.refreshState();
+        const airCount = this.maybeShowAirBonus(x, y);
+        this.checkFever();
+        this.scene.events.emit("sound.catch", { type: "coin", airCount });
+      }
+    );
 
     this.scene.events.on(
       "powerup.catch",

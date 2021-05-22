@@ -5,7 +5,7 @@ import Curtains from "./curtains";
 import Title from "./title";
 
 const SKINS = ["normal"];
-const EQUIPMENT = ["glasses"];
+const EQUIPMENT = ["glasses", "catears", "cattail", "glowstick"];
 const CHARACTER_PREFIXES = SKINS.map((skin) => "matsuri-" + skin).concat(
   EQUIPMENT.map((equipment) => "equipment-" + equipment)
 );
@@ -109,13 +109,6 @@ export default class Preloader extends Phaser.Scene {
         }
       );
     });
-
-    EQUIPMENT.forEach((name) =>
-      this.load.image(
-        `equipment-${name}-icon`,
-        PUBLIC_PATH + `/images/equipment-${name}-icon.png`
-      )
-    );
 
     this.load.spritesheet(
       `matsurisu-preview`,

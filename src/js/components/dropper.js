@@ -66,6 +66,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.matsurisuBuffer.push(last);
 
     let totalY = 0;
+    let yOffset = 0;
 
     for (let i = 0; i < matsurisuCfg.number - 1; i++) {
       // Attempt 10 times to produce new coordinates that fulfill the conditions
@@ -103,6 +104,18 @@ export default class Dropper extends Phaser.GameObjects.Group {
     }
     this.maximumY = totalY;
 
+    // GENERATE PREVIEWS
+    if (this.state.showPreview) {
+      let previewY = 0;
+      this.previewBuffer = this.matsurisuBuffer.map(({ deltaY, x }) => {
+        previewY += deltaY;
+        return { y: previewY, x };
+      });
+      this.matsurisuBuffer[0].deltaY += PREVIEW_DELTA_Y;
+      this.maximumY += PREVIEW_DELTA_Y;
+      yOffset = PREVIEW_DELTA_Y;
+    } else this.previewBuffer = [];
+
     // GENERATE MONEY
     this.moneyBuffer = [];
 
@@ -110,7 +123,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     for (let i = 0; i < numMoney; i++) {
       this.moneyBuffer.push({
-        y: rand.between(0, totalY),
+        y: rand.between(yOffset, yOffset + totalY),
         x: rand.between(moneyCfg.minX, moneyCfg.maxX),
       });
     }
@@ -127,7 +140,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (availablePowerups.length > 0) {
       for (let i = 0; i < numPowerup; i++) {
         this.powerupBuffer.push({
-          y: rand.between(0, totalY),
+          y: rand.between(yOffset, yOffset + totalY),
           x: rand.between(powerupCfg.minX, powerupCfg.maxX),
           target: Phaser.Utils.Array.GetRandom(availablePowerups),
         });
@@ -158,21 +171,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
     )
       .setDepth(DEPTH.OBJECTDEPTH)
       .setOrigin(0.5, 0.5);
-    this.ebifrionStartY = rand.between(0, Math.floor(0.85 * totalY));
+    this.ebifrionStartY = rand.between(
+      yOffset,
+      yOffset + Math.floor(0.85 * totalY)
+    );
     this.ebifrionActive = false;
     this.scene.add.existing(this.ebifrion);
     this.scene.physics.add.existing(this.ebifrion);
     this.ebifrion.body.setCircle(40, 24, 24);
-
-    // GENERATE PREVIEWS
-    if (this.state.showPreview) {
-      let previewY = 0;
-      this.previewBuffer = this.matsurisuBuffer.map(({ deltaY, x }) => {
-        previewY += deltaY;
-        return { y: previewY, x };
-      });
-      this.matsurisuBuffer[0].deltaY += PREVIEW_DELTA_Y;
-    } else this.previewBuffer = [];
   }
 
   createTimer() {
@@ -340,9 +346,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
     }
   }
 
-  collectMoney({ x, y }) {
+  collectMoney({ x, y, isLucky }) {
     const money = this.scene.add
-      .image(x, y, "items", 2)
+      .image(x, y, "items", isLucky ? 12 : 2)
       .setDepth(DEPTH.OBJECTDEPTH);
     this.scene.tweens.add({
       targets: money,
@@ -503,13 +509,25 @@ export default class Dropper extends Phaser.GameObjects.Group {
     return newMatsurisu;
   }
 
+  createPreview({ x, y }) {
+    const newPreview = this.preview
+      .create(x, 20, "matsurisu-preview", 0, true, true)
+      .setDepth(DEPTH.OBJECTDEPTH)
+      .setOrigin(0.5, 0)
+      .setScale(PREVIEW_MIN_SCALE)
+      .setData("startY", y);
+    newPreview.anims.play("matsurisu-preview.blink");
+  }
+
   createMoney({ x }) {
+    const lucky = Phaser.Math.RND.frac() < this.modMoney.luck;
     const newMoney = this.money
-      .create(x, -100, "items", 2, true, true)
+      .create(x, -100, "items", lucky ? 12 : 2, true, true)
       .setDepth(DEPTH.OBJECTDEPTH)
       .setVelocityY(this.modMoney.fallSpeed)
-      .setData({ fever: false, lucky: false });
-    newMoney.body.setCircle(40, 24, 24);
+      .setData({ fever: false, lucky });
+    if (lucky) newMoney.body.setCircle(50, 14, 14);
+    else newMoney.body.setCircle(40, 24, 24);
     return newMoney;
   }
 
@@ -521,16 +539,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .setData({ target, fever: false, refunded: false });
     newPowerup.body.setCircle(40, 24, 24);
     return newPowerup;
-  }
-
-  createPreview({ x, y }) {
-    const newPreview = this.preview
-      .create(x, 20, "matsurisu-preview", 0, true, true)
-      .setDepth(DEPTH.OBJECTDEPTH)
-      .setOrigin(0.5, 0)
-      .setScale(PREVIEW_MIN_SCALE)
-      .setData("startY", y);
-    newPreview.anims.play("matsurisu-preview.blink");
   }
 
   createExtra(
@@ -692,6 +700,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
     }
 
     if (
+      this.previewBuffer.length > 0 &&
+      this.previewBuffer[0].y < matsurisuTotalY
+    ) {
+      const next = this.previewBuffer.shift();
+      this.createPreview(next);
+    }
+
+    if (
       this.moneyBuffer.length > 0 &&
       this.moneyBuffer[0].y < matsurisuTotalY
     ) {
@@ -719,14 +735,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
         rotation: 2 * Math.PI,
         duration: this.modEbifrion.fallDuration,
       });
-    }
-
-    if (
-      this.previewBuffer.length > 0 &&
-      this.previewBuffer[0].y < matsurisuTotalY
-    ) {
-      const next = this.previewBuffer.shift();
-      this.createPreview(next);
     }
 
     this.updatePreviews(matsurisuTotalY);

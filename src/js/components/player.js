@@ -4,8 +4,8 @@ import Controls from "./controls";
 import { WIDTH, PLAYERHEIGHT, DEPTH } from "../globals";
 import { applyModifiersToState, syncSpritePhysics } from "../utils";
 
-const HITBOX_UP_OFFSET = -40;
-const HITBOX_DOWN_OFFSET = 70;
+const HITBOX_UP_OFFSET = -27.5;
+const HITBOX_DOWN_OFFSET = 82.5;
 const HITBOX_HORIZ_OFFSET = {
   ".left": -9,
   ".right": 5,
@@ -104,7 +104,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     this.hitBox = scene.add.rectangle(
       WIDTH / 2 + HITBOX_HORIZ_OFFSET[this.facing],
-      PLAYERHEIGHT + HITBOX_UP_OFFSET,
+      PLAYERHEIGHT + HITBOX_UP_OFFSET - this.modPhysics.hitBoxHeight / 2,
       this.modPhysics.hitBoxWidth,
       this.modPhysics.hitBoxHeight
     );
@@ -231,7 +231,7 @@ export default class Player extends Phaser.GameObjects.Container {
 
     if (crouching) {
       armOffsetX = HITBOX_HORIZ_CROUCH_OFFSET[this.facing];
-      armOffsetY = HITBOX_DOWN_OFFSET;
+      armOffsetY = HITBOX_DOWN_OFFSET - this.modPhysics.crouchHitBoxHeight / 2;
       if (!sliding)
         this.playerBody.body.setMaxVelocityX(
           this.extraPhysics.crouchMaxVelocity
@@ -242,7 +242,7 @@ export default class Player extends Phaser.GameObjects.Container {
       );
     } else {
       armOffsetX = HITBOX_HORIZ_OFFSET[this.facing];
-      armOffsetY = HITBOX_UP_OFFSET;
+      armOffsetY = HITBOX_UP_OFFSET - this.modPhysics.hitBoxHeight / 2;
       this.playerBody.body.setMaxVelocityX(this.modPhysics.maxVelocity);
       this.hitBox.body.setSize(
         this.modPhysics.hitBoxWidth,

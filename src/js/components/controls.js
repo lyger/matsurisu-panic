@@ -7,6 +7,10 @@ const ControlButtonHorizontal = ButtonFactory("controls-horizontal");
 const ControlButtonVertical = ButtonFactory("controls-vertical");
 const ControlButtonItem = ButtonFactory("controls-item");
 
+const EQUIPMENT_LEFT = 48;
+const EQUIPMENT_Y = 1010;
+const EQUIPMENT_INTERVAL = 75;
+
 export default class Controls extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene);
@@ -82,6 +86,7 @@ export default class Controls extends Phaser.GameObjects.Container {
     ]);
 
     this.refreshPowerup();
+    this.showEquipment();
     scene.add.existing(this);
   }
 
@@ -97,6 +102,20 @@ export default class Controls extends Phaser.GameObjects.Container {
         .setFrame(powerup.frame)
         .setVisible(true);
     }
+  }
+
+  showEquipment() {
+    const state = store.getState();
+    let x = EQUIPMENT_LEFT;
+    state.player.equipment
+      .filter(({ accessory }) => !accessory)
+      .forEach(({ texture, frame }) => {
+        this.scene.add
+          .image(x, EQUIPMENT_Y, texture, frame)
+          .setDepth(DEPTH.UIFRONT)
+          .setScale(0.4);
+        x += EQUIPMENT_INTERVAL;
+      });
   }
 
   usePowerup() {
