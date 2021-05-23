@@ -21,6 +21,8 @@ export default class Powerup extends Item {
     applySideEffect,
     conflictsWith,
   }) {
+    const alreadyOwnedCondition = (state) =>
+      state.player.powerup?.name !== name;
     super("powerup", {
       name,
       description,
@@ -30,7 +32,10 @@ export default class Powerup extends Item {
       price,
       purchaseLimit,
       purchaseSound,
-      purchaseConditions,
+      purchaseConditions:
+        purchaseConditions === undefined
+          ? [alreadyOwnedCondition]
+          : [alreadyOwnedCondition].concat(purchaseConditions),
       buySideEffect,
     });
     if (modifier.key === undefined) modifier.key = "Powerup:" + name;

@@ -114,8 +114,10 @@ export default class Preloader extends Phaser.Scene {
       `matsurisu-preview`,
       PUBLIC_PATH + `/images/matsurisu-preview.png`,
       {
-        frameWidth: 150,
+        frameWidth: 114,
         frameHeight: 150,
+        margin: 1,
+        spacing: 2,
       }
     );
   }
@@ -471,10 +473,6 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/Low_Catch.ogg",
       PUBLIC_PATH + "/audio/Low_Catch.mp3",
     ]);
-    this.load.audio("coin-catch", [
-      PUBLIC_PATH + "/audio/Coin_Catch.ogg",
-      PUBLIC_PATH + "/audio/Coin_Catch.mp3",
-    ]);
     [1, 2, 3, 4, 5].forEach((num) => {
       this.load.audio(`air-catch-${num}`, [
         PUBLIC_PATH + `/audio/High_Catch_${num}.ogg`,
@@ -484,6 +482,14 @@ export default class Preloader extends Phaser.Scene {
     this.load.audio("matsurisu-drop", [
       PUBLIC_PATH + "/audio/Matsurisu_Drop.ogg",
       PUBLIC_PATH + "/audio/Matsurisu_Drop.mp3",
+    ]);
+    this.load.audio("coin-catch", [
+      PUBLIC_PATH + "/audio/Coin_Catch.ogg",
+      PUBLIC_PATH + "/audio/Coin_Catch.mp3",
+    ]);
+    this.load.audio("coin-drop", [
+      PUBLIC_PATH + "/audio/Coin_Drop.ogg",
+      PUBLIC_PATH + "/audio/Coin_Drop.mp3",
     ]);
     this.load.audio("powerup-catch", [
       PUBLIC_PATH + "/audio/Powerup_Catch.ogg",
@@ -496,6 +502,10 @@ export default class Preloader extends Phaser.Scene {
     this.load.audio("ebifrion-catch", [
       PUBLIC_PATH + "/audio/Ebifrion_Catch.ogg",
       PUBLIC_PATH + "/audio/Ebifrion_Catch.mp3",
+    ]);
+    this.load.audio("ebifrion-drop", [
+      PUBLIC_PATH + "/audio/Ebifrion_Drop.ogg",
+      PUBLIC_PATH + "/audio/Ebifrion_Drop.mp3",
     ]);
 
     this.load.audio("walk", [

@@ -283,39 +283,28 @@ function getInitialCatalog() {
         },
       }),
       // ========== EBIFRION ==========
-      // new DispatchItem({
-      //   name: "Ebifrion",
-      //   description: { en: "Score Bonus", ja: "スコアボーナス" },
-      //   tier: 3,
-      //   frame: 0,
-      //   action: { type: "score.buyEbifrion" },
-      //   price: 4000,
-      //   purchaseSound: "ebifrion-catch",
-      //   buySideEffect: (scene) => {
-      //     const state = store.getState();
-      //     addTextEffect(scene, {
-      //       x: 142,
-      //       y: 798,
-      //       text: `+${state.score.scorePerEbifrion}`,
-      //       depth: DEPTH.UIFRONT + 1,
-      //     });
-      //   },
-      // }),
+      new DispatchItem({
+        name: "Ebifrion",
+        description: { en: "Score Bonus", ja: "スコアボーナス" },
+        tier: 1,
+        frame: 0,
+        action: { type: "score.buyEbifrion" },
+        price: 4000,
+        purchaseSound: "ebifrion-catch",
+        buySideEffect: (scene) => {
+          const state = store.getState();
+          addTextEffect(scene, {
+            x: 142,
+            y: 798,
+            text: `+${state.score.scorePerEbifrion}`,
+            depth: DEPTH.UIFRONT + 1,
+          });
+        },
+      }),
     ],
 
     // EQUIPMENT ITEMS
     equipmentItems: [
-      // ========== GLASSES ==========
-      new Equipment({
-        name: "Glasses",
-        description: { en: "Foresight", ja: "先読みメガネ" },
-        tier: 2,
-        frame: 9,
-        price: 3000,
-        purchaseLimit: 1,
-        depth: 1,
-        onActivation: () => store.dispatch({ type: "stage.showPreview" }),
-      }),
       // ========== CAT EARS ==========
       new Equipment({
         name: "CatEars",
@@ -329,16 +318,27 @@ function getInitialCatalog() {
         onActivation: () =>
           store.dispatch({
             type: "stage.money.addModifier",
-            payload: { key: "Equipment:CatEars", luck: 0.25 },
+            payload: { key: "Equipment:CatEars", luck: 0.2 },
           }),
+      }),
+      // ========== GLASSES ==========
+      new Equipment({
+        name: "Glasses",
+        description: { en: "Foresight", ja: "先読みメガネ" },
+        tier: 3,
+        frame: 9,
+        price: 3000,
+        purchaseLimit: 1,
+        depth: 1,
+        onActivation: () => store.dispatch({ type: "stage.showPreview" }),
       }),
       // ========== GLOWSTICK ==========
       new Equipment({
         name: "Glowstick",
         description: { en: "Glowsticks", ja: "ペンライト" },
-        tier: 4,
+        tier: 6,
         frame: 11,
-        price: 6000,
+        price: 10000,
         purchaseLimit: 1,
         depth: 1,
         onActivation: () =>
@@ -359,10 +359,12 @@ function getInitialCatalog() {
 
 export let CATALOG = getInitialCatalog();
 let [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
+let [LIFE, EBIFRION] = CATALOG.dispatchItems;
 
 export function resetCatalog() {
   CATALOG = getInitialCatalog();
   [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
+  [LIFE, EBIFRION] = CATALOG.dispatchItems;
 }
 
 export function getAvailablePowerups() {
@@ -388,18 +390,14 @@ export function combinePowerups(powerup1, powerup2) {
 
 export function getShopItems() {
   const state = store.getState();
-  const player = state.player;
-  const level = state.stage.level;
-  const filteredItems = CATALOG.powerups
-    .concat(CATALOG.dispatchItems)
-    .concat(CATALOG.equipmentItems)
-    .filter((item) => {
-      return (
-        item.tier <= level &&
-        item.canBuy &&
-        (item.type !== "powerup" || item.name !== player.powerup?.name)
-      );
-    });
-
-  return chooseFromArray(filteredItems, state.shop.numItems);
+  const shopItems = [];
+  if (LIFE.canBuy) shopItems.push(LIFE);
+  const filteredEquipment = CATALOG.equipmentItems.filter(
+    (item) => item.canBuy
+  );
+  shopItems.push(...chooseFromArray(filteredEquipment, 1));
+  const filteredPowerups = CATALOG.powerups.filter((item) => item.canBuy);
+  shopItems.push(...chooseFromArray(filteredPowerups, 2));
+  if (shopItems.length < state.shop.numItems) shopItems.push(EBIFRION);
+  return shopItems;
 }

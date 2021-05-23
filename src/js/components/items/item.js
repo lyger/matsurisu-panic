@@ -147,6 +147,7 @@ export default class Item {
     const state = store.getState();
     return (
       (this.purchaseLimit < 0 || this.numPurchased < this.purchaseLimit) &&
+      state.stage.level >= this.tier &&
       this.purchaseConditions.every((cond) => cond(state))
     );
   }

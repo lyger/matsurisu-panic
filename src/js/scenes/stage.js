@@ -211,18 +211,19 @@ export default class Stage extends BaseScene {
         };
         matsurisu.destroy();
         this.events.emit("matsurisu.drop", data);
-        const volume = store.getState().settings.volumeSfx;
         if (!invincible && !bonus) this.playSoundEffect("matsurisu-drop", 0.75);
       }
     );
 
     this.physics.add.collider(ground, this.dropper.money, (ground, money) => {
-      const coords = {
+      const data = {
         x: money.x,
         y: money.y,
+        isLucky: money.getData("lucky"),
       };
       money.destroy();
-      this.events.emit("coin.drop", coords);
+      this.events.emit("coin.drop", data);
+      this.playSoundEffect("coin-drop");
     });
 
     this.physics.add.collider(
@@ -236,7 +237,6 @@ export default class Stage extends BaseScene {
         };
         powerup.destroy();
         this.events.emit("powerup.drop", data);
-        const volume = store.getState().settings.volumeSfx;
         this.playSoundEffect("powerup-drop");
       }
     );
@@ -245,13 +245,14 @@ export default class Stage extends BaseScene {
       ground,
       this.dropper.ebifrion,
       (ground, ebifrion) => {
-        const coords = {
+        const data = {
           x: ebifrion.x,
           y: ebifrion.y,
           rotation: ebifrion.rotation,
         };
         ebifrion.destroy();
-        this.events.emit("ebifrion.drop", coords);
+        this.events.emit("ebifrion.drop", data);
+        this.playSoundEffect("ebifrion-drop");
       }
     );
 
@@ -556,6 +557,7 @@ export default class Stage extends BaseScene {
 
   addEffect({ texture, frame, sound, duration }) {
     this.playSoundEffect(`${sound}-start`);
+    this.events.once("destroy", () => this.sound.stopByKey(`${sound}-start`));
 
     const newEffect = this.add
       .image(0, 0, texture, frame)
@@ -567,6 +569,9 @@ export default class Stage extends BaseScene {
 
     this.time.delayedCall(duration - EFFECT_FADE_DURATION, () => {
       this.playSoundEffect(`${sound}-timeout`);
+      this.events.once("destroy", () =>
+        this.sound.stopByKey(`${sound}-timeout`)
+      );
       this.tweens.add({
         targets: newEffect,
         alpha: 0,

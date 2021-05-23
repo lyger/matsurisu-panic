@@ -9,6 +9,7 @@ const PBAR_HEIGHT = 16;
 const PBAR_Y = 331;
 const TIMEOUT_BLINK_DURATION = 455;
 const PREVIEW_DELTA_Y = 400;
+const PADDED_PREVIEW_DELTA_Y = PREVIEW_DELTA_Y + 50;
 const PREVIEW_MIN_SCALE = 0.2;
 
 function euclidean(x, y) {
@@ -125,6 +126,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.moneyBuffer.push({
         y: rand.between(yOffset, yOffset + totalY),
         x: rand.between(moneyCfg.minX, moneyCfg.maxX),
+        lucky: rand.frac() < moneyCfg.luck,
       });
     }
 
@@ -359,9 +361,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
-  dropMoney({ x, y }) {
+  dropMoney({ x, y, isLucky }) {
     const money = this.scene.add
-      .image(x, y, "items", 2)
+      .image(x, y, "items", isLucky ? 12 : 2)
       .setDepth(DEPTH.OBJECTDEPTH);
     this.scene.tweens.add({
       targets: money,
@@ -519,8 +521,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     newPreview.anims.play("matsurisu-preview.blink");
   }
 
-  createMoney({ x }) {
-    const lucky = Phaser.Math.RND.frac() < this.modMoney.luck;
+  createMoney({ x, lucky }) {
     const newMoney = this.money
       .create(x, -100, "items", lucky ? 12 : 2, true, true)
       .setDepth(DEPTH.OBJECTDEPTH)
@@ -662,9 +663,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .slice()
       .forEach((preview) => {
         const deltaY = currentY - preview.getData("startY");
-        if (deltaY > PREVIEW_DELTA_Y) return preview.destroy();
+        if (deltaY > PADDED_PREVIEW_DELTA_Y) return preview.destroy();
         const newScale =
-          (1 - PREVIEW_MIN_SCALE) * (deltaY / PREVIEW_DELTA_Y) +
+          (1 - PREVIEW_MIN_SCALE) * (deltaY / PADDED_PREVIEW_DELTA_Y) +
           PREVIEW_MIN_SCALE;
         preview.setScale(newScale);
       });
