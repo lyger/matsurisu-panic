@@ -170,10 +170,18 @@ export default class Shop extends BaseScene {
     });
 
     this.itemLabel = this.add
-      .text(WIDTH / 2, 945, "ITEM", { ...TEXT_STYLE, color: "#ffffff" })
+      .text(620, 945, getMessage("ITEM"), { ...TEXT_STYLE, color: "#ffffff" })
       .setDepth(DEPTH.UIFRONT)
       .setOrigin(0.5, 0.5);
     this.itemIcon = null;
+    this.equipmentLabel = this.add
+      .text(258, 945, getMessage("EQUIPMENT"), {
+        ...TEXT_STYLE,
+        color: "#ffffff",
+      })
+      .setDepth(DEPTH.UIFRONT)
+      .setOrigin(0.5, 0.5);
+    this.equipmentIcons = [];
 
     this.doneButton = new ShopButton(this, {
       x: WIDTH / 2,
@@ -195,11 +203,11 @@ export default class Shop extends BaseScene {
 
   createScoreboard() {
     this.scoreLabel = this.add
-      .text(142, 767, "SCORE", BROWN_TEXT_STYLE)
+      .text(165, 767, "SCORE", BROWN_TEXT_STYLE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
     this.levelLabel = this.add
-      .text(66, 838, "Lv", BROWN_TEXT_STYLE)
+      .text(66, 767, "Lv", BROWN_TEXT_STYLE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
     this.moneyLabel = this.add
@@ -208,11 +216,11 @@ export default class Shop extends BaseScene {
       .setDepth(DEPTH.UIFRONT);
 
     this.scoreText = this.add
-      .text(142, 798, "0", BROWN_TEXT_STYLE_LARGE)
+      .text(165, 798, "0", BROWN_TEXT_STYLE_LARGE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
     this.levelText = this.add
-      .text(66, 865, "0", BROWN_TEXT_STYLE_LARGE)
+      .text(66, 798, "0", BROWN_TEXT_STYLE_LARGE)
       .setOrigin(0.5, 0.5)
       .setDepth(DEPTH.UIFRONT);
     this.moneyText = this.add
@@ -227,15 +235,26 @@ export default class Shop extends BaseScene {
   refreshState() {
     const state = store.getState();
     const { money } = state.score;
-    const { powerup } = state.player;
+    const { powerup, equipment } = state.player;
     const { powerupDiscountRate } = state.shop;
     if (powerup !== null) {
       if (this.itemIcon !== null) this.itemIcon.destroy();
       this.itemIcon = this.add
-        .image(WIDTH / 2, 1035, powerup.texture, powerup.frame)
+        .image(620, 1035, powerup.texture, powerup.frame)
         .setDepth(DEPTH.UIFRONT)
-        .setOrigin(0.5, 0.5);
+        .setScale(0.9);
     }
+
+    let equipmentX = 98;
+    equipment
+      .filter(({ accessory }) => !accessory)
+      .forEach(({ texture, frame }) => {
+        this.add
+          .image(equipmentX, 1035, texture, frame)
+          .setDepth(DEPTH.UIFRONT)
+          .setScale(0.9);
+        equipmentX += 160;
+      });
 
     this.items.forEach((shopItem) => {
       if (powerup !== null && shopItem.item.type === "powerup") {
@@ -269,9 +288,9 @@ export default class Shop extends BaseScene {
       key: "stage-scoreboard-life",
       quantity: numLivesTop,
       setXY: {
-        x: 109,
+        x: 73,
         y: 842,
-        stepX: 26.3,
+        stepX: 31.5,
       },
       setOrigin: {
         x: 0.5,
@@ -285,9 +304,9 @@ export default class Shop extends BaseScene {
       key: "stage-scoreboard-life",
       quantity: numLivesBot,
       setXY: {
-        x: 122,
+        x: 87,
         y: 869,
-        stepX: 26.3,
+        stepX: 31.5,
       },
       setOrigin: {
         x: 0.5,

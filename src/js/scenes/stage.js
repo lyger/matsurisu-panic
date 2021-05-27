@@ -432,7 +432,7 @@ export default class Stage extends BaseScene {
 
   resumeGame() {
     const state = store.getState();
-    this.pauseButton.show();
+    this.pauseButton.setVisible();
     this.muteButton.setFrame(state.settings.mute ? 1 : 0);
     this.sound.resumeAll();
     const volumeMusic = state.settings.volumeMusic;

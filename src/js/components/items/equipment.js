@@ -14,6 +14,7 @@ export default class Equipment extends Item {
     purchaseConditions,
     buySideEffect,
     depth = 1,
+    resultsFlag,
     onActivation,
     accessory = null,
   }) {
@@ -32,6 +33,7 @@ export default class Equipment extends Item {
     this.depth = depth;
     this.activated = false;
     this.onActivation = onActivation;
+    this.resultsFlag = resultsFlag;
     this.accessory = accessory;
   }
 
@@ -43,6 +45,7 @@ export default class Equipment extends Item {
         accessory: false,
         texture: this.texture,
         frame: this.frame,
+        resultsFlag: this.resultsFlag,
         animationName: this.name.toLowerCase(),
         depth: this.depth,
         target: this,

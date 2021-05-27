@@ -20,7 +20,7 @@ const HITBOX_HORIZ_CROUCH_OFFSET = {
 // }
 
 class PlayerBody extends Phaser.GameObjects.Container {
-  constructor(scene, x, y, state) {
+  constructor(scene, x, y, state, visibility) {
     super(scene, x, y);
 
     this.scene.physics.add.existing(this);
@@ -32,16 +32,23 @@ class PlayerBody extends Phaser.GameObjects.Container {
       0,
       this.skinName + "-idle"
     );
-    this.equipment = this.state.equipment.map(({ depth, animationName }) => {
-      const equipmentTexture = "equipment-" + animationName;
-      const equipmentSprite = new Phaser.GameObjects.Sprite(
-        scene,
-        0,
-        0,
-        equipmentTexture + "-idle"
-      );
-      return { depth, texture: equipmentTexture, sprite: equipmentSprite };
-    });
+    this.equipment = this.state.equipment.map(
+      ({ key, depth, animationName }) => {
+        const equipmentTexture = "equipment-" + animationName;
+        const equipmentSprite = new Phaser.GameObjects.Sprite(
+          scene,
+          0,
+          0,
+          equipmentTexture + "-idle"
+        );
+        return {
+          key: /Equipment:([A-Za-z0-9]+)/.exec(key)[1].toLowerCase(),
+          depth,
+          texture: equipmentTexture,
+          sprite: equipmentSprite,
+        };
+      }
+    );
     const children = [{ depth: 0, sprite: this.bodySprite }].concat(
       this.equipment
     );
@@ -50,6 +57,7 @@ class PlayerBody extends Phaser.GameObjects.Container {
       this.scene.add.existing(sprite);
       this.add(sprite);
     });
+    this.updateVisibility(visibility);
 
     this.scene.add.existing(this);
   }
@@ -57,6 +65,13 @@ class PlayerBody extends Phaser.GameObjects.Container {
   updateState(state) {
     this.state = state;
     this.skinName = "matsuri-" + this.state.skin;
+    return this;
+  }
+
+  updateVisibility(visibility) {
+    this.equipment.forEach(({ key, sprite }) => {
+      sprite.setVisible(visibility[key]);
+    });
     return this;
   }
 
@@ -74,6 +89,7 @@ export default class Player extends Phaser.GameObjects.Container {
     super(scene);
 
     this.state = store.getState().player;
+    this.visibility = store.getState().settings.visibility;
     this.applyModifiersToPhysics();
 
     const { PLAYERDEPTH } = DEPTH;
@@ -90,7 +106,8 @@ export default class Player extends Phaser.GameObjects.Container {
       scene,
       WIDTH / 2,
       PLAYERHEIGHT,
-      this.state
+      this.state,
+      this.visibility
     );
     this.playerBody.setDepth(PLAYERDEPTH);
 
@@ -150,9 +167,14 @@ export default class Player extends Phaser.GameObjects.Container {
 
   reloadState() {
     const newState = store.getState().player;
+    const newVisibility = store.getState().settings.visibility;
+    if (this.visibility !== newVisibility) {
+      this.playerBody.updateVisibility(newVisibility);
+      this.visibility = newVisibility;
+    }
     if (this.state === newState) return;
 
-    this.playerBody.updateState(this.state);
+    this.playerBody.updateState(newState);
 
     this.controls.refreshPowerup();
 

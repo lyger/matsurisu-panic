@@ -40,7 +40,7 @@ export default class Title extends BaseScene {
       overSound: "menu-click",
       downSound: "menu-click",
       upCallback: () => this.startGame(),
-    }).show(false);
+    }).setVisible(false);
     this.settingsButton = new SideButton(this, {
       x: WIDTH / 2 - 195,
       y: HEIGHT - 145,
@@ -51,7 +51,7 @@ export default class Title extends BaseScene {
         this.scene.add("SettingsModal", SettingsModal, true, {
           parentSceneKey: this.scene.key,
         }),
-    }).show(false);
+    }).setVisible(false);
     this.controlsButton = new SideButton(this, {
       x: WIDTH / 2 + 195,
       y: HEIGHT - 145,
@@ -62,7 +62,7 @@ export default class Title extends BaseScene {
         this.scene.add("InstructionsModal", InstructionsModal, true, {
           parentSceneKey: this.scene.key,
         }),
-    }).show(false);
+    }).setVisible(false);
     this.creditsButton = new CreditButton(this, {
       x: WIDTH / 2,
       y: HEIGHT - 34,
@@ -71,7 +71,7 @@ export default class Title extends BaseScene {
         this.scene.add("CreditsModal", CreditsModal, true, {
           parentSceneKey: this.scene.key,
         }),
-    }).show(false);
+    }).setVisible(false);
 
     this.createContrail({
       texture: "title-matsurisu1",
@@ -129,10 +129,10 @@ export default class Title extends BaseScene {
     });
     this.time.delayedCall(START_DELAY + 900, () => {
       this.add.image(WIDTH / 2, HEIGHT / 2, "title-sparkles");
-      this.startButton.show(true);
-      this.settingsButton.show(true);
-      this.controlsButton.show(true);
-      this.creditsButton.show(true);
+      this.startButton.setVisible(true);
+      this.settingsButton.setVisible(true);
+      this.controlsButton.setVisible(true);
+      this.creditsButton.setVisible(true);
     });
 
     this.events.on("rerender", this.refreshDisplay, this);

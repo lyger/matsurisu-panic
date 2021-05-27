@@ -1,10 +1,45 @@
+const visibilityDefaultState = {
+  catears: true,
+  glasses: true,
+  glowstick: true,
+};
+
 export const settingsDefaultState = {
   mute: false,
   volumeMusic: 1,
   volumeSfx: 1,
   language: "ja",
   viewedInstructions: false,
+  visibility: visibilityDefaultState,
 };
+
+function visibilityReducer(state = visibilityDefaultState, action) {
+  const { type, payload } = action;
+  switch (type) {
+    case "settings.visibility.showCatEars":
+      return {
+        ...state,
+        catears: true,
+      };
+    case "settings.visibility.hideCatEars":
+      return {
+        ...state,
+        catears: false,
+      };
+    case "settings.visibility.showGlasses":
+      return {
+        ...state,
+        glasses: true,
+      };
+    case "settings.visibility.hideGlasses":
+      return {
+        ...state,
+        glasses: false,
+      };
+    default:
+      return state;
+  }
+}
 
 export default function settingsReducer(state = settingsDefaultState, action) {
   const { type, payload } = action;
@@ -42,6 +77,9 @@ export default function settingsReducer(state = settingsDefaultState, action) {
     case "global.clearData":
       return settingsDefaultState;
     default:
-      return state;
+      return {
+        ...state,
+        visibility: visibilityReducer(state.visibility, action),
+      };
   }
 }

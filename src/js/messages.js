@@ -5,10 +5,14 @@ const MSG = {
   CLOSE: { en: "CLOSE", ja: "閉じる" },
   GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
 
+  ITEM: { en: "ITEM", ja: "アイテム" },
+  EQUIPMENT: { en: "EQUIPMENT", ja: "装備" },
+
   SETTINGS_SOUND: { en: "Sound", ja: "音声" },
   SETTINGS_MUSIC: { en: "Music", ja: "BGM" },
   SETTINGS_SFX: { en: "SFX", ja: "SE" },
   SETTINGS_LANG: { en: "Language", ja: "言語" },
+  SETTINGS_VISIBILITY: { en: "Visibility Settings", ja: "表示設定" },
   SETTINGS_CLEAR: { en: "Clear data", ja: "データ削除" },
   SETTINGS_CONFIRM_CLEAR: {
     en: "Clear high scores and reset settings?",

@@ -314,6 +314,7 @@ function getInitialCatalog() {
         price: 4000,
         purchaseLimit: 1,
         depth: 1,
+        resultsFlag: 0b001,
         accessory: { name: "CatTail", depth: -1 },
         onActivation: () =>
           store.dispatch({
@@ -330,6 +331,7 @@ function getInitialCatalog() {
         price: 3000,
         purchaseLimit: 1,
         depth: 1,
+        resultsFlag: 0b010,
         onActivation: () => store.dispatch({ type: "stage.showPreview" }),
       }),
       // ========== GLOWSTICK ==========
@@ -341,6 +343,7 @@ function getInitialCatalog() {
         price: 10000,
         purchaseLimit: 1,
         depth: 1,
+        resultsFlag: 0b100,
         onActivation: () =>
           store.dispatch({
             type: "player.physics.addModifier",

@@ -104,7 +104,7 @@ class TweetConfirmModal extends BaseModal {
       downSound: "menu-click",
       downCallback: () =>
         this.returnToParent({ hideTweetButton: this.doneTweeting }),
-    }).show(false);
+    }).setVisible(false);
 
     this.refreshDisplay();
   }
@@ -123,8 +123,8 @@ class TweetConfirmModal extends BaseModal {
   }
 
   handleTweet() {
-    this.buttonNo.show(false);
-    this.buttonTweet.show(false);
+    this.buttonNo.setVisible(false);
+    this.buttonTweet.setVisible(false);
     this.confirmText.setVisible(false);
     this.languageToggle.setVisible(false).setActive(false);
     this.tweetText.setText(getMessage("TWEET_PROGRESS"));
@@ -146,13 +146,13 @@ class TweetConfirmModal extends BaseModal {
       .setInteractive();
     clickArea.on("pointerup", () => window.open(url, "_blank"));
     this.doneTweeting = true;
-    this.buttonOk.show(true);
+    this.buttonOk.setVisible(true);
   }
 
   handleFailure(err) {
     console.log(err);
     this.tweetText.setText(getMessage("TWEET_FAILURE"));
-    this.buttonOk.show(true);
+    this.buttonOk.setVisible(true);
   }
 }
 
@@ -259,7 +259,7 @@ export default class Results extends BaseScene {
       downSound: "menu-click",
       upCallback: () => this.showGlobalHighscores(),
     })
-      .show(false)
+      .setVisible(false)
       .setAlpha(0);
 
     this.selfButton = new SelfWorldButton(this, {
@@ -270,10 +270,10 @@ export default class Results extends BaseScene {
       overSound: "menu-click",
       downSound: "menu-click",
       upCallback: () => this.showLocalHighscores(),
-    }).show(false);
+    }).setVisible(false);
 
     this.time.delayedCall(secondaryDelay + 5 * 300, () => {
-      this.worldButton.show(true).setAlpha(0);
+      this.worldButton.setVisible(true).setAlpha(0);
       this.tweens.add({
         targets: this.worldButton,
         alpha: 1,
@@ -310,11 +310,22 @@ export default class Results extends BaseScene {
   }
 
   createUI() {
+    const state = store.getState();
+    const visibility = state.settings.visibility;
+    const illustFrame = state.player.equipment
+      .filter(({ accessory }) => !accessory)
+      .filter(({ animationName }) => visibility[animationName])
+      .reduce((acc, { resultsFlag }) => acc + resultsFlag, 0);
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "results-background")
       .setDepth(DEPTH.BGBACK);
     this.illust = this.add
-      .image(WIDTH / 2 + SLIDE_DISTANCE, HEIGHT / 2, "results-illustration")
+      .image(
+        WIDTH / 2 + SLIDE_DISTANCE,
+        HEIGHT / 2,
+        "results-illustration-comp",
+        illustFrame
+      )
       .setDepth(DEPTH.OBJECTDEPTH)
       .setAlpha(0);
     this.frames = this.add
@@ -366,8 +377,8 @@ export default class Results extends BaseScene {
 
   showLocalHighscores(delay = 0) {
     this.highscoresTitleMessage = "RESULTS_PERSONAL_BESTS";
-    this.worldButton.show(true);
-    this.selfButton.show(false);
+    this.worldButton.setVisible(true);
+    this.selfButton.setVisible(false);
     const highscores = this.state.highscores.highscores;
     const lastIndex = this.state.highscores.lastIndex;
     this.clearHighscores();
@@ -381,8 +392,8 @@ export default class Results extends BaseScene {
 
   showGlobalHighscores(delay = 0) {
     this.highscoresTitleMessage = "RESULTS_WORLD_BESTS";
-    this.worldButton.show(false);
-    this.selfButton.show(true);
+    this.worldButton.setVisible(false);
+    this.selfButton.setVisible(true);
     this.clearHighscores();
     fetch(HIGHSCORES_ENDPOINT)
       .then((resp) => resp.json())

@@ -33,11 +33,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
     };
 
     this.totalY = 0;
+    this.lastT = 0;
 
     this.add(this.matsurisu);
     this.add(this.money);
     this.add(this.powerup);
 
+    this.matsurisuBuffer = [];
+    this.previewBuffer = [];
+    this.moneyBuffer = [];
+    this.powerupBuffer = [];
     this.generateDrops();
 
     this.createTimer();
@@ -56,18 +61,15 @@ export default class Dropper extends Phaser.GameObjects.Group {
     const rand = Phaser.Math.RND;
 
     // GENERATE MATSURISU
-    this.matsurisuBuffer = [];
-    this.matsurisuLastSpawn = 0;
-
+    const startY = this.totalY + (this.state.showPreview ? PREVIEW_DELTA_Y : 0);
     let last = {
-      deltaY: 0,
+      y: startY,
       x: rand.between(matsurisuCfg.minX, matsurisuCfg.maxX),
     };
 
     this.matsurisuBuffer.push(last);
 
-    let totalY = 0;
-    let yOffset = 0;
+    let cummulativeY = last.y;
 
     for (let i = 0; i < matsurisuCfg.number - 1; i++) {
       // Attempt 10 times to produce new coordinates that fulfill the conditions
@@ -93,7 +95,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
           break;
       }
       const next = {
-        deltaY: deltaY,
+        y: last.y + deltaY,
         x: newX,
         bonus: false,
       };
@@ -101,30 +103,24 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.matsurisuBuffer.push(next);
 
       last = next;
-      totalY += deltaY;
+      cummulativeY += deltaY;
     }
-    this.maximumY = totalY;
+    this.maximumY = cummulativeY;
 
     // GENERATE PREVIEWS
     if (this.state.showPreview) {
-      let previewY = 0;
-      this.previewBuffer = this.matsurisuBuffer.map(({ deltaY, x }) => {
-        previewY += deltaY;
-        return { y: previewY, x };
-      });
-      this.matsurisuBuffer[0].deltaY += PREVIEW_DELTA_Y;
-      this.maximumY += PREVIEW_DELTA_Y;
-      yOffset = PREVIEW_DELTA_Y;
-    } else this.previewBuffer = [];
+      this.previewBuffer = this.matsurisuBuffer.map(({ y, x }) => ({
+        y: y - PREVIEW_DELTA_Y,
+        x,
+      }));
+    }
 
     // GENERATE MONEY
-    this.moneyBuffer = [];
-
     const numMoney = rand.between(moneyCfg.minNumber, moneyCfg.maxNumber);
 
     for (let i = 0; i < numMoney; i++) {
       this.moneyBuffer.push({
-        y: rand.between(yOffset, yOffset + totalY),
+        y: rand.between(startY, cummulativeY),
         x: rand.between(moneyCfg.minX, moneyCfg.maxX),
         lucky: rand.frac() < moneyCfg.luck,
       });
@@ -133,8 +129,6 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.moneyBuffer.sort((a, b) => a.y - b.y);
 
     // GENERATE POWERUPS
-    this.powerupBuffer = [];
-
     const numPowerup = rand.between(powerupCfg.minNumber, powerupCfg.maxNumber);
 
     const availablePowerups = getAvailablePowerups();
@@ -142,7 +136,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (availablePowerups.length > 0) {
       for (let i = 0; i < numPowerup; i++) {
         this.powerupBuffer.push({
-          y: rand.between(yOffset, yOffset + totalY),
+          y: rand.between(startY, cummulativeY),
           x: rand.between(powerupCfg.minX, powerupCfg.maxX),
           target: Phaser.Utils.Array.GetRandom(availablePowerups),
         });
@@ -173,10 +167,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     )
       .setDepth(DEPTH.OBJECTDEPTH)
       .setOrigin(0.5, 0.5);
-    this.ebifrionStartY = rand.between(
-      yOffset,
-      yOffset + Math.floor(0.85 * totalY)
-    );
+    this.ebifrionStartY = rand.between(startY, Math.floor(0.85 * cummulativeY));
     this.ebifrionActive = false;
     this.scene.add.existing(this.ebifrion);
     this.scene.physics.add.existing(this.ebifrion);
@@ -610,12 +601,12 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (this.matsurisuBuffer.length > 0) {
       const next = this.matsurisuBuffer[0];
       for (let i = 0; i < num; i++) {
-        const deltaY = rand.between(0, 0.67 * next.deltaY);
+        const y = rand.between(this.totalY, next.y);
         const x = rand.between(this.modMatsurisu.minX, this.modMatsurisu.maxX);
-        this.matsurisuBuffer.unshift({ deltaY, x, bonus: true });
-        next.deltaY -= deltaY;
+        this.matsurisuBuffer.unshift({ x, y, bonus: true });
       }
     }
+    this.matsurisuBuffer.sort((a, b) => a.y - b.y);
     return true;
   }
 
@@ -645,16 +636,14 @@ export default class Dropper extends Phaser.GameObjects.Group {
       .forEach((matsurisu) => {
         if (matsurisu.getData("bonus")) matsurisu.destroy();
       });
-    let reclaimedDeltaY = 0;
-    this.matsurisuBuffer = this.matsurisuBuffer.filter((config) => {
-      const { bonus } = config;
-      if (bonus) reclaimedDeltaY += config.deltaY;
-      else if (reclaimedDeltaY > 0) {
-        config.deltaY += reclaimedDeltaY;
-        reclaimedDeltaY = 0;
-      }
-      return !bonus;
-    });
+    this.matsurisuBuffer = this.matsurisuBuffer.filter(({ bonus }) => !bonus);
+  }
+
+  getDeltaT() {
+    const now = this.timer.elapsed;
+    const deltaT = now - this.lastT;
+    this.lastT = now;
+    return deltaT;
   }
 
   updatePreviews(currentY) {
@@ -673,22 +662,16 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
   update(time) {
     this.reloadState();
-    const delta = this.timer.elapsed;
-    const matsurisuDeltaY =
-      ((delta - this.matsurisuLastSpawn) / 1000) * this.modMatsurisu.fallSpeed;
-    const matsurisuTotalY = this.totalY + matsurisuDeltaY;
+    const deltaT = this.getDeltaT();
+    const deltaY = (deltaT / 1000) * this.modMatsurisu.fallSpeed;
+    const totalY = this.totalY + deltaY;
+    this.totalY = totalY;
 
     const isNextFeverItem =
-      this.numFever < this.state.fever.number &&
-      matsurisuTotalY > this.nextFeverY;
+      this.numFever < this.state.fever.number && totalY > this.nextFeverY;
 
-    if (
-      this.matsurisuBuffer.length > 0 &&
-      this.matsurisuBuffer[0].deltaY < matsurisuDeltaY
-    ) {
+    if (this.matsurisuBuffer.length > 0 && this.matsurisuBuffer[0].y < totalY) {
       const next = this.matsurisuBuffer.shift();
-      this.matsurisuLastSpawn = delta;
-      this.totalY += matsurisuDeltaY;
 
       const newMatsurisu = this.createMatsurisu(next);
       if (isNextFeverItem) {
@@ -700,35 +683,26 @@ export default class Dropper extends Phaser.GameObjects.Group {
       if (!next.bonus) this.generateBonusMatsurisu();
     }
 
-    if (
-      this.previewBuffer.length > 0 &&
-      this.previewBuffer[0].y < matsurisuTotalY
-    ) {
+    if (this.previewBuffer.length > 0 && this.previewBuffer[0].y < totalY) {
       const next = this.previewBuffer.shift();
       this.createPreview(next);
     }
 
-    if (
-      this.moneyBuffer.length > 0 &&
-      this.moneyBuffer[0].y < matsurisuTotalY
-    ) {
+    if (this.moneyBuffer.length > 0 && this.moneyBuffer[0].y < totalY) {
       const next = this.moneyBuffer.shift();
 
       const newMoney = this.createMoney(next);
       if (isNextFeverItem) this.makeFeverItem(newMoney);
     }
 
-    if (
-      this.powerupBuffer.length > 0 &&
-      this.powerupBuffer[0].y < matsurisuTotalY
-    ) {
+    if (this.powerupBuffer.length > 0 && this.powerupBuffer[0].y < totalY) {
       const next = this.powerupBuffer.shift();
 
       const newPowerup = this.createPowerup(next);
       if (isNextFeverItem) this.makeFeverItem(newPowerup);
     }
 
-    if (!this.ebifrionActive && this.ebifrionStartY <= matsurisuTotalY) {
+    if (!this.ebifrionActive && this.ebifrionStartY <= totalY) {
       this.ebifrionActive = true;
       this.ebifrion.startFollow(this.modEbifrion.fallDuration);
       this.scene.tweens.add({
@@ -738,12 +712,12 @@ export default class Dropper extends Phaser.GameObjects.Group {
       });
     }
 
-    this.updatePreviews(matsurisuTotalY);
+    this.updatePreviews(totalY);
 
     this.progressBar.setCrop(
       0,
       0,
-      Math.min(matsurisuTotalY / (this.maximumY + 200), 1) * PBAR_WIDTH,
+      Math.min(totalY / (this.maximumY + 200), 1) * PBAR_WIDTH,
       PBAR_HEIGHT
     );
   }

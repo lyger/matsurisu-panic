@@ -8,7 +8,7 @@ const ControlButtonVertical = ButtonFactory("controls-vertical");
 const ControlButtonItem = ButtonFactory("controls-item");
 
 const EQUIPMENT_LEFT = 48;
-const EQUIPMENT_Y = 1010;
+const EQUIPMENT_Y = 1001;
 const EQUIPMENT_INTERVAL = 75;
 
 export default class Controls extends Phaser.GameObjects.Container {

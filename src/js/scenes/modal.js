@@ -128,8 +128,8 @@ class PagedModal extends BaseModal {
     this.pageText.setText(`${this.currentPage + 1} / ${this.pages.length}`);
     const isFirst = this.currentPage === 0;
     const isLast = this.currentPage === this.pages.length - 1;
-    this.prevButton.show(!isFirst);
-    this.nextButton.show(!isLast);
+    this.prevButton.setVisible(!isFirst);
+    this.nextButton.setVisible(!isLast);
   }
 
   goToPrevious() {
@@ -145,18 +145,33 @@ class PagedModal extends BaseModal {
 
 const SETTINGS_COL1 = 160;
 const SETTINGS_COL2 = 430;
+const SETTINGS_ROW05 = 380;
 const SETTINGS_ROW1 = 420;
+const SETTINGS_ROW15 = 460;
 const SETTINGS_ROW2 = 500;
+const SETTINGS_ROW25 = 540;
 const SETTINGS_ROW3 = 580;
 const SETTINGS_ROW4 = 660;
-const SETTINGS_ROW5 = 750;
 
 const ClearButton = ButtonFactory("modal-clear-buttons", false, BROWN_STYLE_LG);
 
-export class SettingsModal extends BaseModal {
+export class SettingsModal extends PagedModal {
   create(args) {
     super.create(args);
 
+    this.pages = [this.createPage1(), this.createPage2()];
+
+    this.refreshDisplay();
+
+    if (this.soundToggle.state === true) {
+      this.musicSlider.setMute();
+      this.sfxSlider.setMute();
+    }
+
+    this.renderPages();
+  }
+
+  createPage1() {
     this.soundLabel = this.add
       .text(
         SETTINGS_COL1,
@@ -242,9 +257,72 @@ export class SettingsModal extends BaseModal {
       toggleCallback: () => this.refreshDisplay(),
     });
 
+    return [
+      this.soundLabel,
+      this.soundToggle,
+      this.musicLabel,
+      this.musicSlider,
+      this.sfxLabel,
+      this.sfxSlider,
+      this.languageLabel,
+      this.languageToggle,
+    ];
+  }
+
+  createPage2() {
+    this.visibilityLabel = this.add
+      .text(
+        WIDTH / 2,
+        SETTINGS_ROW05,
+        getMessage("SETTINGS_VISIBILITY"),
+        BROWN_STYLE_LG
+      )
+      .setDepth(DEPTH.UIFRONT)
+      .setOrigin(0.5, 0.5);
+
+    this.catEarsLabel = this.add
+      .image(SETTINGS_COL1, SETTINGS_ROW15, "items", 10)
+      .setDepth(DEPTH.UIFRONT)
+      .setScale(0.75);
+    this.catEarsToggle = new Toggle(this, {
+      texture: "modal-toggle-buttons",
+      x: SETTINGS_COL2,
+      y: SETTINGS_ROW15,
+      spacing: 190,
+      target: "settings.visibility.catears",
+      leftState: true,
+      leftBase: 1,
+      leftSelected: 0,
+      rightBase: 3,
+      rightSelected: 2,
+      actionLeft: { type: "settings.visibility.showCatEars" },
+      actionRight: { type: "settings.visibility.hideCatEars" },
+      toggleCallback: () => this.refreshDisplay(),
+    });
+
+    this.glassesLabel = this.add
+      .image(SETTINGS_COL1, SETTINGS_ROW25, "items", 9)
+      .setDepth(DEPTH.UIFRONT)
+      .setScale(0.75);
+    this.glassesToggle = new Toggle(this, {
+      texture: "modal-toggle-buttons",
+      x: SETTINGS_COL2,
+      y: SETTINGS_ROW25,
+      spacing: 190,
+      target: "settings.visibility.glasses",
+      leftState: true,
+      leftBase: 1,
+      leftSelected: 0,
+      rightBase: 3,
+      rightSelected: 2,
+      actionLeft: { type: "settings.visibility.showGlasses" },
+      actionRight: { type: "settings.visibility.hideGlasses" },
+      toggleCallback: () => this.refreshDisplay(),
+    });
+
     this.clearButton = new ClearButton(this, {
       x: WIDTH / 2,
-      y: SETTINGS_ROW5,
+      y: SETTINGS_ROW4,
       text: getMessage("SETTINGS_CLEAR"),
       base: 1,
       over: 0,
@@ -256,13 +334,14 @@ export class SettingsModal extends BaseModal {
         }
       },
     });
-
-    this.refreshDisplay();
-
-    if (this.soundToggle.state === true) {
-      this.musicSlider.setMute();
-      this.sfxSlider.setMute();
-    }
+    return [
+      this.visibilityLabel,
+      this.catEarsLabel,
+      this.catEarsToggle,
+      this.glassesLabel,
+      this.glassesToggle,
+      this.clearButton,
+    ];
   }
 
   refreshDisplay() {
@@ -270,12 +349,15 @@ export class SettingsModal extends BaseModal {
     this.musicLabel.setText(getMessage("SETTINGS_MUSIC"));
     this.sfxLabel.setText(getMessage("SETTINGS_SFX"));
     this.languageLabel.setText(getMessage("SETTINGS_LANG"));
-    this.clearButton.setText(getMessage("SETTINGS_CLEAR"));
     this.buttonClose.setText(getMessage("CLOSE"));
     this.soundToggle.rerender();
     this.musicSlider.refreshState();
     this.sfxSlider.refreshState();
     this.languageToggle.rerender();
+
+    this.visibilityLabel.setText(getMessage("SETTINGS_VISIBILITY"));
+    this.clearButton.setText(getMessage("SETTINGS_CLEAR"));
+
     this.scene.get(this.parentSceneKey).events.emit("rerender");
   }
 }

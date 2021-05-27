@@ -116,8 +116,8 @@ function ButtonFactory(key, pixelPerfect = false, textStyle = {}) {
       this.scene.add.existing(this);
     }
 
-    show(value = true) {
-      this.setVisible(value);
+    setVisible(value = true) {
+      super.setVisible(value);
       this.text?.setVisible(value);
       // Whether hiding or showing, we want the button to be default state.
       this.setFrame(this.frames.base);

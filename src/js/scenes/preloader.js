@@ -356,10 +356,6 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/results-frames.png"
     );
     this.load.image(
-      "results-illustration",
-      PUBLIC_PATH + "/images/results-illustration.png"
-    );
-    this.load.image(
       "results-tweet-button",
       PUBLIC_PATH + "/images/results-tweet-button.png"
     );
@@ -408,6 +404,14 @@ export default class Preloader extends Phaser.Scene {
         frameHeight: 60,
         margin: 1,
         spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "results-illustration-comp",
+      PUBLIC_PATH + "/images/results-illustration-comp.png",
+      {
+        frameWidth: 720,
+        frameHeight: 1280,
       }
     );
   }
