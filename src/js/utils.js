@@ -31,6 +31,13 @@ export function addModifierWithoutDuplicates(state, modifier) {
   };
 }
 
+export function removeModifier(state, key) {
+  return {
+    ...state,
+    modifiers: state.modifiers.filter((modifier) => modifier.key !== key),
+  };
+}
+
 export function chooseFromArray(arr, num) {
   const buffer = arr.slice();
   if (num >= arr.length) return buffer;

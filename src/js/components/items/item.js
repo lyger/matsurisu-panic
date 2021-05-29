@@ -76,7 +76,9 @@ class ShopItem extends Phaser.GameObjects.Container {
   }
 
   get price() {
-    // Items will always cost at least one coin
+    // Special case for the one item that actually costs zero
+    if (this.item.price === 0) return 0;
+    // Discounted items will always cost at least one coin
     return Math.max(
       this.item.price - this.discountAmount,
       store.getState().score.moneyPerCoin

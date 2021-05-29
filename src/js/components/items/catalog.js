@@ -1,4 +1,4 @@
-import { DEPTH } from "../../globals";
+import { DEPTH, SHOP_SIZE } from "../../globals";
 import store from "../../store";
 import { addTextEffect, chooseFromArray } from "../../utils";
 import DispatchItem from "./dispatch";
@@ -301,6 +301,16 @@ function getInitialCatalog() {
           });
         },
       }),
+      // ========== IDOL RIBBON ==========
+      new DispatchItem({
+        name: "IdolRibbon",
+        description: { en: "? ? ?", ja: "？？？" },
+        tier: 8,
+        frame: 13,
+        action: { type: "settings.unlockEndless" },
+        price: 0,
+        purchaseConditions: [(state) => !state.settings.endlessUnlocked],
+      }),
     ],
 
     // EQUIPMENT ITEMS
@@ -362,17 +372,16 @@ function getInitialCatalog() {
 
 export let CATALOG = getInitialCatalog();
 let [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
-let [LIFE, EBIFRION] = CATALOG.dispatchItems;
+let [LIFE, EBIFRION, IDOL_RIBBON] = CATALOG.dispatchItems;
 
 export function resetCatalog() {
   CATALOG = getInitialCatalog();
   [SPEED, JUMP, FLOAT, SPEED_PLUS, JUMP_PLUS, FLOAT_PLUS] = CATALOG.powerups;
-  [LIFE, EBIFRION] = CATALOG.dispatchItems;
+  [LIFE, EBIFRION, IDOL_RIBBON] = CATALOG.dispatchItems;
 }
 
 export function getAvailablePowerups() {
-  const state = store.getState();
-  const level = state.stage.level;
+  const level = store.getState().stage.level;
   return CATALOG.powerups.filter((powerup) => powerup.tier <= level);
 }
 
@@ -401,6 +410,8 @@ export function getShopItems() {
   shopItems.push(...chooseFromArray(filteredEquipment, 1));
   const filteredPowerups = CATALOG.powerups.filter((item) => item.canBuy);
   shopItems.push(...chooseFromArray(filteredPowerups, 2));
-  if (shopItems.length < state.shop.numItems) shopItems.push(EBIFRION);
+  if (shopItems.length < SHOP_SIZE) shopItems.push(EBIFRION);
+  if (shopItems.length < SHOP_SIZE && IDOL_RIBBON.canBuy)
+    shopItems.push(IDOL_RIBBON);
   return shopItems;
 }

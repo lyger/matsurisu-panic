@@ -54,3 +54,6 @@ export function setStoreGameRef(game) {
 }
 
 export default store;
+
+Window.DEBUG_enableEndless = () =>
+  store.dispatch({ type: "settings.unlockEndless" });

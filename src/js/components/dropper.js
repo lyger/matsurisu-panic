@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { FEVER_TINT, DEPTH, GROUNDHEIGHT, WIDTH } from "../globals";
+import { FEVER_TINT, DEPTH, GROUNDHEIGHT, WIDTH, TEXT_STYLE } from "../globals";
 import store from "../store";
 import { applyModifiersToState, syncSpritePhysics } from "../utils";
 import { getAvailablePowerups } from "./items/catalog";
@@ -11,6 +11,7 @@ const TIMEOUT_BLINK_DURATION = 455;
 const PREVIEW_DELTA_Y = 400;
 const PADDED_PREVIEW_DELTA_Y = PREVIEW_DELTA_Y + 50;
 const PREVIEW_MIN_SCALE = 0.2;
+const PRICE_DELTA_Y = 80;
 
 function euclidean(x, y) {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
@@ -32,7 +33,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
       bonusAlpha: 1,
     };
 
-    this.totalY = 0;
+    this.currentY = 0;
     this.lastT = 0;
 
     this.add(this.matsurisu);
@@ -45,7 +46,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.powerupBuffer = [];
     this.generateDrops();
 
-    this.createTimer();
+    this.createTimerAndEvents();
     this.createProgressBar();
     this.createEvents();
 
@@ -61,9 +62,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
     const rand = Phaser.Math.RND;
 
     // GENERATE MATSURISU
-    const startY = this.totalY + (this.state.showPreview ? PREVIEW_DELTA_Y : 0);
+    this.startY =
+      this.currentY + (this.state.showPreview ? PREVIEW_DELTA_Y : 0);
     let last = {
-      y: startY,
+      y: this.startY,
       x: rand.between(matsurisuCfg.minX, matsurisuCfg.maxX),
     };
 
@@ -120,7 +122,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     for (let i = 0; i < numMoney; i++) {
       this.moneyBuffer.push({
-        y: rand.between(startY, cummulativeY),
+        y: rand.between(this.startY, cummulativeY),
         x: rand.between(moneyCfg.minX, moneyCfg.maxX),
         lucky: rand.frac() < moneyCfg.luck,
       });
@@ -136,7 +138,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (availablePowerups.length > 0) {
       for (let i = 0; i < numPowerup; i++) {
         this.powerupBuffer.push({
-          y: rand.between(startY, cummulativeY),
+          y: rand.between(this.startY, cummulativeY),
           x: rand.between(powerupCfg.minX, powerupCfg.maxX),
           target: Phaser.Utils.Array.GetRandom(availablePowerups),
         });
@@ -167,14 +169,17 @@ export default class Dropper extends Phaser.GameObjects.Group {
     )
       .setDepth(DEPTH.OBJECTDEPTH)
       .setOrigin(0.5, 0.5);
-    this.ebifrionStartY = rand.between(startY, Math.floor(0.85 * cummulativeY));
+    this.ebifrionStartY = rand.between(
+      this.startY,
+      Math.floor(0.85 * cummulativeY)
+    );
     this.ebifrionActive = false;
     this.scene.add.existing(this.ebifrion);
     this.scene.physics.add.existing(this.ebifrion);
     this.ebifrion.body.setCircle(40, 24, 24);
   }
 
-  createTimer() {
+  createTimerAndEvents() {
     this.timer = this.scene.time.addEvent({
       delay: Infinity,
     });
@@ -182,7 +187,13 @@ export default class Dropper extends Phaser.GameObjects.Group {
 
     this.scene.events.on("dropper.start", () => {
       this.timer.paused = false;
-      this.totalY = 0;
+      this.currentY = 0;
+    });
+
+    this.scene.events.on("dropper.reset", () => {
+      this.reloadState();
+      this.generateDrops();
+      if (this.nextFeverY === Infinity) this.setupFever();
     });
   }
 
@@ -225,9 +236,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
       this.nextFeverY = Infinity;
     } else {
       this.feverActive = false;
-      this.feverStep = (0.8 * this.maximumY) / this.state.fever.number;
+      this.feverStep =
+        (0.8 * (this.maximumY - this.startY)) / this.state.fever.number;
       this.numFever = 0;
-      this.nextFeverY = this.feverStep;
+      this.nextFeverY = Math.max(this.startY, this.currentY) + this.feverStep;
       this.scene.events.on("global.feverStart", () => {
         this.feverActive = true;
         // Once fever has been activated for the level, we'll stop spawning more fever items
@@ -524,12 +536,39 @@ export default class Dropper extends Phaser.GameObjects.Group {
   }
 
   createPowerup({ x, target }) {
+    const price = this.state.isEndless ? target.price : 0;
     const newPowerup = this.powerup
       .create(x, -100, target.texture, target.frame, true, true)
       .setDepth(DEPTH.OBJECTDEPTH)
       .setVelocityY(this.modPowerup.fallSpeed)
-      .setData({ target, fever: false, refunded: false });
+      .setData({ target, fever: false, refunded: false, price });
     newPowerup.body.setCircle(40, 24, 24);
+    if (price > 0) {
+      const priceText = this.scene.add
+        .text(
+          newPowerup.x,
+          newPowerup.y + PRICE_DELTA_Y,
+          `¥${price.toLocaleString("en-US")}`,
+          TEXT_STYLE
+        )
+        .setDepth(DEPTH.OBJECTDEPTH + 1)
+        .setOrigin(0.5, 0.5);
+      newPowerup.setData("extra:price", priceText);
+      const syncText = () => {
+        priceText.x = newPowerup.x;
+        priceText.y = newPowerup.y + PRICE_DELTA_Y;
+        priceText.setAlpha(newPowerup.alpha);
+      };
+      this.scene.events.on("update", syncText);
+      const destroyText = () => {
+        this.scene.events.off("update", syncText);
+        priceText?.destroy?.();
+      };
+      newPowerup.once("destroy", destroyText);
+      this.scene.events.once("transitionout", () =>
+        newPowerup.off("destroy", destroyText)
+      );
+    }
     return newPowerup;
   }
 
@@ -601,7 +640,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     if (this.matsurisuBuffer.length > 0) {
       const next = this.matsurisuBuffer[0];
       for (let i = 0; i < num; i++) {
-        const y = rand.between(this.totalY, next.y);
+        const y = rand.between(this.currentY, next.y);
         const x = rand.between(this.modMatsurisu.minX, this.modMatsurisu.maxX);
         this.matsurisuBuffer.unshift({ x, y, bonus: true });
       }
@@ -623,7 +662,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
           targets: this.syncProps,
           bonusAlpha: 0,
           duration: TIMEOUT_BLINK_DURATION,
-          onComplete: (fadeTween) => this.scene.tweens.remove(fadeTween),
+          onComplete: (fadeTween) => {
+            this.scene.tweens.remove(fadeTween);
+            this.syncProps.bonusAlpha = 1;
+          },
         });
       },
     });
@@ -664,8 +706,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.reloadState();
     const deltaT = this.getDeltaT();
     const deltaY = (deltaT / 1000) * this.modMatsurisu.fallSpeed;
-    const totalY = this.totalY + deltaY;
-    this.totalY = totalY;
+    const totalY = this.currentY + deltaY;
+    this.currentY = totalY;
 
     const isNextFeverItem =
       this.numFever < this.state.fever.number && totalY > this.nextFeverY;
@@ -717,7 +759,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.progressBar.setCrop(
       0,
       0,
-      Math.min(totalY / (this.maximumY + 200), 1) * PBAR_WIDTH,
+      Math.min((totalY - this.startY) / (this.maximumY - this.startY), 1) *
+        PBAR_WIDTH,
       PBAR_HEIGHT
     );
   }

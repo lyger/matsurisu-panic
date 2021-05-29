@@ -33,8 +33,9 @@ export default class Stage extends BaseScene {
 
     this.activateEquipment();
 
-    this.startBgm(GAME_START_DELAY / 2000);
+    this.createSounds();
     this.createSoundListeners();
+    this.bgm.play({ delay: GAME_START_DELAY / 2000 });
 
     this.background = this.add
       .image(WIDTH / 2, HEIGHT / 2, "stage-background")
@@ -60,10 +61,10 @@ export default class Stage extends BaseScene {
     debugKey2.on("down", () => {
       this.loseStage();
     });
-    const debugKey3 = this.input.keyboard.addKey("c", true, false);
-    debugKey3.on("down", () => {
-      this.events.emit("global.feverStart");
-    });
+    // const debugKey3 = this.input.keyboard.addKey("c", true, false);
+    // debugKey3.on("down", () => {
+    //   this.events.emit("global.feverStart");
+    // });
   }
 
   createUIButtons() {
@@ -134,7 +135,10 @@ export default class Stage extends BaseScene {
       this.dropper.powerup,
       (player, powerup) => {
         const target = powerup.getData("target");
-        const currentPowerup = store.getState().player.powerup;
+        const price = powerup.getData("price");
+        const state = store.getState();
+        if (price > 0 && price > state.score.money) return;
+        const currentPowerup = state.player.powerup;
         const airborne = this.matsuri.airborne;
         const data = {
           x: powerup.x,
@@ -144,6 +148,7 @@ export default class Stage extends BaseScene {
           upgraded: null,
           target,
           airborne,
+          price,
         };
         if (currentPowerup === null) {
           store.dispatch({
@@ -168,6 +173,10 @@ export default class Stage extends BaseScene {
       }
     );
 
+    this.createPlayerEbifrionCollision();
+  }
+
+  createPlayerEbifrionCollision() {
     this.physics.add.overlap(
       this.matsuri.hitBox,
       this.dropper.ebifrion,
@@ -189,13 +198,13 @@ export default class Stage extends BaseScene {
   }
 
   createGroundCollisions() {
-    const ground = this.add
+    this.ground = this.add
       .rectangle(WIDTH / 2, GROUNDHEIGHT, 720, 300)
       .setOrigin(0.5, 0);
-    this.physics.add.existing(ground, true);
+    this.physics.add.existing(this.ground, true);
 
     this.physics.add.collider(
-      ground,
+      this.ground,
       this.dropper.matsurisu,
       (ground, matsurisu) => {
         const invincible = store.getState().score.invincible;
@@ -215,19 +224,23 @@ export default class Stage extends BaseScene {
       }
     );
 
-    this.physics.add.collider(ground, this.dropper.money, (ground, money) => {
-      const data = {
-        x: money.x,
-        y: money.y,
-        isLucky: money.getData("lucky"),
-      };
-      money.destroy();
-      this.events.emit("coin.drop", data);
-      this.playSoundEffect("coin-drop");
-    });
+    this.physics.add.collider(
+      this.ground,
+      this.dropper.money,
+      (ground, money) => {
+        const data = {
+          x: money.x,
+          y: money.y,
+          isLucky: money.getData("lucky"),
+        };
+        money.destroy();
+        this.events.emit("coin.drop", data);
+        this.playSoundEffect("coin-drop");
+      }
+    );
 
     this.physics.add.collider(
-      ground,
+      this.ground,
       this.dropper.powerup,
       (ground, powerup) => {
         const data = {
@@ -241,8 +254,15 @@ export default class Stage extends BaseScene {
       }
     );
 
+    this.createGroundEbifrionCollision();
+
+    this.physics.add.collider(this.ground, this.matsuri.playerBody);
+    this.physics.add.collider(this.ground, this.matsuri.armSprite);
+  }
+
+  createGroundEbifrionCollision() {
     this.physics.add.collider(
-      ground,
+      this.ground,
       this.dropper.ebifrion,
       (ground, ebifrion) => {
         const data = {
@@ -255,12 +275,10 @@ export default class Stage extends BaseScene {
         this.playSoundEffect("ebifrion-drop");
       }
     );
-
-    this.physics.add.collider(ground, this.matsuri.playerBody);
-    this.physics.add.collider(ground, this.matsuri.armSprite);
   }
 
   createEvents() {
+    const state = store.getState();
     this.events.once("global.gameOver", this.loseStage, this);
     this.events.on("global.feverStart", this.activateFever, this);
 
@@ -272,17 +290,31 @@ export default class Stage extends BaseScene {
 
     this.events.on("stage.addEffect", this.addEffect, this);
 
-    this.events.once("dropper.done", () => {
-      this.fadeBgm(GAME_END_DELAY);
-      this.time.delayedCall(GAME_END_DELAY, () => {
-        const state = store.getState();
-        if (state.score.drops === 0) {
-          this.sound.play("stage-full-combo");
-          this.events.emit("global.fullCombo");
-          this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
-        } else this.winStage();
+    if (state.stage.isEndless) {
+      this.events.on("dropper.done", () => {
+        store.dispatch({ type: "global.winStageEndless" });
+        store.dispatch({ type: "stage.increaseLevel" });
+        this.events.emit("rerender");
+        this.events.emit("dropper.reset");
+        this.createPlayerEbifrionCollision();
+        this.createGroundEbifrionCollision();
       });
-    });
+      this.events.on("global.feverEnd", () => {
+        this.dropper.setupFever();
+      });
+    } else {
+      this.events.once("dropper.done", () => {
+        this.fadeBgm(GAME_END_DELAY);
+        this.time.delayedCall(GAME_END_DELAY, () => {
+          const state = store.getState();
+          if (state.score.drops === 0) {
+            this.sound.play("stage-full-combo");
+            this.events.emit("global.fullCombo");
+            this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
+          } else this.winStage();
+        });
+      });
+    }
 
     this.time.delayedCall(GAME_START_DELAY, () => {
       this.events.emit("dropper.start");
@@ -296,7 +328,13 @@ export default class Stage extends BaseScene {
 
     this.events.on(
       "sound.catch",
-      ({ type, airCount = 0, isLow = false, isRedundant = false }) => {
+      ({
+        type,
+        airCount = 0,
+        isLow = false,
+        isRedundant = false,
+        price = 0,
+      }) => {
         if (airCount > 0)
           this.playSoundEffect(`air-catch-${Math.min(airCount, 5)}`);
         switch (type) {
@@ -309,7 +347,10 @@ export default class Stage extends BaseScene {
             break;
           case "powerup":
             if (isRedundant) this.playSoundEffect("ebifrion-catch");
-            else this.playSoundEffect("powerup-catch");
+            else {
+              this.playSoundEffect("powerup-catch");
+              if (price > 0) this.playSoundEffect("shop-buy");
+            }
             break;
           case "ebifrion":
             this.playSoundEffect("ebifrion-catch");
@@ -358,6 +399,8 @@ export default class Stage extends BaseScene {
       crawlSound.destroy();
       this.bgm?.stop?.();
       this.bgm?.destroy?.();
+      this.feverMusic?.stop?.();
+      this.feverMusic?.destroy?.();
     });
   }
 
@@ -378,13 +421,23 @@ export default class Stage extends BaseScene {
     });
   }
 
-  startBgm(delay) {
+  createSounds() {
     const settings = store.getState().settings;
     this.bgm = this.sound.add("matsuri-samba", {
       loop: true,
       volume: STAGE_BGM_VOLUME_FACTOR * settings.volumeMusic,
     });
-    this.bgm.play({ delay });
+    this.bgm.addMarker({
+      name: "fever-resume",
+      start: 2.19,
+      config: {
+        loop: true,
+        volume: STAGE_BGM_VOLUME_FACTOR * settings.volumeMusic,
+      },
+    });
+    this.feverMusic = this.sound.add("fever-music", {
+      volume: STAGE_BGM_VOLUME_FACTOR * settings.volumeMusic,
+    });
   }
 
   fadeBgm(duration) {
@@ -394,6 +447,12 @@ export default class Stage extends BaseScene {
       duration,
       onComplete: () => this.bgm.stop(),
     });
+  }
+
+  refreshMusicVolume() {
+    const volumeMusic = store.getState().settings.volumeMusic;
+    this.bgm.setVolume(STAGE_BGM_VOLUME_FACTOR * volumeMusic);
+    this.feverMusic.setVolume(STAGE_BGM_VOLUME_FACTOR * volumeMusic);
   }
 
   toggleMute() {
@@ -435,11 +494,16 @@ export default class Stage extends BaseScene {
     this.pauseButton.setVisible();
     this.muteButton.setFrame(state.settings.mute ? 1 : 0);
     this.sound.resumeAll();
-    const volumeMusic = state.settings.volumeMusic;
-    this.bgm.setVolume(STAGE_BGM_VOLUME_FACTOR * volumeMusic);
+    this.refreshMusicVolume();
   }
 
   activateFever() {
+    this.bgm.stop();
+    this.feverMusic.play();
+    this.events.once("global.feverEnd", () => {
+      this.bgm.play("fever-resume");
+      this.refreshMusicVolume();
+    });
     const feverBack = this.add
       .image(WIDTH / 2, HEIGHT / 2, "stage-background-fever")
       .setDepth(DEPTH.BGBACK + 1);

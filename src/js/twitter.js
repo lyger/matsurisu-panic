@@ -7,6 +7,7 @@ export default function sendTweet(
   message,
   imageData,
   score,
+  endless,
   successCallback,
   errorCallback
 ) {
@@ -28,7 +29,7 @@ export default function sendTweet(
   function postTweet(auth) {
     fetch(TWEET_ENDPOINT, {
       method: "POST",
-      body: JSON.stringify({ auth: auth, data: tweetData, score: score }),
+      body: JSON.stringify({ auth: auth, data: tweetData, score, endless }),
     })
       .then((response) => {
         if (!response.ok)

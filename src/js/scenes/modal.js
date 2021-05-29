@@ -214,6 +214,7 @@ export class SettingsModal extends PagedModal {
       y: SETTINGS_ROW2,
       target: "settings.volumeMusic",
       changeAction: { type: "settings.setVolumeMusic" },
+      changeCallback: () => this.refreshDisplay(),
     }).setDepth(DEPTH.UIBACK);
 
     this.sfxLabel = this.add
@@ -230,6 +231,7 @@ export class SettingsModal extends PagedModal {
       y: SETTINGS_ROW3,
       target: "settings.volumeSfx",
       changeAction: { type: "settings.setVolumeSfx" },
+      changeCallback: () => this.refreshDisplay(),
     }).setDepth(DEPTH.UIBACK);
 
     this.languageLabel = this.add

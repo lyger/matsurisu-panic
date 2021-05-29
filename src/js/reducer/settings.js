@@ -10,6 +10,7 @@ export const settingsDefaultState = {
   volumeSfx: 1,
   language: "ja",
   viewedInstructions: false,
+  endlessUnlocked: false,
   visibility: visibilityDefaultState,
 };
 
@@ -68,6 +69,11 @@ export default function settingsReducer(state = settingsDefaultState, action) {
       return {
         ...state,
         language: "ja",
+      };
+    case "settings.unlockEndless":
+      return {
+        ...state,
+        endlessUnlocked: true,
       };
     case "settings.viewInstructions":
       return {

@@ -57,6 +57,10 @@ class FeverWheel extends Phaser.GameObjects.Container {
       duration: feverDuration * 1000 - 300,
       onUpdate: this.update,
       onUpdateScope: this,
+      onComplete: () => {
+        this.isCountdown = false;
+        this.value = 0;
+      },
     });
   }
 
@@ -166,7 +170,7 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
 
     this.scene.events.on(
       "powerup.catch",
-      ({ airborne, isFever, isRedundant, x, y }) => {
+      ({ airborne, isFever, isRedundant, price, x, y }) => {
         store.dispatch({
           type: "score.catchPowerup",
           payload: { airborne, isFever, isRedundant },
@@ -179,11 +183,20 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
             y,
             text: `+${this.state.scorePerRedundantPowerup}`,
           });
+        else if (price > 0) {
+          store.dispatch({ type: "score.loseMoney", payload: price });
+          addTextEffect(this.scene, {
+            x,
+            y,
+            text: `−¥${price.toLocaleString("en-US")}`,
+          });
+        }
         this.checkFever();
         this.scene.events.emit("sound.catch", {
           type: "powerup",
           airCount,
           isRedundant,
+          price,
         });
       }
     );
@@ -254,6 +267,8 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
       this.comboText.setColor(COMBO_TEXT_COLOR).setAlpha(0.4);
     });
 
+    this.scene.events.on("rerender", this.refreshState, this);
+
     return this;
   }
 
@@ -290,7 +305,7 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
       setXY: {
         x: 292,
         y: 1003 + LIVES_OFFSET_TOP,
-        stepX: 30,
+        stepX: 31,
       },
       setOrigin: {
         x: 0.5,
@@ -306,7 +321,7 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
       setXY: {
         x: 305,
         y: 1003 + LIVES_OFFSET_BOT,
-        stepX: 30,
+        stepX: 31,
       },
       setOrigin: {
         x: 0.5,
@@ -366,6 +381,7 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
     this.comboText.setText(`${this.state.combo}`);
     if (this.state.combo > oldCombo && this.state.combo % 5 === 0)
       this.emphasizeText(this.comboText);
+    if (this.state.combo > 999) this.comboText.setFontSize(96);
     this.refreshLives();
 
     if (feverCfg.number > 0) {

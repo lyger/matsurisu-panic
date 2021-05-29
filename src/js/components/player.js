@@ -32,23 +32,7 @@ class PlayerBody extends Phaser.GameObjects.Container {
       0,
       this.skinName + "-idle"
     );
-    this.equipment = this.state.equipment.map(
-      ({ key, depth, animationName }) => {
-        const equipmentTexture = "equipment-" + animationName;
-        const equipmentSprite = new Phaser.GameObjects.Sprite(
-          scene,
-          0,
-          0,
-          equipmentTexture + "-idle"
-        );
-        return {
-          key: /Equipment:([A-Za-z0-9]+)/.exec(key)[1].toLowerCase(),
-          depth,
-          texture: equipmentTexture,
-          sprite: equipmentSprite,
-        };
-      }
-    );
+    this.updateEquipment();
     const children = [{ depth: 0, sprite: this.bodySprite }].concat(
       this.equipment
     );
@@ -66,6 +50,26 @@ class PlayerBody extends Phaser.GameObjects.Container {
     this.state = state;
     this.skinName = "matsuri-" + this.state.skin;
     return this;
+  }
+
+  updateEquipment() {
+    this.equipment = this.state.equipment.map(
+      ({ key, depth, animationName }) => {
+        const equipmentTexture = "equipment-" + animationName;
+        const equipmentSprite = new Phaser.GameObjects.Sprite(
+          this.scene,
+          0,
+          0,
+          equipmentTexture + "-idle"
+        );
+        return {
+          key: /Equipment:([A-Za-z0-9]+)/.exec(key)[1].toLowerCase(),
+          depth,
+          texture: equipmentTexture,
+          sprite: equipmentSprite,
+        };
+      }
+    );
   }
 
   updateVisibility(visibility) {

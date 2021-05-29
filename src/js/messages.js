@@ -1,6 +1,8 @@
 const MSG = {
+  BEGIN: { en: "BEGIN", ja: "始める" },
   START: { en: "START", ja: "スタート" },
   CREDITS: { en: "CREDITS", ja: "クレジット" },
+  ENDLESS: { en: "ENDLESS", ja: "エンドレス" },
 
   CLOSE: { en: "CLOSE", ja: "閉じる" },
   GENERIC_ERROR: { en: "ERROR", ja: "エラー" },
@@ -21,7 +23,7 @@ const MSG = {
 
   CREDITS_PROGRAMMER: { en: "Programming", ja: "プログラミング" },
   CREDITS_ART: { en: "Art & Design", ja: "イラスト・デザイン" },
-  CREDITS_SOUND: { en: "SFX & Other Music", ja: "効果音・その他BGM" },
+  CREDITS_SOUND: { en: "Music & SFX", ja: "BGM・効果音" },
   CREDITS_MUSIC: { en: "Level & Shop Music", ja: "ステージ・ショップBGM" },
   CREDITS_PLAYTESTER: { en: "Playtesters", ja: "テストプレイヤー" },
 
@@ -54,8 +56,13 @@ const MSG = {
 
   CONFIRM_TWEET: { en: "Send tweet?", ja: "ツイートしますか？" },
   TWEET: {
-    en: "I scored [SCORE] points! #TestHashtag",
-    ja: "[SCORE]点を達成しました！ #テストハッシュタグ",
+    en: "I scored [SCORE] points! #MatsurisuPanic #まつりすパニック",
+    ja: "[SCORE]点を達成しました！ #まつりすパニック #MatsurisuPanic",
+  },
+  TWEET_ENDLESS: {
+    en: "I scored [SCORE] in Endless Mode! #MatsurisuPanic #まつりすパニック",
+    ja:
+      "エンドレスモードで[SCORE]点を達成しました！ #まつりすパニック #MatsurisuPanic",
   },
   TWEET_PROGRESS: { en: "Sending...", ja: "送信中…" },
   TWEET_SUCCESS: { en: "Tweet sent!", ja: "ツイート成功！" },

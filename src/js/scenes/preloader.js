@@ -1,6 +1,8 @@
 import Phaser from "phaser";
-import { HEIGHT, PUBLIC_PATH } from "../globals";
+import ButtonFactory from "../components/uibutton";
+import { HEIGHT, PUBLIC_PATH, TEXT_STYLE, WIDTH } from "../globals";
 import store from "../store";
+import { getMessage } from "../utils";
 import Curtains from "./curtains";
 import Title from "./title";
 
@@ -10,6 +12,11 @@ const CHARACTER_PREFIXES = SKINS.map((skin) => "matsuri-" + skin).concat(
   EQUIPMENT.map((equipment) => "equipment-" + equipment)
 );
 const MATSURISU = ["normal", "light", "fever"];
+const BeginButton = ButtonFactory("title-start-buttons", true, {
+  ...TEXT_STYLE,
+  color: "#fff",
+  fontSize: "50px",
+});
 
 export default class Preloader extends Phaser.Scene {
   constructor() {
@@ -132,6 +139,16 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/title-start-buttons.png",
       {
         frameWidth: 230,
+        frameHeight: 125,
+        margin: 1,
+        spacing: 2,
+      }
+    );
+    this.load.spritesheet(
+      "title-start-buttons-alt",
+      PUBLIC_PATH + "/images/title-start-buttons-alt.png",
+      {
+        frameWidth: 210,
         frameHeight: 125,
         margin: 1,
         spacing: 2,
@@ -464,9 +481,21 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/matsuri_jazz.ogg",
       PUBLIC_PATH + "/audio/matsuri_jazz.mp3",
     ]);
+    this.load.audio("title-music", [
+      PUBLIC_PATH + "/audio/Title-Music.ogg",
+      PUBLIC_PATH + "/audio/Title-Music.mp3",
+    ]);
     this.load.audio("win-music", [
       PUBLIC_PATH + "/audio/Win-Music.ogg",
       PUBLIC_PATH + "/audio/Win-Music.mp3",
+    ]);
+    this.load.audio("gameover-music", [
+      PUBLIC_PATH + "/audio/GameOver-Music.ogg",
+      PUBLIC_PATH + "/audio/GameOver-Music.mp3",
+    ]);
+    this.load.audio("fever-music", [
+      PUBLIC_PATH + "/audio/Fever-Music.ogg",
+      PUBLIC_PATH + "/audio/Fever-Music.mp3",
     ]);
 
     this.load.audio("matsurisu-catch", [
@@ -572,8 +601,8 @@ export default class Preloader extends Phaser.Scene {
     const progressBar = this.add.graphics();
     this.load.on("progress", function (value) {
       progressBar.clear();
-      progressBar.fillStyle(0xffffff, 0.5);
-      progressBar.fillRect(200, HEIGHT / 2 - 5, 320 * value, 10);
+      progressBar.fillStyle(0xffffff, 0.75);
+      progressBar.fillRect(150, HEIGHT / 2 - 7.5, 420 * value, 15);
     });
 
     this.load.on("complete", function () {
@@ -686,6 +715,17 @@ export default class Preloader extends Phaser.Scene {
     this.createAnimations();
     this.scene.add("Curtains", Curtains, false);
     this.scene.bringToTop("Curtains");
-    this.scene.add("Title", Title, true);
+    this.beginButton = new BeginButton(this, {
+      x: WIDTH / 2,
+      y: HEIGHT / 2,
+      base: 0,
+      over: 1,
+      text: getMessage("BEGIN"),
+      overTextStyle: { color: "#7f7f7f" },
+      downCallback: () => {
+        this.scene.add("Title", Title, true);
+        this.scene.remove(this.scene.key);
+      },
+    });
   }
 }

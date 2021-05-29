@@ -1,4 +1,4 @@
-import { addModifierWithoutDuplicates } from "../utils";
+import { addModifierWithoutDuplicates, removeModifier } from "../utils";
 
 const matsurisuDefaultState = {
   number: 30,
@@ -53,6 +53,7 @@ export const stageDefaultState = {
   level: 0,
   maxLevel: 10,
   showPreview: false,
+  isEndless: false,
   matsurisu: matsurisuDefaultState,
   money: moneyDefaultState,
   powerup: powerupDefaultState,
@@ -120,12 +121,7 @@ function moneyReducer(state = moneyDefaultState, action) {
     case "stage.money.addModifier":
       return addModifierWithoutDuplicates(state, payload);
     case "stage.money.removeModifier":
-      return {
-        ...state,
-        modifiers: state.modifiers.filter(
-          (modifier) => modifier.key !== payload
-        ),
-      };
+      return removeModifier(state, payload);
     default:
       return state;
   }
@@ -145,12 +141,15 @@ function powerupReducer(state = powerupDefaultState, action) {
     case "stage.powerup.addModifier":
       return addModifierWithoutDuplicates(state, payload);
     case "stage.powerup.removeModifier":
-      return {
-        ...state,
-        modifiers: state.modifiers.filter(
-          (modifier) => modifier.key !== payload
-        ),
-      };
+      return removeModifier(state, payload);
+    case "global.activateEndless":
+      return addModifierWithoutDuplicates(state, {
+        key: "Endless:PowerupSpawn",
+        minNumber: 1,
+        maxNumber: 1,
+      });
+    case "global.deactivateEndless":
+      return removeModifier(state, "Endless:PowerupSpawn");
     default:
       return state;
   }
@@ -221,6 +220,26 @@ export default function stageReducer(state = stageDefaultState, action) {
       return {
         ...state,
         showPreview: false,
+      };
+    case "global.activateEndless":
+      return {
+        ...state,
+        isEndless: true,
+        matsurisu: matsurisuReducer(state.matsurisu, action),
+        money: moneyReducer(state.money, action),
+        powerup: powerupReducer(state.powerup, action),
+        ebifrion: ebifrionReducer(state.ebifrion, action),
+        fever: feverReducer(state.fever, action),
+      };
+    case "global.deactivateEndless":
+      return {
+        ...state,
+        isEndless: false,
+        matsurisu: matsurisuReducer(state.matsurisu, action),
+        money: moneyReducer(state.money, action),
+        powerup: powerupReducer(state.powerup, action),
+        ebifrion: ebifrionReducer(state.ebifrion, action),
+        fever: feverReducer(state.fever, action),
       };
     default:
       return {

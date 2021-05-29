@@ -28,8 +28,9 @@ const SLIDE_DELAY = 400;
 const SLIDE_DURATION = 800;
 
 class TweetConfirmModal extends BaseModal {
-  create({ parentSceneKey, imgData, score }) {
+  create({ parentSceneKey, imgData, score, isEndless }) {
     super.create({ parentSceneKey, popup: false, closeButton: false });
+    this.isEndless = isEndless;
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "tweet-confirm-modal")
       .setDepth(DEPTH.UIBACK)
@@ -110,7 +111,9 @@ class TweetConfirmModal extends BaseModal {
   }
 
   get fullTweetText() {
-    const baseText = getMessage("TWEET").replace("[SCORE]", `${this.score}`);
+    const baseText = getMessage(
+      this.isEndless ? "TWEET_ENDLESS" : "TWEET"
+    ).replace("[SCORE]", `${this.score}`);
     return `${baseText} http://example.com`;
   }
 
@@ -132,6 +135,7 @@ class TweetConfirmModal extends BaseModal {
       this.fullTweetText,
       this.imgData,
       this.score,
+      this.isEndless,
       this.handleSuccess.bind(this),
       this.handleFailure.bind(this)
     );
@@ -159,13 +163,11 @@ class TweetConfirmModal extends BaseModal {
 export default class Results extends BaseScene {
   create() {
     this.state = store.getState();
+    this.isEndless = this.state.stage.isEndless;
     this.createUI();
 
-    if (this.state.score.stagesCleared === this.state.stage.maxLevel)
-      this.sound.play("win-music", {
-        volume: 0.5 * this.state.settings.volumeMusic,
-        delay: SLIDE_DELAY / 1000,
-      });
+    this.createBgm();
+    this.bgm.play({ delay: SLIDE_DELAY / 750 });
 
     this.counter = { score: this.state.score.score };
     this.finalScore = 0;
@@ -301,7 +303,10 @@ export default class Results extends BaseScene {
       upCallback: () => this.handleNewGame(),
     });
 
-    store.dispatch({ type: "highscores.add", payload: this.finalScore });
+    store.dispatch({
+      type: this.isEndless ? "highscores.addEndless" : "highscores.add",
+      payload: this.finalScore,
+    });
     this.state = store.getState();
 
     this.showLocalHighscores(secondaryDelay);
@@ -369,6 +374,32 @@ export default class Results extends BaseScene {
     });
   }
 
+  createBgm() {
+    if (this.state.score.stagesCleared === this.state.stage.maxLevel) {
+      this.bgm = this.sound.add("win-music", {
+        volume: 0.5 * this.state.settings.volumeMusic,
+      });
+    } else {
+      this.bgm = this.sound.add("gameover-music", {
+        volume: 0.5 * this.state.settings.volumeMusic,
+        loop: true,
+      });
+    }
+    this.events.on("destroy", () => {
+      this.bgm?.stop?.();
+      this.bgm?.destroy?.();
+    });
+  }
+
+  fadeBgm() {
+    this.tweens.add({
+      targets: this.bgm,
+      volume: 0,
+      duration: 800,
+      onComplete: () => this.bgm.stop(),
+    });
+  }
+
   clearHighscores() {
     this.highscoreElements?.forEach((obj) => obj.destroy());
     this.highscoreElements = [];
@@ -379,8 +410,14 @@ export default class Results extends BaseScene {
     this.highscoresTitleMessage = "RESULTS_PERSONAL_BESTS";
     this.worldButton.setVisible(true);
     this.selfButton.setVisible(false);
-    const highscores = this.state.highscores.highscores;
-    const lastIndex = this.state.highscores.lastIndex;
+    let highscores, lastIndex;
+    if (this.isEndless) {
+      highscores = this.state.highscores.highscoresEndless;
+      lastIndex = this.state.highscores.lastIndexEndless;
+    } else {
+      highscores = this.state.highscores.highscores;
+      lastIndex = this.state.highscores.lastIndex;
+    }
     this.clearHighscores();
     this.createHighscores({
       delay,
@@ -395,7 +432,7 @@ export default class Results extends BaseScene {
     this.worldButton.setVisible(false);
     this.selfButton.setVisible(true);
     this.clearHighscores();
-    fetch(HIGHSCORES_ENDPOINT)
+    fetch(HIGHSCORES_ENDPOINT + `?endless=${this.isEndless ? 1 : 0}`)
       .then((resp) => resp.json())
       .then(({ highscores }) => {
         this.createHighscores({
@@ -520,16 +557,18 @@ export default class Results extends BaseScene {
       parentSceneKey: this.scene.key,
       imgData: this.imgData,
       score: this.finalScore,
+      isEndless: this.isEndless,
     });
   }
 
   handleNewGame() {
+    this.fadeBgm();
     store.dispatch({ type: "global.newGame" });
     this.curtainsTo("Stage", Stage);
   }
 
   handleMainMenu() {
-    store.dispatch({ type: "global.newGame" });
+    this.fadeBgm();
     this.curtainsTo("Title", Title);
   }
 

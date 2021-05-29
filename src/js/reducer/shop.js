@@ -1,5 +1,4 @@
 export const shopDefaultState = {
-  numItems: 4,
   powerupDiscountRate: 0.75,
 };
 

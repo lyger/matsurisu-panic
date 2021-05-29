@@ -98,7 +98,9 @@ export default class PauseScreen extends BaseModal {
     this.events.once("destroy", () => {
       stageScene.scene.remove("Stage");
     });
+    const isEndless = store.getState().stage.isEndless;
     store.dispatch({ type: "global.newGame" });
+    if (isEndless) store.dispatch({ type: "global.activateEndless" });
     this.curtainsTo("RestartProxy", RestartProxy);
   }
 
@@ -115,7 +117,6 @@ export default class PauseScreen extends BaseModal {
     this.events.once("destroy", () => {
       stageScene.scene.remove("Stage");
     });
-    store.dispatch({ type: "global.newGame" });
     this.curtainsTo("Title", Title);
   }
 

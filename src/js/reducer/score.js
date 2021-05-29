@@ -175,6 +175,11 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         airForgiveness: 0,
         fever: 0,
       };
+    case "global.winStageEndless":
+      return {
+        ...state,
+        stagesCleared: stage.stagesCleared + 1,
+      };
     case "global.activateFever":
       return {
         ...state,
@@ -185,6 +190,16 @@ export default function scoreReducer(state = scoreDefaultState, action) {
       return {
         ...state,
         invincible: false,
+      };
+    case "global.activateEndless":
+      return {
+        ...state,
+        lives: state.maxLives,
+      };
+    case "global.deactivateEndless":
+      return {
+        ...state,
+        lives: 3,
       };
     default:
       return state;

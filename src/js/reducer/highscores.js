@@ -2,7 +2,9 @@ import { descendingSortedIndex } from "../utils";
 
 export const highscoresDefaultState = {
   highscores: [],
-  lastIndex: 0,
+  highscoresEndless: [],
+  lastIndex: -1,
+  lastIndexEndless: -1,
 };
 
 export default function highscoresReducer(state, action) {
@@ -21,6 +23,23 @@ export default function highscoresReducer(state, action) {
         ...state,
         highscores: newHighscores,
         lastIndex: index,
+      };
+    case "highscores.addEndless":
+      const indexEndless = descendingSortedIndex(
+        state.highscoresEndless,
+        payload,
+        (v) => v.score
+      );
+      // Unlikely to cause a problem, but limit the number of scores we store
+      const newHighscoresEndless = state.highscoresEndless.slice(0, 10);
+      newHighscoresEndless.splice(indexEndless, 0, {
+        score: payload,
+        time: Date.now(),
+      });
+      return {
+        ...state,
+        highscoresEndless: newHighscoresEndless,
+        lastIndexEndless: indexEndless,
       };
     case "global.clearData":
       return highscoresDefaultState;

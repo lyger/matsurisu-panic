@@ -15,6 +15,8 @@ export const DEPTH = {
 
 export const PUBLIC_PATH = "/matsurisu-panic";
 
+export const SHOP_SIZE = 4;
+
 export const TEXT_STYLE = {
   fontFamily: "Gen Jyuu Gothic P Heavy, sans-serif",
   fontSize: "30px",
@@ -42,5 +44,6 @@ export const FEVER_TINT = 0xffffff;
 export const FEVER_TEXT_COLOR = "#ffff5a";
 export const COMBO_TEXT_COLOR = "#ffc82e";
 
+export const TITLE_BGM_VOLUME_FACTOR = 0.3;
 export const STAGE_BGM_VOLUME_FACTOR = 0.075;
 export const SHOP_BGM_VOLUME_FACTOR = 0.5;
