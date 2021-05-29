@@ -110,18 +110,20 @@ class TweetConfirmModal extends BaseModal {
     this.refreshDisplay();
   }
 
+  get baseTweetText() {
+    return getMessage(this.isEndless ? "TWEET_ENDLESS" : "TWEET").replace(
+      "[SCORE]",
+      `${this.score}`
+    );
+  }
+
   get fullTweetText() {
-    const baseText = getMessage(
-      this.isEndless ? "TWEET_ENDLESS" : "TWEET"
-    ).replace("[SCORE]", `${this.score}`);
-    return `${baseText} http://example.com`;
+    return `${this.baseTweetText} http://example.com`;
   }
 
   refreshDisplay() {
     this.confirmText.setText(getMessage("CONFIRM_TWEET"));
-    this.tweetText.setText(
-      getMessage("TWEET").replace("[SCORE]", `${this.score}`)
-    );
+    this.tweetText.setText(this.baseTweetText);
     this.scene.get(this.parentSceneKey).events.emit("rerender");
   }
 
@@ -318,7 +320,6 @@ export default class Results extends BaseScene {
     const state = store.getState();
     const visibility = state.settings.visibility;
     const illustFrame = state.player.equipment
-      .filter(({ accessory }) => !accessory)
       .filter(({ animationName }) => visibility[animationName])
       .reduce((acc, { resultsFlag }) => acc + resultsFlag, 0);
     this.add
@@ -526,7 +527,7 @@ export default class Results extends BaseScene {
   }
 
   addBonus({ y, delay, duration, value, multiplier = 1 }) {
-    this.finalScore += value * multiplier;
+    this.finalScore += Math.floor(value * multiplier);
     const message =
       value === 0
         ? "—"

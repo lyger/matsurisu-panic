@@ -75,6 +75,9 @@ export default class PauseScreen extends BaseModal {
 
     this.events.on("rerender", this.refreshDisplay, this);
     this.events.on("resume", () => (this.lock = false));
+    this.events.on("transitionout", () =>
+      this.scene.get("Stage").events.emit("transitionout")
+    );
 
     this.time.delayedCall(300, () => (this.debounce = false));
   }

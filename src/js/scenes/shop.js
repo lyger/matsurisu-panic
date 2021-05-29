@@ -246,15 +246,13 @@ export default class Shop extends BaseScene {
     }
 
     let equipmentX = 98;
-    equipment
-      .filter(({ accessory }) => !accessory)
-      .forEach(({ texture, frame }) => {
-        this.add
-          .image(equipmentX, 1035, texture, frame)
-          .setDepth(DEPTH.UIFRONT)
-          .setScale(0.9);
-        equipmentX += 160;
-      });
+    equipment.forEach(({ texture, frame }) => {
+      this.add
+        .image(equipmentX, 1035, texture, frame)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.9);
+      equipmentX += 160;
+    });
 
     this.items.forEach((shopItem) => {
       if (powerup !== null && shopItem.item.type === "powerup") {

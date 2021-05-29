@@ -53,28 +53,44 @@ class PlayerBody extends Phaser.GameObjects.Container {
   }
 
   updateEquipment() {
-    this.equipment = this.state.equipment.map(
-      ({ key, depth, animationName }) => {
-        const equipmentTexture = "equipment-" + animationName;
-        const equipmentSprite = new Phaser.GameObjects.Sprite(
+    const newEquipment = [];
+    this.state.equipment.forEach(({ key, depth, animationName, accessory }) => {
+      const equipmentTexture = "equipment-" + animationName;
+      const equipmentSprite = new Phaser.GameObjects.Sprite(
+        this.scene,
+        0,
+        0,
+        equipmentTexture + "-idle"
+      );
+      const visibilityKey = animationName;
+      newEquipment.push({
+        visibilityKey,
+        depth,
+        texture: equipmentTexture,
+        sprite: equipmentSprite,
+      });
+      if (accessory !== null) {
+        const accessoryTexture = "equipment-" + accessory.name.toLowerCase();
+        const accessorySprite = new Phaser.GameObjects.Sprite(
           this.scene,
           0,
           0,
-          equipmentTexture + "-idle"
+          accessoryTexture + "-idle"
         );
-        return {
-          key: /Equipment:([A-Za-z0-9]+)/.exec(key)[1].toLowerCase(),
-          depth,
-          texture: equipmentTexture,
-          sprite: equipmentSprite,
-        };
+        newEquipment.push({
+          visibilityKey,
+          depth: accessory.depth,
+          texture: accessoryTexture,
+          sprite: accessorySprite,
+        });
       }
-    );
+    });
+    this.equipment = newEquipment;
   }
 
   updateVisibility(visibility) {
-    this.equipment.forEach(({ key, sprite }) => {
-      sprite.setVisible(visibility[key]);
+    this.equipment.forEach(({ visibilityKey, sprite }) => {
+      sprite.setVisible(visibility[visibilityKey]);
     });
     return this;
   }

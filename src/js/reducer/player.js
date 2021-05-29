@@ -90,6 +90,18 @@ export default function playerReducer(state = playerDefaultState, action) {
         ...state,
         equipment: state.equipment.concat([payload]),
       };
+    case "global.winStageEndless":
+      return {
+        ...state,
+        equipment: state.equipment.map((equip) => {
+          if (equip.accessory) return equip;
+          return {
+            ...equip,
+            stages: equip.stages - 1,
+          };
+        }),
+        physics: playerPhysicsReducer(state.physics, action),
+      };
     default:
       return {
         ...state,

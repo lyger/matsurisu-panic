@@ -190,6 +190,7 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
             y,
             text: `−¥${price.toLocaleString("en-US")}`,
           });
+          this.refreshState();
         }
         this.checkFever();
         this.scene.events.emit("sound.catch", {

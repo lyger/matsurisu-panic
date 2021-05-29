@@ -400,6 +400,11 @@ export function combinePowerups(powerup1, powerup2) {
   return null;
 }
 
+export function getAvailableEquipment() {
+  const level = store.getState().stage.level;
+  return CATALOG.equipmentItems.filter((equipment) => equipment.tier <= level);
+}
+
 export function getShopItems() {
   const state = store.getState();
   const shopItems = [];

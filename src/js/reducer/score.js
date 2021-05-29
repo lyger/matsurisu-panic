@@ -126,13 +126,13 @@ export default function scoreReducer(state = scoreDefaultState, action) {
     case "score.loseMoney":
       return {
         ...state,
-        money: Math.max(state.money - (payload || 1), 0),
+        money: Math.max(state.money - payload, 0),
       };
     case "score.gainMoney":
       // Should only be used in the rare case when money needs to be manually adjusted, otherwise use "score.catchCoin"
       return {
         ...state,
-        money: Math.min(state.money + (payload | 1), state.maxMoney),
+        money: Math.min(state.money + payload, state.maxMoney),
       };
     case "score.resetAir":
       return {
@@ -178,7 +178,7 @@ export default function scoreReducer(state = scoreDefaultState, action) {
     case "global.winStageEndless":
       return {
         ...state,
-        stagesCleared: stage.stagesCleared + 1,
+        stagesCleared: state.stagesCleared + 1,
       };
     case "global.activateFever":
       return {

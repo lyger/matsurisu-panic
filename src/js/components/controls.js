@@ -107,15 +107,13 @@ export default class Controls extends Phaser.GameObjects.Container {
   showEquipment() {
     const state = store.getState();
     let x = EQUIPMENT_LEFT;
-    state.player.equipment
-      .filter(({ accessory }) => !accessory)
-      .forEach(({ texture, frame }) => {
-        this.scene.add
-          .image(x, EQUIPMENT_Y, texture, frame)
-          .setDepth(DEPTH.UIFRONT)
-          .setScale(0.4);
-        x += EQUIPMENT_INTERVAL;
-      });
+    state.player.equipment.forEach(({ texture, frame }) => {
+      this.scene.add
+        .image(x, EQUIPMENT_Y, texture, frame)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.4);
+      x += EQUIPMENT_INTERVAL;
+    });
   }
 
   usePowerup() {

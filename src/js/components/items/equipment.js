@@ -37,30 +37,25 @@ export default class Equipment extends Item {
     this.accessory = accessory;
   }
 
+  get config() {
+    return {
+      key: "Equipment:" + this.name,
+      accessory: this.accessory,
+      texture: this.texture,
+      frame: this.frame,
+      resultsFlag: this.resultsFlag,
+      animationName: this.name.toLowerCase(),
+      depth: this.depth,
+      target: this,
+      stages: Infinity,
+    };
+  }
+
   handleBuy() {
     store.dispatch({
       type: "player.addEquipment",
-      payload: {
-        key: "Equipment:" + this.name,
-        accessory: false,
-        texture: this.texture,
-        frame: this.frame,
-        resultsFlag: this.resultsFlag,
-        animationName: this.name.toLowerCase(),
-        depth: this.depth,
-        target: this,
-      },
+      payload: this.config,
     });
-    if (this.accessory !== null)
-      store.dispatch({
-        type: "player.addEquipment",
-        payload: {
-          key: "Equipment:" + this.name + ".accessory",
-          accessory: true,
-          animationName: this.accessory.name.toLowerCase(),
-          depth: this.accessory.depth,
-        },
-      });
   }
 
   apply(scene) {

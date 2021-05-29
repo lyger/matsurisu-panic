@@ -406,9 +406,7 @@ export default class Stage extends BaseScene {
 
   activateEquipment() {
     const state = store.getState();
-    state.player.equipment
-      .filter(({ accessory }) => !accessory)
-      .forEach(({ target }) => target?.apply(this));
+    state.player.equipment.forEach(({ target }) => target?.apply(this));
   }
 
   setAirForgiveness() {
