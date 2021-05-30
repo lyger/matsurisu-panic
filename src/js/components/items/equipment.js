@@ -16,6 +16,7 @@ export default class Equipment extends Item {
     depth = 1,
     resultsFlag,
     onActivation,
+    onDeactivation,
     accessory = null,
   }) {
     super("equipment", {
@@ -33,6 +34,7 @@ export default class Equipment extends Item {
     this.depth = depth;
     this.activated = false;
     this.onActivation = onActivation;
+    this.onDeactivation = onDeactivation;
     this.resultsFlag = resultsFlag;
     this.accessory = accessory;
   }
@@ -62,6 +64,13 @@ export default class Equipment extends Item {
     if (this.activated) return false;
     this.onActivation(scene);
     this.activated = true;
+    return true;
+  }
+
+  remove(scene) {
+    if (!this.activated) return false;
+    this.onDeactivation(scene);
+    this.activated = false;
     return true;
   }
 }

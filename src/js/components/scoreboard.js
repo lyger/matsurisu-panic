@@ -214,6 +214,23 @@ export default class Scoreboard extends Phaser.GameObjects.GameObject {
       this.scene.events.emit("sound.catch", { type: "ebifrion", airCount });
     });
 
+    this.scene.events.on("equipment.catch", ({ airborne, price, x, y }) => {
+      store.dispatch({ type: "score.catchEquipment", payload: { airborne } });
+      store.dispatch({ type: "score.loseMoney", payload: price });
+      this.refreshState();
+      const airCount = this.maybeShowAirBonus(x, y);
+      addTextEffect(this.scene, {
+        x,
+        y,
+        text: `−¥${price.toLocaleString("en-US")}`,
+      });
+      this.scene.events.emit("sound.catch", {
+        type: "equipment",
+        airCount,
+        price,
+      });
+    });
+
     this.scene.events.on("global.fullCombo", () => {
       store.dispatch({ type: "score.fullCombo" });
       this.refreshState();

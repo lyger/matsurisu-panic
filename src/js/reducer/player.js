@@ -90,16 +90,27 @@ export default function playerReducer(state = playerDefaultState, action) {
         ...state,
         equipment: state.equipment.concat([payload]),
       };
+    case "global.activateEndless":
+      return {
+        ...state,
+        skin: "idol",
+        physics: playerPhysicsReducer(state.physics, action),
+      };
+    case "global.deactivateEndless":
+      return {
+        ...state,
+        skin: "normal",
+        physics: playerPhysicsReducer(state.physics, action),
+      };
     case "global.winStageEndless":
       return {
         ...state,
-        equipment: state.equipment.map((equip) => {
-          if (equip.accessory) return equip;
-          return {
-            ...equip,
-            stages: equip.stages - 1,
-          };
-        }),
+        equipment: state.equipment
+          .map(({ stages, ...rest }) => ({
+            ...rest,
+            stages: stages - 1,
+          }))
+          .filter(({ stages }) => stages > 0),
         physics: playerPhysicsReducer(state.physics, action),
       };
     default:

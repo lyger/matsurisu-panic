@@ -32,15 +32,9 @@ class PlayerBody extends Phaser.GameObjects.Container {
       0,
       this.skinName + "-idle"
     );
-    this.updateEquipment();
-    const children = [{ depth: 0, sprite: this.bodySprite }].concat(
-      this.equipment
-    );
-    children.sort((a, b) => a.depth - b.depth);
-    children.forEach(({ sprite }) => {
-      this.scene.add.existing(sprite);
-      this.add(sprite);
-    });
+    this.scene.add.existing(this.bodySprite);
+    this.equipment = [];
+    this.updateChildren();
     this.updateVisibility(visibility);
 
     this.scene.add.existing(this);
@@ -52,9 +46,10 @@ class PlayerBody extends Phaser.GameObjects.Container {
     return this;
   }
 
-  updateEquipment() {
+  updateChildren() {
+    this.equipment.forEach(({ sprite }) => sprite?.destroy());
     const newEquipment = [];
-    this.state.equipment.forEach(({ key, depth, animationName, accessory }) => {
+    this.state.equipment.forEach(({ depth, animationName, accessory }) => {
       const equipmentTexture = "equipment-" + animationName;
       const equipmentSprite = new Phaser.GameObjects.Sprite(
         this.scene,
@@ -86,6 +81,18 @@ class PlayerBody extends Phaser.GameObjects.Container {
       }
     });
     this.equipment = newEquipment;
+
+    this.removeAll();
+    const children = [{ depth: 0, sprite: this.bodySprite }].concat(
+      this.equipment
+    );
+    children.sort((a, b) => a.depth - b.depth);
+    children.forEach(({ sprite }) => {
+      if (sprite !== this.bodySprite) this.scene.add.existing(sprite);
+      this.add(sprite);
+    });
+
+    return this;
   }
 
   updateVisibility(visibility) {
@@ -145,6 +152,12 @@ export default class Player extends Phaser.GameObjects.Container {
       this.modPhysics.hitBoxWidth,
       this.modPhysics.hitBoxHeight
     );
+
+    this.scene.events.on("rerender", () => {
+      this.reloadState();
+      this.playerBody.updateState(this.state).updateChildren();
+      this.controls.refreshEquipment();
+    });
 
     scene.physics.add.existing(this.hitBox);
 

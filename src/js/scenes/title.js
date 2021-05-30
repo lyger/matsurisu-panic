@@ -39,13 +39,13 @@ export default class Title extends BaseScene {
     this.createMusic();
     this.bgm.play();
 
-    const endlessUnlocked = store.getState().settings.endlessUnlocked;
+    this.endlessUnlocked = store.getState().settings.endlessUnlocked;
 
     let sideButtonOffset = 195;
     let startButtonX = WIDTH / 2;
     let StartButtonClass = StartButton;
 
-    if (endlessUnlocked) {
+    if (this.endlessUnlocked) {
       sideButtonOffset = 285;
       startButtonX = WIDTH / 2 - 110;
       StartButtonClass = StartButtonAlt;
@@ -75,7 +75,7 @@ export default class Title extends BaseScene {
       y: START_BUTTONS_HEIGHT,
       base: 0,
       over: 1,
-      text: getMessage("START"),
+      text: getMessage(this.endlessUnlocked ? "NORMAL" : "START"),
       overTextStyle: { color: "#7f7f7f" },
       overSound: "menu-click",
       downSound: "menu-click",
@@ -264,7 +264,9 @@ export default class Title extends BaseScene {
   refresh() {
     const volumeMusic = store.getState().settings.volumeMusic;
     this.bgm.setVolume(TITLE_BGM_VOLUME_FACTOR * volumeMusic);
-    this.startButton.setText(getMessage("START"));
+    this.startButton.setText(
+      getMessage(this.endlessUnlocked ? "NORMAL" : "START")
+    );
     this.creditsButton.setText(getMessage("CREDITS"));
     this.endlessButton?.setText(getMessage("ENDLESS"));
   }

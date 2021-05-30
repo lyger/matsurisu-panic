@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import ButtonFactory from "./uibutton";
-import { WIDTH, HEIGHT, DEPTH } from "../globals";
+import { WIDTH, HEIGHT, DEPTH, TEXT_STYLE } from "../globals";
 import store from "../store";
 
 const ControlButtonHorizontal = ButtonFactory("controls-horizontal");
@@ -10,6 +10,13 @@ const ControlButtonItem = ButtonFactory("controls-item");
 const EQUIPMENT_LEFT = 48;
 const EQUIPMENT_Y = 1001;
 const EQUIPMENT_INTERVAL = 75;
+const EQUIPMENT_COUNT_STYLE = {
+  ...TEXT_STYLE,
+  color: "#fc5854",
+  fontSize: "24px",
+  stroke: "#fff",
+  strokeThickness: 3,
+};
 
 export default class Controls extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -85,9 +92,11 @@ export default class Controls extends Phaser.GameObjects.Container {
       this.powerupButton,
     ]);
 
+    this.equipmentDisplay = [];
+
     this.refreshPowerup();
-    this.showEquipment();
-    scene.add.existing(this);
+    this.refreshEquipment();
+    this.scene.add.existing(this);
   }
 
   refreshPowerup() {
@@ -104,16 +113,35 @@ export default class Controls extends Phaser.GameObjects.Container {
     }
   }
 
-  showEquipment() {
+  refreshEquipment() {
+    this.equipmentDisplay.forEach((item) => item?.destroy());
     const state = store.getState();
     let x = EQUIPMENT_LEFT;
-    state.player.equipment.forEach(({ texture, frame }) => {
-      this.scene.add
-        .image(x, EQUIPMENT_Y, texture, frame)
-        .setDepth(DEPTH.UIFRONT)
-        .setScale(0.4);
-      x += EQUIPMENT_INTERVAL;
-    });
+    this.equipmentDisplay = state.player.equipment.flatMap(
+      ({ texture, frame, stages }) => {
+        const ret = [];
+        ret.push(
+          this.scene.add
+            .image(x, EQUIPMENT_Y, texture, frame)
+            .setDepth(DEPTH.UIFRONT)
+            .setScale(0.4)
+        );
+        if (stages < Infinity)
+          ret.push(
+            this.scene.add
+              .text(
+                x + 25,
+                EQUIPMENT_Y + 25,
+                `${stages}`,
+                EQUIPMENT_COUNT_STYLE
+              )
+              .setDepth(DEPTH.UIFRONT + 1)
+              .setOrigin(0.5, 0.5)
+          );
+        x += EQUIPMENT_INTERVAL;
+        return ret;
+      }
+    );
   }
 
   usePowerup() {

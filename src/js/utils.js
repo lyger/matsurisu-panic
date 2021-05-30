@@ -114,3 +114,9 @@ export function getMessage(key) {
 export function traverseState(state, path) {
   return path.split(".").reduce((st, key) => st[key], state);
 }
+
+export function formatSummation(n) {
+  if (n === 1) return "1";
+  if (n === 2) return "(1+2)";
+  return `(Σ ${n})`;
+}

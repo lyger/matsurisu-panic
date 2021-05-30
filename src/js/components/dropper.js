@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { FEVER_TINT, DEPTH, GROUNDHEIGHT, WIDTH, TEXT_STYLE } from "../globals";
 import store from "../store";
 import { applyModifiersToState, syncSpritePhysics } from "../utils";
-import { getAvailablePowerups } from "./items/catalog";
+import { getAvailableEquipment, getAvailablePowerups } from "./items/catalog";
 
 const PBAR_WIDTH = 676;
 const PBAR_HEIGHT = 16;
@@ -27,6 +27,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.matsurisu = this.scene.physics.add.group();
     this.money = this.scene.physics.add.group();
     this.powerup = this.scene.physics.add.group();
+    this.equipment = this.scene.physics.add.group();
     this.preview = this.scene.add.group();
     this.extraConfigs = [];
     this.syncProps = {
@@ -44,6 +45,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.previewBuffer = [];
     this.moneyBuffer = [];
     this.powerupBuffer = [];
+    this.equipmentBuffer = [];
     this.generateDrops();
 
     this.createTimerAndEvents();
@@ -58,6 +60,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     const moneyCfg = this.modMoney;
     const powerupCfg = this.modPowerup;
     const ebifrionCfg = this.modEbifrion;
+    const equipmentCfg = this.modEquipment;
 
     const rand = Phaser.Math.RND;
 
@@ -178,6 +181,19 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.add.existing(this.ebifrion);
     this.scene.physics.add.existing(this.ebifrion);
     this.ebifrion.body.setCircle(40, 24, 24);
+
+    // GENERATE EQUIPMENT
+    if (this.state.isEndless && rand.frac() < equipmentCfg.probability) {
+      const availableEquipment = getAvailableEquipment();
+      if (availableEquipment.length > 0) {
+        this.equipmentBuffer.push({
+          y: cummulativeY + equipmentCfg.distanceY,
+          x: WIDTH / 2,
+          target: Phaser.Utils.Array.GetRandom(availableEquipment),
+        });
+        this.maximumY += equipmentCfg.distanceY;
+      }
+    }
   }
 
   createTimerAndEvents() {
@@ -209,8 +225,10 @@ export default class Dropper extends Phaser.GameObjects.Group {
     const checkFinished = () => {
       if (this.matsurisuBuffer.length > 0) return;
       if (this.moneyBuffer.length > 0) return;
+      if (this.equipmentBuffer.length > 0) return;
       if (this.matsurisu.countActive() > 0) return;
       if (this.money.countActive() > 0) return;
+      if (this.equipment.countActive() > 0) return;
       this.scene.events.emit("dropper.done");
     };
 
@@ -218,6 +236,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("matsurisu.drop", checkFinished);
     this.scene.events.on("coin.catch", checkFinished);
     this.scene.events.on("coin.drop", checkFinished);
+    this.scene.events.on("equipment.catch", checkFinished);
+    this.scene.events.on("equipment.drop", checkFinished);
 
     this.scene.events.on("matsurisu.catch", this.catchMatsurisu, this);
     this.scene.events.on("matsurisu.drop", this.dropMatsurisu, this);
@@ -227,6 +247,8 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("powerup.drop", this.dropPowerup, this);
     this.scene.events.on("ebifrion.catch", this.catchEbifrion, this);
     this.scene.events.on("ebifrion.drop", this.dropEbifrion, this);
+    this.scene.events.on("equipment.catch", this.catchEquipment, this);
+    this.scene.events.on("equipment.drop", this.dropEquipment, this);
   }
 
   setupFever() {
@@ -445,11 +467,38 @@ export default class Dropper extends Phaser.GameObjects.Group {
     });
   }
 
+  catchEquipment({ x, y, target }) {
+    const equipment = this.scene.add
+      .image(x, y, target.texture, target.frame)
+      .setDepth(DEPTH.OBJECTDEPTH);
+    this.scene.tweens.add({
+      targets: equipment,
+      alpha: 0,
+      y: y - 100,
+      duration: 300,
+      onComplete: () => equipment.destroy(),
+    });
+  }
+
+  dropEquipment({ x, y, target }) {
+    const equipment = this.scene.add
+      .image(x, y, target.texture, target.frame)
+      .setDepth(DEPTH.OBJECTDEPTH);
+    this.scene.tweens.add({
+      targets: equipment,
+      alpha: 0,
+      y: y + 100,
+      duration: 300,
+      onComplete: () => equipment.destroy(),
+    });
+  }
+
   applyModifiersToConfigs() {
     this.modMatsurisu = applyModifiersToState(this.state.matsurisu);
     this.modMoney = applyModifiersToState(this.state.money);
     this.modPowerup = applyModifiersToState(this.state.powerup);
     this.modEbifrion = applyModifiersToState(this.state.ebifrion);
+    this.modEquipment = applyModifiersToState(this.state.equipment);
     return this;
   }
 
@@ -546,6 +595,17 @@ export default class Dropper extends Phaser.GameObjects.Group {
     newPowerup.body.setCircle(40, 24, 24);
     if (price > 0) this.attachPrice(newPowerup, price);
     return newPowerup;
+  }
+
+  createEquipment({ x, target }) {
+    const newEquipment = this.equipment
+      .create(x, -100, target.texture, target.frame, true, true)
+      .setDepth(DEPTH.OBJECTDEPTH)
+      .setVelocityY(this.modEquipment.fallSpeed)
+      .setData({ target, price: target.price });
+    newEquipment.body.setCircle(40, 24, 24);
+    this.attachPrice(newEquipment, target.price);
+    return newEquipment;
   }
 
   attachPrice(target, price) {
@@ -755,6 +815,9 @@ export default class Dropper extends Phaser.GameObjects.Group {
         isNextFeverItem = false;
       }
     }
+
+    if (this.equipmentBuffer.length > 0 && this.equipmentBuffer[0].y < totalY)
+      this.createEquipment(this.equipmentBuffer.shift());
 
     if (!this.ebifrionActive && this.ebifrionStartY <= totalY) {
       this.ebifrionActive = true;

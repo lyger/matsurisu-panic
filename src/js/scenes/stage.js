@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import {
   DEPTH,
+  ENDLESS_EQUIPMENT_STAGES,
   GROUNDHEIGHT,
   HEIGHT,
   STAGE_BGM_VOLUME_FACTOR,
@@ -52,19 +53,6 @@ export default class Stage extends BaseScene {
     this.createEvents();
 
     if (this.anims.paused) this.anims.resumeAll();
-
-    const debugKey = this.input.keyboard.addKey("z", true, false);
-    debugKey.on("down", () => {
-      this.winStage();
-    });
-    const debugKey2 = this.input.keyboard.addKey("x", true, false);
-    debugKey2.on("down", () => {
-      this.loseStage();
-    });
-    // const debugKey3 = this.input.keyboard.addKey("c", true, false);
-    // debugKey3.on("down", () => {
-    //   this.events.emit("global.feverStart");
-    // });
   }
 
   createUIButtons() {
@@ -137,20 +125,12 @@ export default class Stage extends BaseScene {
         const target = powerup.getData("target");
         const price = powerup.getData("price");
         const state = store.getState();
-        if (price > 0 && price > state.score.money) return;
         const currentPowerup = state.player.powerup;
         const airborne = this.matsuri.airborne;
-        const data = {
-          x: powerup.x,
-          y: powerup.y,
-          isFever: powerup.getData("fever"),
-          isRedundant: false,
-          upgraded: null,
-          target,
-          airborne,
-          price,
-        };
+        let isRedundant = false;
+        let upgraded = null;
         if (currentPowerup === null) {
+          if (price > 0 && price > state.score.money) return;
           store.dispatch({
             type: "player.setPowerup",
             payload: target,
@@ -158,20 +138,59 @@ export default class Stage extends BaseScene {
         } else {
           const combinedPowerup = combinePowerups(currentPowerup, target);
           if (combinedPowerup === null) {
-            data.isRedundant = true;
+            isRedundant = true;
           } else {
+            if (price > 0 && price > state.score.money) return;
             store.dispatch({
               type: "player.setPowerup",
               payload: combinedPowerup,
             });
-            data.upgraded = combinedPowerup;
+            upgraded = combinedPowerup;
           }
         }
+        const data = {
+          x: powerup.x,
+          y: powerup.y,
+          isFever: powerup.getData("fever"),
+          isRedundant,
+          upgraded,
+          target,
+          airborne,
+          price,
+        };
         powerup.destroy();
         this.events.emit("powerup.catch", data);
         this.setAirForgiveness();
       }
     );
+
+    if (store.getState().stage.isEndless) {
+      this.physics.add.overlap(
+        this.matsuri.hitBox,
+        this.dropper.equipment,
+        (player, equipment) => {
+          const target = equipment.getData("target");
+          const price = equipment.getData("price");
+          const state = store.getState();
+          if (price > state.score.money) return;
+          const airborne = this.matsuri.airborne;
+          const data = {
+            x: equipment.x,
+            y: equipment.y,
+            airborne,
+            price,
+            target,
+          };
+          store.dispatch({
+            type: "player.addEquipment",
+            payload: { ...target.config, stages: ENDLESS_EQUIPMENT_STAGES + 1 },
+          });
+          equipment.destroy();
+          this.events.emit("equipment.catch", data);
+          this.setAirForgiveness();
+        }
+      );
+    }
 
     this.createPlayerEbifrionCollision();
   }
@@ -254,6 +273,23 @@ export default class Stage extends BaseScene {
       }
     );
 
+    if (store.getState().stage.isEndless) {
+      this.physics.add.collider(
+        this.ground,
+        this.dropper.equipment,
+        (ground, equipment) => {
+          const data = {
+            x: equipment.x,
+            y: equipment.y,
+            target: equipment.getData("target"),
+          };
+          equipment.destroy();
+          this.events.emit("equipment.drop", data);
+          this.playSoundEffect("powerup-drop");
+        }
+      );
+    }
+
     this.createGroundEbifrionCollision();
 
     this.physics.add.collider(this.ground, this.matsuri.playerBody);
@@ -292,8 +328,10 @@ export default class Stage extends BaseScene {
 
     if (state.stage.isEndless) {
       this.events.on("dropper.done", () => {
+        this.deactivateEquipment();
         store.dispatch({ type: "global.winStageEndless" });
         store.dispatch({ type: "stage.increaseLevel" });
+        this.activateEquipment();
         this.events.emit("rerender");
         this.events.emit("dropper.reset");
         this.createPlayerEbifrionCollision();
@@ -355,6 +393,10 @@ export default class Stage extends BaseScene {
           case "ebifrion":
             this.playSoundEffect("ebifrion-catch");
             break;
+          case "equipment":
+            this.playSoundEffect("powerup-catch");
+            if (price > 0) this.playSoundEffect("shop-buy");
+            break;
         }
       }
     );
@@ -407,6 +449,11 @@ export default class Stage extends BaseScene {
   activateEquipment() {
     const state = store.getState();
     state.player.equipment.forEach(({ target }) => target?.apply(this));
+  }
+
+  deactivateEquipment() {
+    const state = store.getState();
+    state.player.equipment.forEach(({ target }) => target?.remove(this));
   }
 
   setAirForgiveness() {

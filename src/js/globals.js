@@ -16,6 +16,7 @@ export const DEPTH = {
 export const PUBLIC_PATH = "/matsurisu-panic";
 
 export const SHOP_SIZE = 4;
+export const ENDLESS_EQUIPMENT_STAGES = 3;
 
 export const TEXT_STYLE = {
   fontFamily: "Gen Jyuu Gothic P Heavy, sans-serif",

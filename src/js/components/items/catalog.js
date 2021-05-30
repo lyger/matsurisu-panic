@@ -331,6 +331,11 @@ function getInitialCatalog() {
             type: "stage.money.addModifier",
             payload: { key: "Equipment:CatEars", luck: 0.2 },
           }),
+        onDeactivation: () =>
+          store.dispatch({
+            type: "stage.money.removeModifier",
+            payload: "Equipment:CatEars",
+          }),
       }),
       // ========== GLASSES ==========
       new Equipment({
@@ -343,6 +348,7 @@ function getInitialCatalog() {
         depth: 1,
         resultsFlag: 0b010,
         onActivation: () => store.dispatch({ type: "stage.showPreview" }),
+        onDeactivation: () => store.dispatch({ type: "stage.hidePreview" }),
       }),
       // ========== GLOWSTICK ==========
       new Equipment({
@@ -364,6 +370,11 @@ function getInitialCatalog() {
               crouchHitBoxWidth: 90,
               crouchHitBoxHeight: 10,
             },
+          }),
+        onDeactivation: () =>
+          store.dispatch({
+            type: "player.physics.removeModifier",
+            payload: "Equipment:Glowstick",
           }),
       }),
     ],
@@ -401,8 +412,14 @@ export function combinePowerups(powerup1, powerup2) {
 }
 
 export function getAvailableEquipment() {
-  const level = store.getState().stage.level;
-  return CATALOG.equipmentItems.filter((equipment) => equipment.tier <= level);
+  const state = store.getState();
+  const level = state.stage.level;
+  const playerEquipment = state.player.equipment;
+  return CATALOG.equipmentItems.filter(
+    (equipment) =>
+      equipment.tier <= level &&
+      !playerEquipment.some(({ key }) => key === equipment.config.key)
+  );
 }
 
 export function getShopItems() {

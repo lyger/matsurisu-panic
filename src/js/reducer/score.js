@@ -36,6 +36,7 @@ export const scoreDefaultState = {
   invincible: false,
   results: {
     livesMultiplier: 1500,
+    stagesMultiplier: 1000,
     moneyMultiplier: 0.2,
     bestComboMultiplier: 200,
   },
@@ -63,7 +64,6 @@ export default function scoreReducer(state = scoreDefaultState, action) {
     case "score.catchCoin": {
       const stateWithAir = applyAirBonus(payload.airborne, state);
       const multiplier = payload.isLucky ? 2 : 1;
-      // DEBUG
       return {
         ...stateWithAir,
         money: Math.min(
@@ -91,6 +91,10 @@ export default function scoreReducer(state = scoreDefaultState, action) {
         ...stateWithAir,
         score: stateWithAir.score + state.scorePerEbifrion,
       };
+    }
+    case "score.catchEquipment": {
+      const stateWithAir = applyAirBonus(payload.airborne, state);
+      return stateWithAir;
     }
     case "score.dropMatsurisu":
       if (state.invincible || payload.bonus) return state;

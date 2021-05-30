@@ -2,6 +2,7 @@ const MSG = {
   BEGIN: { en: "BEGIN", ja: "始める" },
   START: { en: "START", ja: "スタート" },
   CREDITS: { en: "CREDITS", ja: "クレジット" },
+  NORMAL: { en: "NORMAL", ja: "ノーマル" },
   ENDLESS: { en: "ENDLESS", ja: "エンドレス" },
 
   CLOSE: { en: "CLOSE", ja: "閉じる" },

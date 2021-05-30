@@ -10,7 +10,7 @@ import store from "../store";
 import ButtonFactory from "../components/uibutton";
 import Stage from "./stage";
 import sendTweet from "../twitter";
-import { getMessage, timestampToDateString } from "../utils";
+import { formatSummation, getMessage, timestampToDateString } from "../utils";
 import Title from "./title";
 import BaseScene from "./base";
 import Toggle from "../components/toggle";
@@ -51,7 +51,7 @@ class TweetConfirmModal extends BaseModal {
     this.tweetText = this.add
       .text(WIDTH / 2, 665, "", {
         ...RESULTS_TEXT_STYLE,
-        fontSize: "32px",
+        fontSize: "30px",
         align: "center",
         wordWrap: { width: 580, useAdvancedWrap: true },
       })
@@ -189,13 +189,25 @@ export default class Results extends BaseScene {
       value: this.state.score.money,
       multiplier: this.state.score.results.moneyMultiplier,
     });
-    this.addBonus({
-      y: 460,
-      delay: initialDelay + 600,
-      duration: 500,
-      value: this.state.score.lives,
-      multiplier: this.state.score.results.livesMultiplier,
-    });
+    if (this.isEndless) {
+      const nStages = this.state.score.stagesCleared;
+      this.addBonus({
+        y: 460,
+        delay: initialDelay + 600,
+        duration: 500,
+        value: Math.floor((nStages * (nStages + 1)) / 2),
+        displayValue: formatSummation(this.state.score.stagesCleared),
+        multiplier: this.state.score.results.stagesMultiplier,
+      });
+    } else {
+      this.addBonus({
+        y: 460,
+        delay: initialDelay + 600,
+        duration: 500,
+        value: this.state.score.lives,
+        multiplier: this.state.score.results.livesMultiplier,
+      });
+    }
     this.addBonus({
       y: 530,
       delay: initialDelay + 900,
@@ -319,23 +331,24 @@ export default class Results extends BaseScene {
   createUI() {
     const state = store.getState();
     const visibility = state.settings.visibility;
+    const suffix = this.isEndless ? "-endless" : "";
     const illustFrame = state.player.equipment
       .filter(({ animationName }) => visibility[animationName])
       .reduce((acc, { resultsFlag }) => acc + resultsFlag, 0);
     this.add
-      .image(WIDTH / 2, HEIGHT / 2, "results-background")
+      .image(WIDTH / 2, HEIGHT / 2, "results-background" + suffix)
       .setDepth(DEPTH.BGBACK);
     this.illust = this.add
       .image(
         WIDTH / 2 + SLIDE_DISTANCE,
         HEIGHT / 2,
-        "results-illustration-comp",
+        "results-illustration-comp" + suffix,
         illustFrame
       )
       .setDepth(DEPTH.OBJECTDEPTH)
       .setAlpha(0);
     this.frames = this.add
-      .image(WIDTH / 2 - SLIDE_DISTANCE, 475, "results-frames")
+      .image(WIDTH / 2 - SLIDE_DISTANCE, 475, "results-frames" + suffix)
       .setDepth(DEPTH.UIBACK)
       .setAlpha(0);
     this.tweens.add({
@@ -348,7 +361,7 @@ export default class Results extends BaseScene {
     });
     const levelFrame = this.add
       .container(WIDTH / 2, 130, [
-        new Phaser.GameObjects.Image(this, 0, 0, "results-level"),
+        new Phaser.GameObjects.Image(this, 0, 0, "results-level" + suffix),
         new Phaser.GameObjects.Text(
           this,
           85,
@@ -376,7 +389,10 @@ export default class Results extends BaseScene {
   }
 
   createBgm() {
-    if (this.state.score.stagesCleared === this.state.stage.maxLevel) {
+    if (
+      this.state.score.stagesCleared === this.state.stage.maxLevel ||
+      this.isEndless
+    ) {
       this.bgm = this.sound.add("win-music", {
         volume: 0.5 * this.state.settings.volumeMusic,
       });
@@ -526,14 +542,21 @@ export default class Results extends BaseScene {
     this.highscoreElements = elements;
   }
 
-  addBonus({ y, delay, duration, value, multiplier = 1 }) {
+  addBonus({
+    y,
+    delay,
+    duration,
+    value,
+    displayValue = value,
+    multiplier = 1,
+  }) {
     this.finalScore += Math.floor(value * multiplier);
     const message =
-      value === 0
+      displayValue === 0
         ? "—"
         : multiplier === 1
-        ? `${value}`
-        : `${value} × ${multiplier}`;
+        ? `${displayValue}`
+        : `${displayValue} × ${multiplier}`;
     const text = this.add
       .text(355, y, message, RESULTS_TEXT_STYLE)
       .setDepth(DEPTH.UIFRONT)

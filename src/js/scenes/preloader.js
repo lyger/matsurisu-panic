@@ -6,7 +6,7 @@ import { getMessage } from "../utils";
 import Curtains from "./curtains";
 import Title from "./title";
 
-const SKINS = ["normal"];
+const SKINS = ["normal", "idol"];
 const EQUIPMENT = ["glasses", "catears", "cattail", "glowstick"];
 const CHARACTER_PREFIXES = SKINS.map((skin) => "matsuri-" + skin).concat(
   EQUIPMENT.map((equipment) => "equipment-" + equipment)
@@ -369,8 +369,37 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/images/results-background.png"
     );
     this.load.image(
+      "results-background-endless",
+      PUBLIC_PATH + "/images/results-background-endless.png"
+    );
+    this.load.image(
       "results-frames",
       PUBLIC_PATH + "/images/results-frames.png"
+    );
+    this.load.image(
+      "results-frames-endless",
+      PUBLIC_PATH + "/images/results-frames-endless.png"
+    );
+    this.load.image("results-level", PUBLIC_PATH + "/images/results-level.png");
+    this.load.image(
+      "results-level-endless",
+      PUBLIC_PATH + "/images/results-level-endless.png"
+    );
+    this.load.spritesheet(
+      "results-illustration-comp",
+      PUBLIC_PATH + "/images/results-illustration-comp.png",
+      {
+        frameWidth: 720,
+        frameHeight: 1280,
+      }
+    );
+    this.load.spritesheet(
+      "results-illustration-comp-endless",
+      PUBLIC_PATH + "/images/results-illustration-comp-endless.png",
+      {
+        frameWidth: 720,
+        frameHeight: 1280,
+      }
     );
     this.load.image(
       "results-tweet-button",
@@ -396,7 +425,6 @@ export default class Preloader extends Phaser.Scene {
         spacing: 2,
       }
     );
-    this.load.image("results-level", PUBLIC_PATH + "/images/results-level.png");
     this.load.image("results-new", PUBLIC_PATH + "/images/results-new.png");
 
     this.load.image(
@@ -421,14 +449,6 @@ export default class Preloader extends Phaser.Scene {
         frameHeight: 60,
         margin: 1,
         spacing: 2,
-      }
-    );
-    this.load.spritesheet(
-      "results-illustration-comp",
-      PUBLIC_PATH + "/images/results-illustration-comp.png",
-      {
-        frameWidth: 720,
-        frameHeight: 1280,
       }
     );
   }
