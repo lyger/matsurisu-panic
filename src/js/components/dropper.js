@@ -238,6 +238,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
     this.scene.events.on("coin.drop", checkFinished);
     this.scene.events.on("equipment.catch", checkFinished);
     this.scene.events.on("equipment.drop", checkFinished);
+    this.scene.events.on("matsurisu.bonus-timeout", checkFinished);
 
     this.scene.events.on("matsurisu.catch", this.catchMatsurisu, this);
     this.scene.events.on("matsurisu.drop", this.dropMatsurisu, this);
@@ -728,6 +729,7 @@ export default class Dropper extends Phaser.GameObjects.Group {
           onComplete: (fadeTween) => {
             this.scene.tweens.remove(fadeTween);
             this.syncProps.bonusAlpha = 1;
+            this.scene.events.emit("matsurisu.bonus-timeout");
           },
         });
       },

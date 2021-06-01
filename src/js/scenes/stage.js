@@ -350,7 +350,9 @@ export default class Stage extends BaseScene {
         this.time.delayedCall(GAME_END_DELAY, () => {
           const state = store.getState();
           if (state.score.drops === 0) {
-            this.sound.play("stage-full-combo");
+            this.sound.play("stage-full-combo", {
+              volume: state.settings.volumeMusic,
+            });
             this.events.emit("global.fullCombo");
             this.time.delayedCall(GAME_END_DELAY, () => this.winStage());
           } else this.winStage();

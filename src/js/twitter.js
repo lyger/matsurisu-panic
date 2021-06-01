@@ -72,7 +72,11 @@ export default function sendTweet(
     );
 
     twitterAuthWindowInterval = setInterval(() => {
-      if (twitterAuthWindow.closed) {
+      if (
+        !twitterAuthWindow ||
+        twitterAuthWindow.closed ||
+        twitterAuthWindow.closed === undefined
+      ) {
         wrappedErrorCallback(new Error("Popup closed before authentication."));
       }
     }, 100);
