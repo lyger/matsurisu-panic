@@ -528,7 +528,7 @@ export default class Preloader extends Phaser.Scene {
       PUBLIC_PATH + "/audio/Low_Catch.ogg",
       PUBLIC_PATH + "/audio/Low_Catch.mp3",
     ]);
-    [1, 2, 3, 4, 5].forEach((num) => {
+    [1, 2, 3, 4, 5, 6, 7].forEach((num) => {
       this.load.audio(`air-catch-${num}`, [
         PUBLIC_PATH + `/audio/High_Catch_${num}.ogg`,
         PUBLIC_PATH + `/audio/High_Catch_${num}.mp3`,

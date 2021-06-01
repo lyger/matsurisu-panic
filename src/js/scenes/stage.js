@@ -380,7 +380,7 @@ export default class Stage extends BaseScene {
         price = 0,
       }) => {
         if (airCount > 0)
-          this.playSoundEffect(`air-catch-${Math.min(airCount, 5)}`);
+          this.playSoundEffect(`air-catch-${Math.min(airCount, 7)}`);
         switch (type) {
           case "matsurisu":
             if (isLow) this.playSoundEffect("matsurisu-low-catch");

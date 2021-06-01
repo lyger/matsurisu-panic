@@ -596,6 +596,7 @@ export default class Results extends BaseScene {
   handleNewGame() {
     this.fadeBgm();
     store.dispatch({ type: "global.newGame" });
+    if (this.isEndless) store.dispatch({ type: "global.activateEndless" });
     this.curtainsTo("Stage", Stage);
   }
 
