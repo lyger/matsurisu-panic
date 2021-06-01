@@ -31,12 +31,12 @@ export default class DispatchItem extends Item {
   }
 
   handleBuy() {
-    let action;
-    if (this.action instanceof Function) {
-      action = this.action(store.getState());
+    let actions;
+    if (Array.isArray(this.action)) {
+      actions = this.action;
     } else {
-      action = this.action;
+      actions = [this.action];
     }
-    store.dispatch(action);
+    actions.forEach((action) => store.dispatch(action));
   }
 }

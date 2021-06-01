@@ -10,7 +10,12 @@ import store from "../store";
 import ButtonFactory from "../components/uibutton";
 import Stage from "./stage";
 import sendTweet from "../twitter";
-import { formatSummation, getMessage, timestampToDateString } from "../utils";
+import {
+  formatSummation,
+  getMessage,
+  shortenString,
+  timestampToDateString,
+} from "../utils";
 import Title from "./title";
 import BaseScene from "./base";
 import Toggle from "../components/toggle";
@@ -118,7 +123,7 @@ class TweetConfirmModal extends BaseModal {
   }
 
   get fullTweetText() {
-    return `${this.baseTweetText} http://example.com`;
+    return `${this.baseTweetText} https://lyger.github.io/matsurisu-panic/`;
   }
 
   refreshDisplay() {
@@ -332,21 +337,24 @@ export default class Results extends BaseScene {
     const state = store.getState();
     const visibility = state.settings.visibility;
     const suffix = this.isEndless ? "-endless" : "";
-    const illustFrame = state.player.equipment
+    let illustFrame = state.player.equipment
       .filter(({ animationName }) => visibility[animationName])
       .reduce((acc, { resultsFlag }) => acc + resultsFlag, 0);
+    const illustSheet = Math.floor(illustFrame / 4);
+    illustFrame = illustFrame % 4;
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "results-background" + suffix)
       .setDepth(DEPTH.BGBACK);
     this.illust = this.add
       .image(
         WIDTH / 2 + SLIDE_DISTANCE,
-        HEIGHT / 2,
-        "results-illustration-comp" + suffix,
+        0,
+        `results-illustration-comp-${illustSheet}-${this.state.player.skin}`,
         illustFrame
       )
       .setDepth(DEPTH.OBJECTDEPTH)
-      .setAlpha(0);
+      .setAlpha(0)
+      .setOrigin(0.5, 0);
     this.frames = this.add
       .image(WIDTH / 2 - SLIDE_DISTANCE, 475, "results-frames" + suffix)
       .setDepth(DEPTH.UIBACK)
@@ -456,7 +464,7 @@ export default class Results extends BaseScene {
           delay,
           highscores,
           lastIndex: -1,
-          rowToText: ({ score, name }) => [`${score}`, name],
+          rowToText: ({ score, name }) => [`${score}`, shortenString(name, 8)],
         });
       })
       .catch((err) => this.showHighscoresError(err.toString().split(": ")));

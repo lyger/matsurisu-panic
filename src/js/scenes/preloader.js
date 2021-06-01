@@ -385,22 +385,24 @@ export default class Preloader extends Phaser.Scene {
       "results-level-endless",
       PUBLIC_PATH + "/images/results-level-endless.png"
     );
-    this.load.spritesheet(
-      "results-illustration-comp",
-      PUBLIC_PATH + "/images/results-illustration-comp.png",
-      {
-        frameWidth: 720,
-        frameHeight: 1280,
-      }
-    );
-    this.load.spritesheet(
-      "results-illustration-comp-endless",
-      PUBLIC_PATH + "/images/results-illustration-comp-endless.png",
-      {
-        frameWidth: 720,
-        frameHeight: 1280,
-      }
-    );
+    SKINS.forEach((skin) => {
+      this.load.spritesheet(
+        `results-illustration-comp-0-${skin}`,
+        PUBLIC_PATH + `/images/results-illustration-comp-0-${skin}.png`,
+        {
+          frameWidth: 720,
+          frameHeight: 800,
+        }
+      );
+      this.load.spritesheet(
+        `results-illustration-comp-1-${skin}`,
+        PUBLIC_PATH + `/images/results-illustration-comp-1-${skin}.png`,
+        {
+          frameWidth: 720,
+          frameHeight: 800,
+        }
+      );
+    });
     this.load.image(
       "results-tweet-button",
       PUBLIC_PATH + "/images/results-tweet-button.png"

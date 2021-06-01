@@ -90,6 +90,11 @@ export default function playerReducer(state = playerDefaultState, action) {
         ...state,
         equipment: state.equipment.concat([payload]),
       };
+    case "player.setSkin":
+      return {
+        ...state,
+        skin: payload,
+      };
     case "global.activateEndless":
       return {
         ...state,

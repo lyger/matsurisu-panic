@@ -379,6 +379,7 @@ export class CreditsModal extends PagedModal {
       "Cody Connekt",
       "gottagoms123",
       "Konbo",
+      "Loserbait",
       "natsuki",
       "PingTKP",
       "RAIA!?",
@@ -509,7 +510,7 @@ export class CreditsModal extends PagedModal {
 export class InstructionsModal extends PagedModal {
   create(args) {
     super.create(args);
-    this.pages = [this.createPage1(), this.createPage2()];
+    this.pages = [this.createPage1(), this.createPage2(), this.createPage3()];
 
     this.renderPages();
 
@@ -615,6 +616,64 @@ export class InstructionsModal extends PagedModal {
         .image(COL2, ROW3_HEIGHT + 20, "items", 7)
         .setDepth(DEPTH.UIFRONT)
         .setScale(0.75),
+    ];
+  }
+
+  createPage3() {
+    const COL1 = 270;
+    const COL2 = 540;
+    const ROW1_HEIGHT = 420;
+    const ROW2_HEIGHT = 540;
+    const ROW3_HEIGHT = 660;
+    return [
+      this.add
+        .text(
+          COL1,
+          ROW1_HEIGHT,
+          getMessage("INSTRUCTIONS_EQUIPMENT"),
+          BROWN_STYLE_MD
+        )
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(0.5, 0.5),
+      this.add
+        .image(COL2 - 20, ROW1_HEIGHT - 20, "items", 11)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.75),
+      this.add
+        .image(COL2 + 30, ROW1_HEIGHT - 10, "items", 10)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.75),
+      this.add
+        .image(COL2, ROW1_HEIGHT + 20, "items", 9)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.75),
+      this.add
+        .text(
+          COL1,
+          ROW2_HEIGHT,
+          getMessage("INSTRUCTIONS_FEVER"),
+          BROWN_STYLE_MD
+        )
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(0.5, 0.5),
+      this.add
+        .image(COL2, ROW2_HEIGHT, "extra-fever")
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.75),
+      this.add
+        .text(
+          COL1,
+          ROW3_HEIGHT,
+          getMessage("INSTRUCTIONS_SECRET"),
+          BROWN_STYLE_MD
+        )
+        .setDepth(DEPTH.UIFRONT)
+        .setOrigin(0.5, 0.5),
+      this.add
+        .image(COL2, ROW3_HEIGHT, "items", 13)
+        .setDepth(DEPTH.UIFRONT)
+        .setScale(0.75)
+        .setTintFill(0x000000),
     ];
   }
 }

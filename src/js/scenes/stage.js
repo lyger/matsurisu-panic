@@ -53,6 +53,10 @@ export default class Stage extends BaseScene {
     this.createEvents();
 
     if (this.anims.paused) this.anims.resumeAll();
+
+    // DEBUG again
+    // const debugButton = this.input.keyboard.addKey("z");
+    // debugButton.on("down", () => this.winStage());
   }
 
   createUIButtons() {

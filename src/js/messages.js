@@ -46,6 +46,18 @@ const MSG = {
     en: "Powerups give you\nvarious abilities!",
     ja: "アイテム発動で\nいろんな効果があるよ！",
   },
+  INSTRUCTIONS_EQUIPMENT: {
+    en: "Equipment can make\nMatsuri even stronger!",
+    ja: "装備でまつりちゃんを\nもっと強くしよう！",
+  },
+  INSTRUCTIONS_FEVER: {
+    en: "Catch bubbled items\nto activate fever mode!",
+    ja: "シャボン玉をキャッチすると\nフィーバーモードに突入するよ！",
+  },
+  INSTRUCTIONS_SECRET: {
+    en: "Can you discover the\nsecret game mode?",
+    ja: "隠しモードを\n見つけ出せるかな？",
+  },
 
   PAUSE_CONTINUE: { en: "Continue", ja: "続ける" },
   PAUSE_RESTART: { en: "Restart", ja: "やり直す" },

@@ -149,7 +149,6 @@ function getInitialCatalog() {
         },
         duration: 35,
         price: 2000,
-        purchaseLimit: 1,
         conflictsWith: ["Speed"],
         applySideEffect: (scene) => {
           const config = {
@@ -201,7 +200,6 @@ function getInitialCatalog() {
         },
         duration: 35,
         price: 2000,
-        purchaseLimit: 1,
         conflictsWith: ["Jump"],
         applySideEffect: (scene) => {
           const particles = scene.add
@@ -245,7 +243,6 @@ function getInitialCatalog() {
         modifier: { op: "multiply", fallSpeed: 0.5 },
         duration: 30,
         price: 3000,
-        purchaseLimit: 1,
         conflictsWith: ["Float"],
         applySideEffect: (scene) => {
           scene.dropper.addExtra({
@@ -307,9 +304,15 @@ function getInitialCatalog() {
         description: { en: "? ? ?", ja: "？？？" },
         tier: 8,
         frame: 13,
-        action: { type: "settings.unlockEndless" },
+        purchaseLimit: 1,
+        purchaseConditions: [
+          (state) => state.score.lives === state.score.maxLives,
+        ],
+        action: [
+          { type: "settings.unlockEndless" },
+          { type: "player.setSkin", payload: "idol" },
+        ],
         price: 0,
-        purchaseConditions: [(state) => !state.settings.endlessUnlocked],
       }),
     ],
 
@@ -424,8 +427,12 @@ export function getAvailableEquipment() {
 
 export function getShopItems() {
   const state = store.getState();
+  // As a special case, if Endless is already unlocked, rename the idol ribbon
+  if (state.settings.endlessUnlocked)
+    IDOL_RIBBON.description = { ja: "アイドルリボン", en: "Idol Ribbon" };
   const shopItems = [];
   if (LIFE.canBuy) shopItems.push(LIFE);
+  else if (IDOL_RIBBON.canBuy) shopItems.push(IDOL_RIBBON);
   const filteredEquipment = CATALOG.equipmentItems.filter(
     (item) => item.canBuy
   );
@@ -433,7 +440,5 @@ export function getShopItems() {
   const filteredPowerups = CATALOG.powerups.filter((item) => item.canBuy);
   shopItems.push(...chooseFromArray(filteredPowerups, 2));
   if (shopItems.length < SHOP_SIZE) shopItems.push(EBIFRION);
-  if (shopItems.length < SHOP_SIZE && IDOL_RIBBON.canBuy)
-    shopItems.push(IDOL_RIBBON);
   return shopItems;
 }

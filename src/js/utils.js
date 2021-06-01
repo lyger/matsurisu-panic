@@ -116,7 +116,12 @@ export function traverseState(state, path) {
 }
 
 export function formatSummation(n) {
-  if (n === 1) return "1";
+  if (n < 2) return `${n}`;
   if (n === 2) return "(1+2)";
   return `(Σ ${n})`;
+}
+
+export function shortenString(s, length = 10) {
+  if (s.length > Math.max(3, length)) return s.substring(0, length - 2) + "...";
+  return s;
 }
