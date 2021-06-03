@@ -20,7 +20,7 @@ const game = new Phaser.Game({
   height: HEIGHT,
   scale: {
     parent: "phaser-root",
-    mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: {
@@ -29,6 +29,9 @@ const game = new Phaser.Game({
   render: {
     batchSize: 1024,
     maxTextures: 8,
+  },
+  dom: {
+    createContainer: true,
   },
   physics: { default: "arcade", arcade: { debug: false } },
   backgroundColor: 0x00000,

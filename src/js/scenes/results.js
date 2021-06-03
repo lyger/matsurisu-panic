@@ -9,7 +9,7 @@ import {
 import store from "../store";
 import ButtonFactory from "../components/uibutton";
 import Stage from "./stage";
-import sendTweet from "../twitter";
+import TwitterManager from "../twitter";
 import {
   formatSummation,
   getMessage,
@@ -35,7 +35,13 @@ const SLIDE_DURATION = 800;
 class TweetConfirmModal extends BaseModal {
   create({ parentSceneKey, imgData, score, isEndless }) {
     super.create({ parentSceneKey, popup: false, closeButton: false });
-    this.isEndless = isEndless;
+
+    TwitterManager.setErrorCallback(this.handleFailure.bind(this));
+    this.events.once("destroy", () => {
+      TwitterManager.cleanup();
+      TwitterManager.clearErrorCallback();
+    });
+
     this.add
       .image(WIDTH / 2, HEIGHT / 2, "tweet-confirm-modal")
       .setDepth(DEPTH.UIBACK)
@@ -43,6 +49,7 @@ class TweetConfirmModal extends BaseModal {
       .setInteractive(this.input.makePixelPerfect());
 
     this.state = store.getState();
+    this.isEndless = isEndless;
     this.imgData = imgData;
     this.score = score;
 
@@ -90,15 +97,57 @@ class TweetConfirmModal extends BaseModal {
       downCallback: () => this.returnToParent({ hideTweetButton: false }),
     });
 
-    this.buttonTweet = new TweetButton(this, {
-      x: 490,
-      y: 820,
-      base: 2,
-      over: 3,
-      overSound: "menu-click",
-      downSound: "menu-click",
-      downCallback: () => this.handleTweet(),
-    });
+    if (TwitterManager.isAuthorized) {
+      this.buttonTweet = new TweetButton(this, {
+        x: 490,
+        y: 820,
+        base: 2,
+        over: 3,
+        overSound: "menu-click",
+        downSound: "menu-click",
+        downCallback: () => {
+          this.handleTweet();
+          TwitterManager.tweet({
+            message: this.fullTweetText,
+            imageData: this.imgData,
+            score: this.score,
+            endless: this.isEndless,
+            onSuccess: this.handleSuccess.bind(this),
+          });
+        },
+      });
+    } else {
+      this.buttonLoadingText = this.add
+        .text(490, 820, getMessage("TWEET_BUTTON_LOADING"), {
+          ...RESULTS_TEXT_STYLE,
+          fontSize: "32px",
+        })
+        .setOrigin(0.5, 0.5)
+        .setDepth(DEPTH.UIFRONT);
+      TwitterManager.initialize((oauthToken) => {
+        this.buttonLoadingText.destroy();
+        this.buttonTweet = this.add
+          .dom(490, 820, "button")
+          .setOrigin(0.5, 0.5)
+          .setClassName("tweet-button");
+        this.buttonTweet.addListener("click mouseover");
+        this.buttonTweet.on("mouseover", () =>
+          this.playSoundEffect("menu-click")
+        );
+        this.buttonTweet.on("click", () => {
+          this.playSoundEffect("menu-click");
+          this.handleTweet();
+          TwitterManager.authorizeAndTweet({
+            oauthToken,
+            message: this.fullTweetText,
+            imageData: this.imgData,
+            score: this.score,
+            endless: this.isEndless,
+            onSuccess: this.handleSuccess.bind(this),
+          });
+        });
+      });
+    }
 
     this.doneTweeting = false;
     this.buttonOk = new TweetButton(this, {
@@ -126,6 +175,14 @@ class TweetConfirmModal extends BaseModal {
     return `${this.baseTweetText} https://lyger.github.io/matsurisu-panic/`;
   }
 
+  hideTweetMenu() {
+    this.buttonNo.setVisible(false);
+    this.buttonTweet?.setVisible(false);
+    this.buttonLoadingText?.setVisible(false);
+    this.confirmText.setVisible(false);
+    this.languageToggle.setVisible(false).setActive(false);
+  }
+
   refreshDisplay() {
     this.confirmText.setText(getMessage("CONFIRM_TWEET"));
     this.tweetText.setText(this.baseTweetText);
@@ -133,19 +190,8 @@ class TweetConfirmModal extends BaseModal {
   }
 
   handleTweet() {
-    this.buttonNo.setVisible(false);
-    this.buttonTweet.setVisible(false);
-    this.confirmText.setVisible(false);
-    this.languageToggle.setVisible(false).setActive(false);
+    this.hideTweetMenu();
     this.tweetText.setText(getMessage("TWEET_PROGRESS"));
-    sendTweet(
-      this.fullTweetText,
-      this.imgData,
-      this.score,
-      this.isEndless,
-      this.handleSuccess.bind(this),
-      this.handleFailure.bind(this)
-    );
   }
 
   handleSuccess({ url }) {
@@ -162,6 +208,7 @@ class TweetConfirmModal extends BaseModal {
 
   handleFailure(err) {
     console.log(err);
+    this.hideTweetMenu();
     this.tweetText.setText(getMessage("TWEET_FAILURE"));
     this.buttonOk.setVisible(true);
   }

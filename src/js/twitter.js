@@ -1,35 +1,96 @@
 const TOKEN_ENDPOINT = "https://onitools.moe/_matsurisu_panic_auth/token";
 const TWEET_ENDPOINT = "https://onitools.moe/_matsurisu_panic_auth/tweet";
 
-let userAuth;
+const TwitterManager = {
+  userAuth: null,
+  authWindow: null,
+  authWindowInterval: null,
+  authListener: null,
+  errorCallback: null,
 
-export default function sendTweet(
-  message,
-  imageData,
-  score,
-  endless,
-  successCallback,
-  errorCallback
-) {
-  const tweetData = { message, imageData };
+  get isAuthorized() {
+    return this.userAuth !== null;
+  },
 
-  let twitterAuthWindow, twitterAuthWindowInterval, finishTweetProcess;
+  setErrorCallback(callback) {
+    this.errorCallback = callback;
+  },
 
-  const wrappedSuccessCallback = (data) => {
-    if (successCallback !== undefined && successCallback !== null)
-      successCallback(data);
-  };
-  const wrappedErrorCallback = (data) => {
-    clearInterval(twitterAuthWindowInterval);
-    window.removeEventListener("message", finishTweetProcess);
-    if (errorCallback !== undefined && errorCallback !== null)
-      errorCallback(data);
-  };
+  clearErrorCallback() {
+    this.errorCallback = null;
+  },
 
-  function postTweet(auth) {
+  cleanup() {
+    window.removeEventListener("message", this.authListener);
+    clearInterval(this.authWindowInterval);
+  },
+
+  handleError(err) {
+    this.cleanup();
+    this.errorCallback?.(err);
+  },
+
+  initialize(onSuccess) {
+    fetch(TOKEN_ENDPOINT)
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(
+            `Token fetch returned response code ${response.status}`
+          );
+        return response.json();
+      })
+      .then((json) => {
+        if (json.status !== 200) throw new Error(json.error_message);
+        onSuccess?.(json.oauth_token);
+      })
+      .catch(this.handleError.bind(this));
+  },
+
+  authorizeAndTweet({
+    oauthToken,
+    message,
+    imageData,
+    score,
+    endless = false,
+    onSuccess,
+  }) {
+    this.authListener = (event) => {
+      if (!event.origin.startsWith("https://onitools.moe")) {
+        return;
+      }
+      this.cleanup();
+      this.userAuth = event.data;
+      this.tweet({ message, imageData, score, endless, onSuccess });
+    };
+
+    window.addEventListener("message", this.authListener);
+
+    this.authWindow = window.open(
+      `https://api.twitter.com/oauth/authenticate?oauth_token=${oauthToken}`,
+      "Sign in with Twitter",
+      "left=100,top=100,width=400,height=400"
+    );
+
+    this.authWindowInterval = setInterval(() => {
+      if (
+        this.authWindow === null ||
+        this.authWindow === undefined ||
+        this.authWindow.closed ||
+        this.authWindow.closed === undefined
+      )
+        this.handleError(new Error("Popup closed before authentication."));
+    }, 100);
+  },
+
+  tweet({ message, imageData, score, endless = false, onSuccess }) {
     fetch(TWEET_ENDPOINT, {
       method: "POST",
-      body: JSON.stringify({ auth: auth, data: tweetData, score, endless }),
+      body: JSON.stringify({
+        auth: this.userAuth,
+        data: { message, imageData },
+        score,
+        endless,
+      }),
     })
       .then((response) => {
         if (!response.ok)
@@ -40,62 +101,13 @@ export default function sendTweet(
       })
       .then((json) => {
         if (json.status !== 200) throw new Error(json.error_message);
-        clearInterval(twitterAuthWindowInterval);
-        twitterAuthWindow?.postMessage("done", "*");
-        twitterAuthWindow?.close();
-        wrappedSuccessCallback(json);
+        this.cleanup();
+        this.authWindow?.postMessage("done", "*");
+        this.authWindow?.close();
+        onSuccess?.(json);
       })
-      .catch(wrappedErrorCallback);
-  }
+      .catch(this.handleError.bind(this));
+  },
+};
 
-  if (userAuth !== undefined) return postTweet(userAuth);
-
-  // Callback for after twitter login
-  finishTweetProcess = function (event) {
-    if (!event.origin.startsWith("https://onitools.moe")) {
-      return;
-    }
-    window.removeEventListener("message", finishTweetProcess);
-
-    const auth = event.data;
-    userAuth = auth;
-
-    postTweet(auth);
-  };
-
-  // Function to open login with Twitter window after initial token retrieval
-  function openTwitterAuthWindow(oauth_token) {
-    twitterAuthWindow = window.open(
-      `https://api.twitter.com/oauth/authenticate?oauth_token=${oauth_token}`,
-      "Sign in with Twitter",
-      "left=100,top=100,width=400,height=400"
-    );
-
-    twitterAuthWindowInterval = setInterval(() => {
-      if (
-        !twitterAuthWindow ||
-        twitterAuthWindow.closed ||
-        twitterAuthWindow.closed === undefined
-      ) {
-        wrappedErrorCallback(new Error("Popup closed before authentication."));
-      }
-    }, 100);
-  }
-
-  window.addEventListener("message", finishTweetProcess);
-
-  // Actually begin tweet process
-  fetch(TOKEN_ENDPOINT)
-    .then((response) => {
-      if (!response.ok)
-        throw new Error(
-          `Token fetch returned response code ${response.status}`
-        );
-      return response.json();
-    })
-    .then((json) => {
-      if (json.status !== 200) throw new Error(json.error_message);
-      openTwitterAuthWindow(json.oauth_token);
-    })
-    .catch(wrappedErrorCallback);
-}
+export default TwitterManager;
