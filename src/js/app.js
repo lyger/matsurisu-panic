@@ -26,6 +26,10 @@ const game = new Phaser.Game({
   input: {
     activePointers: 5,
   },
+  render: {
+    batchSize: 1024,
+    maxTextures: 8,
+  },
   physics: { default: "arcade", arcade: { debug: false } },
   backgroundColor: 0x00000,
   resolution: 1,

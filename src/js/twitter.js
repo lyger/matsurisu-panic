@@ -41,6 +41,7 @@ export default function sendTweet(
       .then((json) => {
         if (json.status !== 200) throw new Error(json.error_message);
         clearInterval(twitterAuthWindowInterval);
+        twitterAuthWindow?.postMessage("done", "*");
         twitterAuthWindow?.close();
         wrappedSuccessCallback(json);
       })
@@ -54,13 +55,12 @@ export default function sendTweet(
     if (!event.origin.startsWith("https://onitools.moe")) {
       return;
     }
+    window.removeEventListener("message", finishTweetProcess);
 
     const auth = event.data;
     userAuth = auth;
 
     postTweet(auth);
-
-    window.removeEventListener("message", finishTweetProcess);
   };
 
   // Function to open login with Twitter window after initial token retrieval

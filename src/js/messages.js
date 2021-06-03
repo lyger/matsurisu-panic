@@ -77,7 +77,10 @@ const MSG = {
     ja:
       "エンドレスモードで[SCORE]点を達成しました！ #まつりすパニック #MatsurisuPanic",
   },
-  TWEET_PROGRESS: { en: "Sending...", ja: "送信中…" },
+  TWEET_PROGRESS: {
+    en: "Sending...\n(Please allow popups)",
+    ja: "送信中…\n（ポップアップブロックを無効にしてください）",
+  },
   TWEET_SUCCESS: { en: "Tweet sent!", ja: "ツイート成功！" },
   TWEET_FAILURE: {
     en: "Failed to send tweet!",
